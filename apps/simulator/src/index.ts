@@ -1,3 +1,4 @@
+import type { InboundEmailInput, ProcessEmailInput } from '@demo/shared';
 import { generateEmails, generateWorld } from '@demo/world-generator';
 import express from 'express';
 import { loadEnv } from './env.js';
@@ -9,6 +10,13 @@ const env = loadEnv();
 const world = generateWorld({ seed: env.WORLD_SEED, locale: 'fr' });
 const emails = generateEmails(world, { seed: env.WORLD_SEED, count: env.SIMULATOR_EMAIL_COUNT });
 let seeding: 'pending' | 'done' = 'pending';
+
+/** Input of the `process-email` workflow: the e-mail and the brokerage whose inbox received it. */
+function workflowInput(email: InboundEmailInput): ProcessEmailInput {
+  const brokerage = world.brokerages.find((candidate) => candidate.inboxEmail === email.to);
+  if (!brokerage) throw new Error(`No brokerage has the inbox ${email.to}`);
+  return { email, brokerage: { brokerCode: brokerage.brokerCode, locale: brokerage.locale } };
+}
 
 const app = express();
 
@@ -24,7 +32,7 @@ app.get('/emails', (_req, res) => {
       scenario: groundTruth.scenario,
       subject: email.subject,
       from: email.from,
-      email,
+      input: workflowInput(email),
       groundTruth,
     })),
   );
@@ -39,7 +47,7 @@ app.get('/emails/:index', (req, res) => {
       .json({ error: `No e-mail ${req.params.index}: valid indexes are 1 to ${emails.length}.` });
     return;
   }
-  res.json(generated.email);
+  res.json(workflowInput(generated.email));
 });
 
 app.listen(env.SIMULATOR_PORT, '0.0.0.0', () => {

@@ -7,7 +7,7 @@ const MAX_RESULTS = 10;
 export const searchPolicy = defineTool({
   name: 'search_policy',
   description:
-    'Find insurance policies at the insurer, by exact policy number or by (part of) the policy holder name. ' +
+    "Find your brokerage's insurance policies at the insurer, by exact policy number or by (part of) the policy holder name. " +
     'Use it when the e-mail gives no policy number, or when `get_policy` does not find the number. ' +
     'Returns a short list; call `get_policy` on the right one for details.',
   inputSchema: {
@@ -21,12 +21,13 @@ export const searchPolicy = defineTool({
         'Company name of the policy holder, or a distinctive part of it, e.g. "Boulangerie Martin".',
       ),
   },
-  async handler({ number, holderName }, { db }) {
+  async handler({ number, holderName }, { db, brokerCode }) {
     if (!number && !holderName) {
       return { error: 'Provide `number` or `holderName`.' };
     }
     const policies = await db.policy.findMany({
       where: {
+        brokerCode,
         ...(number ? { number: number.toUpperCase() } : {}),
         ...(holderName ? { holderNameSearch: { contains: normalizeName(holderName) } } : {}),
       },

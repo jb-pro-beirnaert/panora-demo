@@ -1,13 +1,16 @@
 import {
   missingDocuments,
   REQUIRED_DOCUMENTS,
+  type ActionType,
   type AlertType,
   type AttachmentInput,
+  type ClaimGroundTruth,
+  type ClaimScenarioId,
   type DocumentType,
   type ExtranetClaim,
   type ExtranetCoverage,
   type ExtranetPolicy,
-  type GroundTruth,
+  type NonClaimGroundTruth,
   type Peril,
   type ScenarioId,
   type Verdict,
@@ -52,19 +55,34 @@ export const SCENARIO_ORDER: ScenarioId[] = [
   'duplicate_claim',
   'unreadable_field',
   'late_declaration',
+  'non_claim',
 ];
 
-/** About 35 % simple cases (covered, deductible), the rest traps. */
+/** About 35 % simple cases (covered, deductible), 50 % traps, 15 % e-mails that are not claims. */
 export const SCENARIO_WEIGHTS: Record<ScenarioId, number> = {
   covered: 25,
   deductible: 10,
-  policy_terminated: 9,
-  exclusion: 9,
-  limit_exceeded: 9,
-  missing_document: 9,
-  duplicate_claim: 9,
-  unreadable_field: 10,
-  late_declaration: 10,
+  policy_terminated: 7,
+  exclusion: 7,
+  limit_exceeded: 7,
+  missing_document: 7,
+  duplicate_claim: 7,
+  unreadable_field: 7,
+  late_declaration: 8,
+  non_claim: 15,
+};
+
+/** The action `draftingAgent` should propose for each claim scenario. */
+const EXPECTED_ACTION: Record<ClaimScenarioId, ActionType> = {
+  covered: 'file_claim',
+  deductible: 'file_claim',
+  limit_exceeded: 'file_claim',
+  policy_terminated: 'notify_denial',
+  exclusion: 'notify_denial',
+  missing_document: 'request_documents',
+  duplicate_claim: 'request_documents',
+  unreadable_field: 'request_documents',
+  late_declaration: 'request_documents',
 };
 
 interface Target {
@@ -77,7 +95,7 @@ interface Target {
 
 /** Everything needed to write one claim e-mail. */
 interface ClaimDraft {
-  scenario: ScenarioId;
+  scenario: ClaimScenarioId;
   target: Target;
   incidentDate: string;
   receivedAt: string;
@@ -181,7 +199,7 @@ class EmailFactory {
 
   // --- Scenarios ---
 
-  draft(scenario: ScenarioId): ClaimDraft {
+  draft(scenario: ClaimScenarioId): ClaimDraft {
     const received = this.receivedDate();
     const base = {
       scenario,
@@ -543,7 +561,7 @@ class EmailFactory {
     },
   ): GeneratedEmail {
     const { target } = draft;
-    const groundTruth: GroundTruth = {
+    const groundTruth: ClaimGroundTruth = {
       scenario: draft.scenario,
       requestType: 'claim',
       brokerCode: target.policy.brokerCode,
@@ -562,6 +580,7 @@ class EmailFactory {
       limit: target.coverage.limit,
       deductible: target.coverage.deductible,
       clauseRef: draft.clauseRef,
+      expectedAction: EXPECTED_ACTION[draft.scenario],
     };
     return {
       email: {
@@ -575,7 +594,7 @@ class EmailFactory {
 
   // --- Showcase e-mails (verbatim from specs/00-demo-data-and-scenarios.md §3) ---
 
-  showcase(scenario: ScenarioId, index: number): GeneratedEmail | undefined {
+  showcase(scenario: ClaimScenarioId, index: number): GeneratedEmail | undefined {
     const policyOf = (number: string) =>
       this.world.policies.find((policy) => policy.number === number);
     const signature = (client: Client) =>
@@ -704,6 +723,59 @@ class EmailFactory {
     return undefined;
   }
 
+  // --- Not a claim (scenario 8): a quote request or a cancellation ---
+
+  writeNonClaim(index: number): GeneratedEmail {
+    const client = pick(this.faker, this.world.clients);
+    const brokerage = this.world.brokerages.find(
+      (candidate) => candidate.id === client.brokerageId,
+    )!;
+    const business = BUSINESSES[client.businessIndex]!;
+    const policies = this.world.brokeragePolicies.filter(
+      (policy) => policy.clientId === client.id && policy.knownStatus === 'active',
+    );
+    const cancellation = policies.length > 0 && this.faker.datatype.boolean(0.5);
+    const policy = cancellation ? pick(this.faker, policies) : undefined;
+    const received = this.receivedDate();
+
+    const subject = policy
+      ? pick(this.faker, [
+          `Résiliation du contrat ${policy.number}`,
+          'Demande de résiliation',
+          `Résiliation - ${client.tradeName}`,
+        ])
+      : pick(this.faker, [
+          "Demande de devis pour l'ouverture d'un second local",
+          'Demande de devis assurance',
+          `Devis - ${client.tradeName}`,
+        ]);
+    const request = policy
+      ? `Nous souhaitons résilier notre contrat ${policy.number} (${policy.product}) à sa prochaine échéance, le ${frDate(policy.renewalDate)}. ${pick(this.faker, ['Nous avons trouvé une offre plus adaptée à notre activité.', 'Nous cessons cette activité à la fin de l’année.', 'Merci de nous confirmer la démarche à suivre.'])}`
+      : `${pick(this.faker, ['Nous ouvrons un second établissement', 'Nous allons agrandir nos locaux', 'Nous reprenons un fonds de commerce'])} ${pick(this.faker, ['le mois prochain', 'au début de l’année prochaine', 'dans quelques semaines'])}. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant ${business.area} et le matériel ?`;
+    const body = [this.greeting(brokerage.id), request, this.signature(client)].join('\n\n');
+
+    const groundTruth: NonClaimGroundTruth = {
+      scenario: 'non_claim',
+      requestType: policy ? 'cancellation' : 'quote_request',
+      brokerCode: brokerage.brokerCode,
+      holderName: client.companyName,
+      policyNumber: policy?.number ?? null,
+      policyNumberInEmail: policy !== undefined,
+    };
+    return {
+      email: {
+        messageId: `<demo-${this.seed}-${String(index + 1).padStart(4, '0')}@simulator.local>`,
+        receivedAt: this.receivedAt(received),
+        from: client.email,
+        to: brokerage.inboxEmail,
+        subject,
+        body,
+        attachments: [],
+      },
+      groundTruth,
+    };
+  }
+
   private inboxOf(client: Client): string {
     return this.world.brokerages.find((brokerage) => brokerage.id === client.brokerageId)!
       .inboxEmail;
@@ -718,13 +790,14 @@ function drawScenarios(faker: Faker, allowed: ScenarioId[], count: number): Scen
   return scenarios;
 }
 
-/** Generates `count` claim e-mails about `world`, each with its ground truth. Same seed, same e-mails. */
+/** Generates `count` inbound e-mails about `world`, each with its ground truth. Same seed, same e-mails. */
 export function generateEmails(world: World, options: GenerateEmailsOptions): GeneratedEmail[] {
   const faker = createRandom(options.seed);
   const factory = new EmailFactory(world, faker, options.seed);
   const scenarios = drawScenarios(faker, options.scenarios ?? SCENARIO_ORDER, options.count);
   const showcased = new Set<ScenarioId>();
   return scenarios.map((scenario, index) => {
+    if (scenario === 'non_claim') return factory.writeNonClaim(index);
     if (!showcased.has(scenario)) {
       showcased.add(scenario);
       const showcase = factory.showcase(scenario, index);

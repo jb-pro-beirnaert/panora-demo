@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { toIsoDate } from '../db.js';
 import { defineTool } from './define-tool.js';
+import { findOwnPolicy } from './policy-access.js';
 
 export const getPolicy = defineTool({
   name: 'get_policy',
@@ -11,16 +12,12 @@ export const getPolicy = defineTool({
   inputSchema: {
     number: z.string().trim().min(1).describe('Exact policy number, e.g. "C-48213".'),
   },
-  async handler({ number }, { db }) {
-    const policy = await db.policy.findUnique({
-      where: { number: number.toUpperCase() },
-      include: { insurer: { include: { clauses: { where: { general: true } } } } },
+  async handler({ number }, ctx) {
+    const found = await findOwnPolicy(ctx, number, {
+      insurer: { include: { clauses: { where: { general: true } } } },
     });
-    if (!policy) {
-      return {
-        error: `No policy with number "${number}". Try \`search_policy\` with the holder's name.`,
-      };
-    }
+    if ('error' in found) return found;
+    const { policy } = found;
     return {
       data: {
         number: policy.number,

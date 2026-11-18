@@ -65,6 +65,7 @@ These do not exist until the corresponding version is implemented.
 - `npm run infra:down` — stop and remove containers.
 - `npm run build` / `lint` / `typecheck` / `test` — across all workspaces via Turborepo.
 - `npm run dev -w apps/core-api` — run a script in a single workspace.
+- `npm run token -w apps/mcp-extranet -- read DLM-075` — print an MCP extranet token (`read` or `write`, per brokerage), e.g. for the MCP inspector (V2).
 - `npm run gen:evals -- --seed 7 --count 60` — generate the eval dataset into `evals/datasets/` (V7).
 - `npm run evals` (`-- --matrix` for model comparison, V8) — run evals, write JSON + Markdown report, push scores to Langfuse.
 - `npm run start:docker` — full stack in containers (Compose profile `apps`, V11). Docker images are built per app via `turbo prune --docker`.

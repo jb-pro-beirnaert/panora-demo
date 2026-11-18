@@ -9,6 +9,7 @@ export const readClause = defineTool({
   inputSchema: {
     ref: z.string().trim().min(1).describe('Clause reference, e.g. "CG-HZ-4.2".'),
   },
+  // Clauses are the insurer's general conditions, shared by all its policies: not brokerage-scoped.
   async handler({ ref }, { db }) {
     const normalized = ref.toUpperCase();
     const clause = await db.clause.findUnique({

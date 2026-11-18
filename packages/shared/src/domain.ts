@@ -93,3 +93,7 @@ export type AlertType = z.infer<typeof AlertTypeSchema>;
 
 /** Calendar date, `YYYY-MM-DD`. */
 export const IsoDateSchema = z.iso.date();
+
+/** Action `draftingAgent` proposes to the broker. */
+export const ActionTypeSchema = z.enum(['request_documents', 'file_claim', 'notify_denial']);
+export type ActionType = z.infer<typeof ActionTypeSchema>;

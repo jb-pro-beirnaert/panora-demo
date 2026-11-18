@@ -6,6 +6,10 @@ const EnvSchema = z
     EXTRANET_DATABASE_URL: z
       .string()
       .min(1, 'EXTRANET_DATABASE_URL is required (see .env.example)'),
+    /** Verifies the Bearer tokens of `/mcp` (see `@demo/shared/mcp-token`). */
+    MCP_TOKEN_SECRET: z
+      .string()
+      .min(32, 'MCP_TOKEN_SECRET (32+ characters) is required (see .env.example)'),
     DEMO_MODE: z
       .enum(['true', 'false'])
       .default('false')

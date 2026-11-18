@@ -1,5 +1,6 @@
+import type { McpTokenScope } from '@demo/shared';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import type { z } from 'zod';
 import type { Prisma } from '../generated/prisma/client.js';
 import type { Db } from '../db.js';
@@ -7,8 +8,9 @@ import type { Db } from '../db.js';
 /** Per-request context of a tool call. */
 export interface ToolContext {
   db: Db;
-  /** Brokerage of the calling token. Null until MCP tokens arrive (V2). */
-  brokerCode: string | null;
+  /** Brokerage of the calling token: tools only expose this brokerage's policies. */
+  brokerCode: string;
+  scope: McpTokenScope;
 }
 
 /** A tool either returns data, or an error message written for an LLM (what to try next). */
@@ -18,6 +20,10 @@ export interface ToolDefinition<Shape extends z.ZodRawShape> {
   name: string;
   description: string;
   inputSchema: Shape;
+  /** When set, results are also returned as `structuredContent` (typed results for code callers). */
+  outputSchema?: z.ZodRawShape;
+  /** Defaults to a read-only tool. */
+  annotations?: ToolAnnotations;
   handler: (args: z.infer<z.ZodObject<Shape>>, ctx: ToolContext) => Promise<ToolOutcome>;
 }
 
@@ -27,7 +33,7 @@ export function defineTool<Shape extends z.ZodRawShape>(
   return definition;
 }
 
-async function logCall(
+export async function logCall(
   ctx: ToolContext,
   tool: string,
   params: unknown,
@@ -53,7 +59,7 @@ async function logCall(
   }
 }
 
-/** Registers a read-only tool that writes one `CallLog` row per call. */
+/** Registers a tool that writes one `CallLog` row per call. */
 export function registerTool<Shape extends z.ZodRawShape>(
   server: McpServer,
   ctx: ToolContext,
@@ -74,14 +80,18 @@ export function registerTool<Shape extends z.ZodRawShape>(
     if ('error' in outcome) {
       return { isError: true, content: [{ type: 'text', text: outcome.error }] };
     }
-    return { content: [{ type: 'text', text: JSON.stringify(outcome.data, null, 2) }] };
+    return {
+      content: [{ type: 'text', text: JSON.stringify(outcome.data, null, 2) }],
+      ...(definition.outputSchema ? { structuredContent: outcome.data } : {}),
+    };
   };
   server.registerTool(
     definition.name,
     {
       description: definition.description,
       inputSchema: definition.inputSchema,
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      ...(definition.outputSchema ? { outputSchema: definition.outputSchema } : {}),
+      annotations: definition.annotations ?? { readOnlyHint: true, openWorldHint: false },
     },
     callback as never,
   );

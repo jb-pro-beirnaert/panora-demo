@@ -9,7 +9,8 @@
     "start": "prisma migrate deploy && node --env-file-if-exists=../../.env dist/index.js",
     "lint": "eslint .",
     "typecheck": "prisma generate && tsc --noEmit",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "token": "tsx --env-file-if-exists=../../.env src/scripts/issue-token.ts"
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",

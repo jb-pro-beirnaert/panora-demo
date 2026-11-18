@@ -53,12 +53,23 @@ describe('generateEmails', () => {
     for (const { email, groundTruth } of emails) {
       InboundEmailInputSchema.parse(email);
       GroundTruthSchema.parse(groundTruth);
+      assert.ok(email.receivedAt.slice(0, 10) <= world.referenceDate);
+      const brokerage = world.brokerages.find((b) => b.brokerCode === groundTruth.brokerCode);
+      assert.equal(email.to, brokerage?.inboxEmail);
+
+      if (groundTruth.scenario === 'non_claim') {
+        assert.notEqual(groundTruth.requestType, 'claim');
+        assert.equal(email.attachments.length, 0);
+        assert.equal(groundTruth.policyNumber !== null, groundTruth.requestType === 'cancellation');
+        if (groundTruth.policyNumber) assert.ok(email.body.includes(groundTruth.policyNumber));
+        continue;
+      }
+
       const policy = world.policies.find(
         (candidate) => candidate.number === groundTruth.policyNumber,
       );
       assert.ok(policy, `policy ${groundTruth.policyNumber} exists`);
       assert.ok(world.clauses.some((clause) => clause.ref === groundTruth.clauseRef));
-      assert.ok(email.receivedAt.slice(0, 10) <= world.referenceDate);
       assert.ok(groundTruth.incidentDate <= email.receivedAt.slice(0, 10));
       const text = [email.body, ...email.attachments.map((a) => a.extractedText)].join('\n');
       assert.equal(text.includes(groundTruth.policyNumber), groundTruth.policyNumberInEmail);

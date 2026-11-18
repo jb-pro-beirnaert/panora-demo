@@ -1,9 +1,12 @@
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express, { type ErrorRequestHandler } from 'express';
 import { adminRouter } from './admin/routes.js';
+import { authenticate } from './auth/authenticate.js';
+import { writeToolCalls } from './auth/write-tools.js';
 import { createDb } from './db.js';
 import { loadEnv } from './env.js';
 import { createMcpServer } from './mcp-server.js';
+import { logCall } from './tools/define-tool.js';
 
 // Prisma migrations are applied by `prisma migrate deploy` before this process starts (see package.json).
 const env = loadEnv();
@@ -16,8 +19,39 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'mcp-extranet' });
 });
 
+function jsonRpcError(id: string | number | null, code: number, message: string) {
+  return { jsonrpc: '2.0', error: { code, message }, id };
+}
+
 app.post('/mcp', async (req, res) => {
-  const server = createMcpServer(db);
+  const claims = authenticate(req, env.MCP_TOKEN_SECRET);
+  if (!claims) {
+    res
+      .status(401)
+      .set('WWW-Authenticate', 'Bearer')
+      .json(jsonRpcError(null, -32001, 'Unauthorized: a valid Bearer token is required.'));
+    return;
+  }
+
+  // A read token never sees `file_claim` in tools/list; an explicit call is refused (and logged)
+  // instead of failing with a generic "unknown tool".
+  const deniedCalls = claims.scope === 'write' ? [] : writeToolCalls(req.body);
+  if (deniedCalls.length > 0) {
+    const message = 'Access denied: this tool requires a write token. Your token is read-only.';
+    for (const call of deniedCalls) {
+      await logCall(
+        { db, brokerCode: claims.brokerCode, scope: claims.scope },
+        call.tool,
+        call.args,
+        { error: message },
+        0,
+      );
+    }
+    res.status(403).json(jsonRpcError(deniedCalls[0]?.id ?? null, -32003, message));
+    return;
+  }
+
+  const server = createMcpServer(db, claims);
   // No `sessionIdGenerator`: stateless mode, every request is self-contained.
   const transport = new StreamableHTTPServerTransport({});
   res.on('close', () => {

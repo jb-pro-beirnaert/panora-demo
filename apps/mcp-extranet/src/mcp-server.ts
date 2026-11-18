@@ -1,17 +1,20 @@
+import type { McpTokenClaims } from '@demo/shared/mcp-token';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { Db } from './db.js';
-import { registerReadTools } from './tools/index.js';
+import { registerTools } from './tools/index.js';
 
-/** One MCP server per HTTP request (stateless Streamable HTTP). */
-export function createMcpServer(db: Db): McpServer {
+/** One MCP server per HTTP request (stateless Streamable HTTP), scoped to the caller's token. */
+export function createMcpServer(db: Db, claims: McpTokenClaims): McpServer {
   const server = new McpServer(
-    { name: 'insurer-extranet', version: '1.0.0' },
+    { name: 'insurer-extranet', version: '2.0.0' },
     {
       instructions:
-        'Simulated extranet of the insurers. Read policies, coverages, clauses and claim history. ' +
-        "The insurer's data is authoritative: it can differ from what the brokerage believes.",
+        `Simulated extranet of the insurers, for brokerage ${claims.brokerCode}. ` +
+        "Read your brokerage's policies, coverages, clauses and claim history" +
+        (claims.scope === 'write' ? ', and declare claims.' : '.') +
+        " The insurer's data is authoritative: it can differ from what the brokerage believes.",
     },
   );
-  registerReadTools(server, { db, brokerCode: null });
+  registerTools(server, { db, brokerCode: claims.brokerCode, scope: claims.scope });
   return server;
 }

@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./mcp-token": {
+      "types": "./dist/mcp-token.d.ts",
+      "default": "./dist/mcp-token.js"
     }
   },
   "files": [
@@ -16,7 +20,8 @@
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test 'src/**/*.test.ts'"
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",

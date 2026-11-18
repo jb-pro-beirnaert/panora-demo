@@ -1,21 +1,14 @@
 import {
-  CoverageVerdictSchema,
-  InboundEmailInputSchema,
+  ProcessEmailInputSchema,
+  ProcessEmailResultSchema,
   TriageResultSchema,
   type InboundEmailInput,
+  type ProcessEmailResult,
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
-
-/** Upper bound on LLM round-trips for the coverage agent (about 7 tool calls + the answer). */
-const COVERAGE_MAX_STEPS = 16;
-
-const PreparedEmailSchema = z.object({
-  email: InboundEmailInputSchema,
-  /** The e-mail and its attachments as one text, with named sections the agents cite as sources. */
-  rendered: z.string(),
-  receivedDate: z.iso.date(),
-});
+import { handleClaimWorkflow } from './handle-claim.js';
+import { PreparedEmailSchema, TriagedEmailSchema } from './schemas.js';
 
 function normalizeText(text: string): string {
   return text
@@ -42,12 +35,13 @@ function renderEmail(email: InboundEmailInput): string {
 const prepare = createStep({
   id: 'prepare',
   description: 'Normalizes the e-mail and the text of its attachments into one document.',
-  inputSchema: InboundEmailInputSchema,
+  inputSchema: ProcessEmailInputSchema,
   outputSchema: PreparedEmailSchema,
   execute: async ({ inputData }) => ({
-    email: inputData,
-    rendered: renderEmail(inputData),
-    receivedDate: inputData.receivedAt.slice(0, 10),
+    email: inputData.email,
+    brokerage: inputData.brokerage,
+    rendered: renderEmail(inputData.email),
+    receivedDate: inputData.email.receivedAt.slice(0, 10),
   }),
 });
 
@@ -55,7 +49,7 @@ const triage = createStep({
   id: 'triage',
   description: 'triageAgent classifies the e-mail and extracts the claim facts.',
   inputSchema: PreparedEmailSchema,
-  outputSchema: PreparedEmailSchema.extend({ triage: TriageResultSchema }),
+  outputSchema: TriagedEmailSchema,
   execute: async ({ inputData, mastra }) => {
     const response = await mastra
       .getAgent('triageAgent')
@@ -66,36 +60,50 @@ const triage = createStep({
   },
 });
 
-const analyzeCoverage = createStep({
-  id: 'analyze-coverage',
-  description: "coverageAgent checks the claim against the insurer's extranet through MCP.",
-  inputSchema: PreparedEmailSchema.extend({ triage: TriageResultSchema }),
-  outputSchema: z.object({ triage: TriageResultSchema, coverage: CoverageVerdictSchema }),
-  execute: async ({ inputData, mastra }) => {
-    const prompt = [
-      `The e-mail was received on ${inputData.receivedDate}.`,
-      `Facts extracted by the triage agent (JSON):\n${JSON.stringify(inputData.triage, null, 2)}`,
-      `The e-mail:\n\n${inputData.rendered}`,
-    ].join('\n\n');
-    const response = await mastra.getAgent('coverageAgent').generate(prompt, {
-      maxSteps: COVERAGE_MAX_STEPS,
-      structuredOutput: { schema: CoverageVerdictSchema },
-    });
-    return { triage: inputData.triage, coverage: CoverageVerdictSchema.parse(response.object) };
+const classify = createStep({
+  id: 'classify',
+  description:
+    'Not a claim: records the request type and ends the workflow (no coverage analysis).',
+  inputSchema: TriagedEmailSchema,
+  outputSchema: ProcessEmailResultSchema,
+  execute: async ({ inputData }): Promise<ProcessEmailResult> => {
+    const { requestType } = inputData.triage;
+    if (requestType === 'claim') throw new Error('classify only handles non-claim e-mails');
+    return { outcome: 'classified', requestType };
+  },
+});
+
+const collectResult = createStep({
+  id: 'collect-result',
+  description: 'Returns the result of the branch that ran.',
+  inputSchema: z.object({
+    classify: ProcessEmailResultSchema.optional(),
+    'handle-claim': ProcessEmailResultSchema.optional(),
+  }),
+  outputSchema: ProcessEmailResultSchema,
+  execute: async ({ inputData }) => {
+    const result = inputData.classify ?? inputData['handle-claim'];
+    if (!result) throw new Error('no branch produced a result');
+    return result;
   },
 });
 
 /**
- * V1: prepare → triage → analyze-coverage. The non-claim branch, drafting and human approval
- * arrive in V2.
+ * prepare → triage → not a claim: classify (end) | claim: handle-claim (coverage analysis,
+ * draft/approval loop with human approval, execute).
  */
 export const processEmailWorkflow = createWorkflow({
   id: 'process-email',
-  description: 'Processes one inbound e-mail: triage, then coverage analysis at the insurer.',
-  inputSchema: InboundEmailInputSchema,
-  outputSchema: z.object({ triage: TriageResultSchema, coverage: CoverageVerdictSchema }),
+  description:
+    'Processes one inbound e-mail: triage, then for a claim coverage analysis, a proposed action approved by a broker, and its execution.',
+  inputSchema: ProcessEmailInputSchema,
+  outputSchema: ProcessEmailResultSchema,
 })
   .then(prepare)
   .then(triage)
-  .then(analyzeCoverage)
+  .branch([
+    [async ({ inputData }) => inputData.triage.requestType !== 'claim', classify],
+    [async ({ inputData }) => inputData.triage.requestType === 'claim', handleClaimWorkflow],
+  ])
+  .then(collectResult)
   .commit();

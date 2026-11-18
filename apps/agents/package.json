@@ -11,7 +11,8 @@
     "build": "mastra build",
     "start": "mastra start --env ../../.env",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test 'src/**/*.test.ts'"
   },
   "dependencies": {
     "@demo/shared": "^0.0.0",

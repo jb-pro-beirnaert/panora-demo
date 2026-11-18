@@ -79,6 +79,11 @@ model Claim {
   amount       Int
   status       String
   description  String
+  /// File names of the supporting documents sent with the declaration.
+  documents    String[] @default([])
+  /// Brokerage that filed the claim through `file_claim`; null for the seeded history.
+  filedBy      String?
+  createdAt    DateTime @default(now())
 
   @@index([policyNumber])
 }
@@ -86,8 +91,8 @@ model Claim {
 /// One row per MCP tool call.
 model CallLog {
   id         Int      @id @default(autoincrement())
-  /// Brokerage the calling token belongs to (null until MCP tokens arrive in V2).
-  brokerCode String?
+  /// Brokerage of the calling token.
+  brokerCode String
   tool       String
   params     Json
   result     Json

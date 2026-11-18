@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "CallLog" ALTER COLUMN "brokerCode" SET NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Claim" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "documents" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN     "filedBy" TEXT;

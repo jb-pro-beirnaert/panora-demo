@@ -5,7 +5,10 @@
     "moduleResolution": "bundler",
     "noEmit": true,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    // Mastra's Workflow type (optional `description`) is not assignable to Step under this flag,
+    // which breaks nested workflows (`.then(workflow)`, `.dountil(workflow)`).
+    "exactOptionalPropertyTypes": false
   },
   "include": ["src/**/*"]
 }
