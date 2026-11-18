@@ -9,3 +9,4 @@ specs
 **/.turbo
 **/.claude
 **/skills-lock.json
+**/src/generated

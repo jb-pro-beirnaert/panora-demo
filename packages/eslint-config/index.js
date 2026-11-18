@@ -5,7 +5,16 @@ import tseslint from 'typescript-eslint';
 
 /** Shared flat config for every Node.js workspace. */
 export default tseslint.config(
-  { ignores: ['dist/**', '.mastra/**', '.turbo/**', '.claude/**', 'node_modules/**'] },
+  {
+    ignores: [
+      'dist/**',
+      '.mastra/**',
+      '.turbo/**',
+      '.claude/**',
+      'node_modules/**',
+      'src/generated/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

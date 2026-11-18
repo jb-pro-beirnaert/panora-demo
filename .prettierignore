@@ -7,3 +7,4 @@ CLAUDE.md
 .turbo
 .claude
 skills-lock.json
+**/src/generated

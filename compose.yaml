@@ -43,6 +43,7 @@ services:
         APP: mcp-extranet
     environment:
       MCP_EXTRANET_PORT: 3002
+      EXTRANET_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/extranet
     ports:
       - '${MCP_EXTRANET_PORT:-3002}:3002'
     healthcheck: &app-healthcheck
@@ -66,6 +67,7 @@ services:
         APP: simulator
     environment:
       SIMULATOR_PORT: 3003
+      MCP_EXTRANET_URL: http://mcp-extranet:3002
     ports:
       - '${SIMULATOR_PORT:-3003}:3003'
     healthcheck:
@@ -88,6 +90,8 @@ services:
     environment:
       MASTRA_PORT: 4111
       MASTRA_HOST: 0.0.0.0
+      AGENTS_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/agents
+      MCP_EXTRANET_URL: http://mcp-extranet:3002
     ports:
       - '${MASTRA_PORT:-4111}:4111'
     healthcheck:

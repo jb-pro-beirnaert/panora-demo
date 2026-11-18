@@ -1,2 +1,7 @@
-// Zod schemas shared across services (TriageResult, CoverageVerdict, ...). Filled in during V1.
-export {};
+// Zod schemas shared across services. Every payload crossing a service boundary is validated here.
+export * from './domain.js';
+export * from './inbound-email.js';
+export * from './triage.js';
+export * from './coverage.js';
+export * from './ground-truth.js';
+export * from './extranet-seed.js';

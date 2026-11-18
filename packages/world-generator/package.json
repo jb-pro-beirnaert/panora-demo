@@ -16,13 +16,15 @@
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test 'src/**/*.test.ts'"
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",
     "@demo/tsconfig": "^0.0.0"
   },
   "dependencies": {
+    "@demo/shared": "^0.0.0",
     "@faker-js/faker": "^10.6.0"
   }
 }

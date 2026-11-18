@@ -1,0 +1,99 @@
+// Database of the simulated insurer extranets. Only the MCP extranet server reads or writes it.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PolicyStatus {
+  active
+  suspended
+  terminated
+}
+
+model Insurer {
+  id       String   @id
+  name     String
+  locale   String
+  policies Policy[]
+  clauses  Clause[]
+}
+
+model Policy {
+  number           String       @id
+  insurerId        String
+  insurer          Insurer      @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  holderName       String
+  /// Lower-case, accent-free holder name, for `search_policy`.
+  holderNameSearch String
+  holderSiren      String
+  brokerCode       String
+  product          String
+  status           PolicyStatus
+  startDate        DateTime     @db.Date
+  endDate          DateTime?    @db.Date
+  endReason        String?
+  coverages        Coverage[]
+  claims           Claim[]
+
+  @@index([holderNameSearch])
+  @@index([brokerCode])
+}
+
+model Coverage {
+  id           Int      @id @default(autoincrement())
+  policyNumber String
+  policy       Policy   @relation(fields: [policyNumber], references: [number], onDelete: Cascade)
+  peril        String
+  label        String
+  limit        Int
+  deductible   Int
+  exclusions   String[]
+  clauseRef    String
+
+  @@index([policyNumber])
+}
+
+model Clause {
+  ref       String  @id
+  insurerId String
+  insurer   Insurer @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  title     String
+  text      String
+  /// General clause of the policy (declaration delay, termination…) rather than a coverage clause.
+  general   Boolean
+}
+
+model Claim {
+  number       String   @id
+  policyNumber String
+  policy       Policy   @relation(fields: [policyNumber], references: [number], onDelete: Cascade)
+  date         DateTime @db.Date
+  nature       String
+  amount       Int
+  status       String
+  description  String
+
+  @@index([policyNumber])
+}
+
+/// One row per MCP tool call.
+model CallLog {
+  id         Int      @id @default(autoincrement())
+  /// Brokerage the calling token belongs to (null until MCP tokens arrive in V2).
+  brokerCode String?
+  tool       String
+  params     Json
+  result     Json
+  isError    Boolean
+  durationMs Int
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
