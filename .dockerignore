@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.mastra
+**/*.tsbuildinfo
+.git
+.env
+.env.*
+specs
+**/.turbo
+**/.claude
+**/skills-lock.json

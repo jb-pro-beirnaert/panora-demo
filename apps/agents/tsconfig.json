@@ -1,0 +1,11 @@
+{
+  "extends": "@demo/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*"]
+}

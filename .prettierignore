@@ -1,0 +1,9 @@
+node_modules
+dist
+.mastra
+package-lock.json
+specs
+CLAUDE.md
+.turbo
+.claude
+skills-lock.json
