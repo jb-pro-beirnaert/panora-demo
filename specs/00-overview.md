@@ -22,7 +22,7 @@ La démo prouve les exigences de la fiche *Founding Senior Full Stack Engineer* 
 
 | Couche | Choix |
 | --- | --- |
-| Langage | TypeScript partout (Node.js 22) |
+| Langage | TypeScript partout (Node.js 24) |
 | Monorepo | npm workspaces + Turborepo |
 | Front | Next.js (App Router) + Tailwind + shadcn/ui + next-intl (FR / EN) |
 | Back métier | NestJS + Prisma + PostgreSQL |

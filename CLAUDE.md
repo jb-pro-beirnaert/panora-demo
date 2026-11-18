@@ -24,7 +24,7 @@ The project is a demo built for a job application to Panora (an insurance-broker
 
 ## Stack
 
-TypeScript everywhere (Node.js 22), npm workspaces + Turborepo. Next.js App Router + Tailwind + shadcn/ui + next-intl; NestJS + Prisma + PostgreSQL; BullMQ + Redis; Mastra in framework mode (own server) with Claude models (Qwen via Ollama in V8); MCP server using the official TypeScript MCP SDK over Streamable HTTP; Langfuse (Cloud in V5, self-hosted in V6); `@faker-js/faker`; Docker Compose (`compose.yaml`); GitHub Actions.
+TypeScript everywhere (Node.js 24), npm workspaces + Turborepo. Next.js App Router + Tailwind + shadcn/ui + next-intl; NestJS + Prisma + PostgreSQL; BullMQ + Redis; Mastra in framework mode (own server) with Claude models (Qwen via Ollama in V8); MCP server using the official TypeScript MCP SDK over Streamable HTTP; Langfuse (Cloud in V5, self-hosted in V6); `@faker-js/faker`; Docker Compose (`compose.yaml`); GitHub Actions.
 
 ## Architecture
 
