@@ -2,6 +2,8 @@ import {
   ApprovalDecisionSchema,
   BrokerageContextSchema,
   ClientLookupResultSchema,
+  DraftSchema,
+  RunOptionsSchema,
   CoverageVerdictSchema,
   InboundEmailInputSchema,
   ProposedActionSchema,
@@ -16,6 +18,8 @@ export const PreparedEmailSchema = z.object({
   caseId: z.string().nullable(),
   email: InboundEmailInputSchema,
   brokerage: BrokerageContextSchema,
+  /** Eval run options (models, architecture, context); absent in normal runs. */
+  options: RunOptionsSchema.optional(),
   /** The e-mail and its attachments as one text, with named sections the agents cite as sources. */
   rendered: z.string(),
   receivedDate: z.iso.date(),
@@ -26,6 +30,8 @@ export const TriagedEmailSchema = PreparedEmailSchema.extend({
   triage: TriageResultSchema,
   /** What the brokerage's software knows about the sender (`find_client`); null if unknown. */
   client: ClientLookupResultSchema.nullable(),
+  /** Single-agent architecture (V8): the verdict and first draft, already produced at triage. */
+  precomputed: z.object({ coverage: CoverageVerdictSchema, draft: DraftSchema }).optional(),
 });
 export type TriagedEmail = z.infer<typeof TriagedEmailSchema>;
 

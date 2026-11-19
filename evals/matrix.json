@@ -1,0 +1,98 @@
+{
+  "description": "Configurations compared by `npm run evals -- --matrix`. One agent's model changes at a time against the baseline; plus the single-agent architecture and the measured optimisations.",
+  "configs": [
+    {
+      "name": "baseline",
+      "group": "baseline",
+      "runOptions": {}
+    },
+    {
+      "name": "triage: gpt-4.1-mini",
+      "group": "triage",
+      "runOptions": {
+        "models": {
+          "triage": "openai/gpt-4.1-mini"
+        }
+      }
+    },
+    {
+      "name": "triage: gpt-5.4-nano",
+      "group": "triage",
+      "runOptions": {
+        "models": {
+          "triage": "openai/gpt-5.4-nano"
+        }
+      }
+    },
+    {
+      "name": "coverage: gpt-5.4-mini",
+      "group": "coverage",
+      "runOptions": {
+        "models": {
+          "coverage": "openai/gpt-5.4-mini"
+        }
+      }
+    },
+    {
+      "name": "coverage: gpt-4.1-mini",
+      "group": "coverage",
+      "runOptions": {
+        "models": {
+          "coverage": "openai/gpt-4.1-mini"
+        }
+      }
+    },
+    {
+      "name": "drafting: gpt-5-nano",
+      "group": "drafting",
+      "runOptions": {
+        "models": {
+          "drafting": "openai/gpt-5-nano"
+        }
+      }
+    },
+    {
+      "name": "drafting: gpt-4.1-mini",
+      "group": "drafting",
+      "runOptions": {
+        "models": {
+          "drafting": "openai/gpt-4.1-mini"
+        }
+      }
+    },
+    {
+      "name": "single agent (gpt-6-luna)",
+      "group": "architecture",
+      "runOptions": {
+        "architecture": "single_agent"
+      }
+    },
+    {
+      "name": "reduced context",
+      "group": "optimisation",
+      "runOptions": {
+        "context": "reduced"
+      }
+    },
+    {
+      "name": "triage: qwen3:4b (Ollama)",
+      "group": "triage",
+      "requires": "ollama",
+      "runOptions": {
+        "models": {
+          "triage": "ollama/qwen3:4b"
+        }
+      }
+    },
+    {
+      "name": "drafting: qwen3:4b (Ollama)",
+      "group": "drafting",
+      "requires": "ollama",
+      "runOptions": {
+        "models": {
+          "drafting": "ollama/qwen3:4b"
+        }
+      }
+    }
+  ]
+}

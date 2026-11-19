@@ -1,9 +1,15 @@
-import { detectLanguage, type EmailAccepted, type InboundEmailInput } from '@demo/shared';
+import { detectLanguage, type EmailAccepted, type ReceiveEmailRequest } from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import { AuditService } from '../audit/audit.service.js';
 import { caseReference } from '../cases/case-views.js';
+import { ENV, type Env } from '../env.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PROCESS_EMAIL_QUEUE, type ProcessEmailJob } from '../queues/queue-names.js';
@@ -15,6 +21,7 @@ export class EmailsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
+    @Inject(ENV) private readonly env: Env,
     @InjectQueue(PROCESS_EMAIL_QUEUE) private readonly processEmailQueue: Queue<ProcessEmailJob>,
   ) {}
 
@@ -22,7 +29,11 @@ export class EmailsService {
    * Stores the e-mail, opens a case and queues its processing. Idempotent on `messageId`: the same
    * e-mail received twice returns the existing case.
    */
-  async receive(input: InboundEmailInput): Promise<EmailAccepted> {
+  async receive({ runOptions, ...input }: ReceiveEmailRequest): Promise<EmailAccepted> {
+    // Run options steer models and prompts: evals only, never in production.
+    if (runOptions && !this.env.DEMO_MODE) {
+      throw new BadRequestException('runOptions are only accepted in demo mode.');
+    }
     const existing = await this.findByMessageId(input.messageId);
     if (existing) return { ...existing, created: false };
 
@@ -57,7 +68,12 @@ export class EmailsService {
           },
         });
         const kase = await tx.case.create({
-          data: { brokerageId: brokerage.id, emailId: email.id, clientId: client?.id ?? null },
+          data: {
+            brokerageId: brokerage.id,
+            emailId: email.id,
+            clientId: client?.id ?? null,
+            ...(runOptions ? { runOptions } : {}),
+          },
         });
         await this.audit.record(
           {

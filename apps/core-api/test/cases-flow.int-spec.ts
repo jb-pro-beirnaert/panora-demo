@@ -319,6 +319,25 @@ describe('case lifecycle (Postgres + Redis)', () => {
     expect(view.failureReason).toBe('LLM unavailable');
   });
 
+  it('forwards eval run options to the workflow (demo mode)', async () => {
+    const other = emails.find((e) => e.groundTruth.scenario === 'exclusion')!.email;
+    const runOptions = { models: { drafting: 'openai/gpt-5-nano' }, context: 'reduced' };
+    const { body } = await receive({ ...other, runOptions } as never).expect(202);
+    const processor = new ProcessEmailProcessor(
+      app.get(PrismaService),
+      mastra as never,
+      app.get(AuditService),
+      app.get(RealtimeService),
+    );
+    await processor.process({ data: { caseId: body.caseId } } as never);
+    expect(mastra.started.at(-1)?.input.options).toEqual(runOptions);
+    await receive({
+      ...other,
+      messageId: '<bad-options@x>',
+      runOptions: { models: { triage: 'no' } },
+    } as never).expect(400);
+  });
+
   it('ignores callbacks for a case that no longer exists', async () => {
     await http
       .post('/internal/cases/00000000-0000-0000-0000-000000000000/steps')

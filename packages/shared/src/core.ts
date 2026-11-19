@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { AlertTypeSchema, LocaleSchema, PolicyStatusSchema, VerdictSchema } from './domain.js';
 import { ProposedActionSchema } from './drafting.js';
-import { ProcessEmailResultSchema } from './process-email.js';
+import { ProcessEmailResultSchema, RunOptionsSchema } from './process-email.js';
+import { InboundEmailInputSchema } from './inbound-email.js';
 
 /**
  * Contracts of the Core API (apps/core-api): seed payload, Mastra → Core callbacks, public API
@@ -194,6 +195,12 @@ export const DecisionRequestSchema = z.object({
   comment: z.string().trim().min(1).max(2_000).optional(),
 });
 export type DecisionRequest = z.infer<typeof DecisionRequestSchema>;
+
+/** Body of `POST /emails`: the e-mail, plus run options for evals (demo mode only). */
+export const ReceiveEmailRequestSchema = InboundEmailInputSchema.extend({
+  runOptions: RunOptionsSchema.optional(),
+});
+export type ReceiveEmailRequest = z.infer<typeof ReceiveEmailRequestSchema>;
 
 /** Response of `POST /emails`. */
 export const EmailAcceptedSchema = z.object({

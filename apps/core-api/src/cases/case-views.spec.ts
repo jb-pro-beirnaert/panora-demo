@@ -21,6 +21,7 @@ describe('toCaseSummary', () => {
       status: 'awaiting_approval',
       workflowRunId: 'run-1',
       traceId: null,
+      runOptions: null,
       requestType: 'claim',
       verdict: 'not_covered',
       alerts: ['policy_terminated'],

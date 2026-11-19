@@ -1,18 +1,21 @@
 import {
   ClientLookupResultSchema,
+  CoverageVerdictSchema,
+  DraftSchema,
   ProcessEmailInputSchema,
   ProcessEmailResultSchema,
   TriageResultSchema,
   type InboundEmailInput,
   type ProcessEmailInput,
   type ProcessEmailResult,
+  type RunOptions,
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
 import { reportToolCalls } from '../core-callbacks/agent-events.js';
 import { core } from '../core-callbacks/core-client.js';
 import { classifiedReport, triageReport } from '../core-callbacks/step-reports.js';
-import { env } from '../env.js';
+import { modelSpecOf } from '../models.js';
 import { CLIENT_LOOKUP_KEY } from '../mcp/extranet-client.js';
 import { lookupClient } from '../tools/find-client.js';
 import { annotateSpan, caseContext } from './context.js';
@@ -21,6 +24,14 @@ import { PreparedEmailSchema, TriagedEmailSchema } from './schemas.js';
 
 /** find_client + the structured answer. */
 const TRIAGE_MAX_STEPS = 4;
+/** find_client, the coverage tool calls and the answer. */
+const SINGLE_AGENT_MAX_STEPS = 18;
+
+const SingleAgentResultSchema = z.object({
+  triage: TriageResultSchema,
+  coverage: CoverageVerdictSchema,
+  draft: DraftSchema,
+});
 
 function normalizeText(text: string): string {
   return text
@@ -29,8 +40,25 @@ function normalizeText(text: string): string {
     .trim();
 }
 
-function renderEmail(email: InboundEmailInput): string {
-  const attachments = email.attachments.map(
+/**
+ * Reduced context (V8 optimisation): photos carry no fact the agents need, and blank lines and
+ * signature padding are dropped from attachments.
+ */
+export function usefulAttachments(email: InboundEmailInput, options?: RunOptions) {
+  if (options?.context !== 'reduced') return email.attachments;
+  return email.attachments
+    .filter((attachment) => !attachment.contentType.startsWith('image/'))
+    .map((attachment) => ({
+      ...attachment,
+      extractedText: attachment.extractedText
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .join('\n'),
+    }));
+}
+
+export function renderEmail(email: InboundEmailInput, options?: RunOptions): string {
+  const attachments = usefulAttachments(email, options).map(
     (attachment) =>
       `=== attachment: ${attachment.fileName} (${attachment.contentType}) ===\n${normalizeText(attachment.extractedText)}`,
   );
@@ -60,7 +88,8 @@ const prepare = createStep({
       caseId,
       email: inputData.email,
       brokerage: inputData.brokerage,
-      rendered: renderEmail(inputData.email),
+      ...(inputData.options ? { options: inputData.options } : {}),
+      rendered: renderEmail(inputData.email, inputData.options),
       receivedDate: inputData.email.receivedAt.slice(0, 10),
     };
   },
@@ -73,19 +102,53 @@ const triage = createStep({
   inputSchema: PreparedEmailSchema,
   outputSchema: TriagedEmailSchema,
   execute: async ({ inputData, mastra, tracingContext }) => {
-    const requestContext = caseContext(inputData.brokerage.brokerCode, inputData.caseId);
-    annotateSpan(tracingContext, 'triage', env.TRIAGE_MODEL);
+    const requestContext = caseContext(
+      inputData.brokerage.brokerCode,
+      inputData.caseId,
+      inputData.options,
+    );
+    const single = inputData.options?.architecture === 'single_agent';
+    const model = modelSpecOf(single ? 'coverage' : 'triage', requestContext);
+    annotateSpan(tracingContext, single ? 'single' : 'triage', model);
     const startedAt = Date.now();
-    const response = await mastra
-      .getAgent('triageAgent')
-      .generate(`Extract the facts from this e-mail.\n\n${inputData.rendered}`, {
-        maxSteps: TRIAGE_MAX_STEPS,
-        structuredOutput: { schema: TriageResultSchema },
-        requestContext,
-        tracingContext,
-        onStepFinish: reportToolCalls(inputData.caseId, 'triage'),
-      });
-    const triageResult = TriageResultSchema.parse(response.object);
+    let triageResult;
+    let precomputed;
+    let usage;
+    if (single) {
+      // V8 comparison: one agent produces the triage, the verdict and the first draft at once.
+      const response = await mastra
+        .getAgent('singleAgent')
+        .generate(
+          [
+            `The e-mail was received on ${inputData.receivedDate}.`,
+            `Brokerage locale (language of the internal note): "${inputData.brokerage.locale}".`,
+            `The e-mail:\n\n${inputData.rendered}`,
+          ].join('\n\n'),
+          {
+            maxSteps: SINGLE_AGENT_MAX_STEPS,
+            structuredOutput: { schema: SingleAgentResultSchema },
+            requestContext,
+            tracingContext,
+            onStepFinish: reportToolCalls(inputData.caseId, 'coverage'),
+          },
+        );
+      const result = SingleAgentResultSchema.parse(response.object);
+      triageResult = result.triage;
+      precomputed = { coverage: result.coverage, draft: result.draft };
+      usage = response.usage;
+    } else {
+      const response = await mastra
+        .getAgent('triageAgent')
+        .generate(`Extract the facts from this e-mail.\n\n${inputData.rendered}`, {
+          maxSteps: TRIAGE_MAX_STEPS,
+          structuredOutput: { schema: TriageResultSchema },
+          requestContext,
+          tracingContext,
+          onStepFinish: reportToolCalls(inputData.caseId, 'triage'),
+        });
+      triageResult = TriageResultSchema.parse(response.object);
+      usage = response.usage;
+    }
     // The model is asked to call find_client; if it did not, look the sender up anyway.
     if (!requestContext.has(CLIENT_LOOKUP_KEY)) {
       await lookupClient(requestContext, inputData.email.from);
@@ -93,18 +156,14 @@ const triage = createStep({
     const client = ClientLookupResultSchema.nullable().parse(
       requestContext.get(CLIENT_LOOKUP_KEY) ?? null,
     );
-    annotateSpan(tracingContext, 'triage', env.TRIAGE_MODEL, {
+    annotateSpan(tracingContext, single ? 'single' : 'triage', model, {
       emailLanguage: triageResult.emailLanguage,
     });
     await core.step(
       inputData.caseId,
-      triageReport(triageResult, {
-        model: env.TRIAGE_MODEL,
-        durationMs: Date.now() - startedAt,
-        usage: response.usage,
-      }),
+      triageReport(triageResult, { model, durationMs: Date.now() - startedAt, usage }),
     );
-    return { ...inputData, triage: triageResult, client };
+    return { ...inputData, triage: triageResult, client, ...(precomputed ? { precomputed } : {}) };
   },
 });
 

@@ -1,0 +1,5412 @@
+{
+  "sources": [
+    "matrix-2026-11-19T04-36-00-194Z.json",
+    "matrix-2026-11-19T04-43-47-681Z.json",
+    "matrix-2026-11-19T04-43-56-870Z.json"
+  ],
+  "rows": [
+    {
+      "config": {
+        "name": "baseline",
+        "group": "baseline",
+        "runOptions": {}
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:42:01.143Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "71fbba6d-0d70-45f0-91cd-3a69b8a39332",
+            "traceId": "71fbba6d0d7045f091cd3a69b8a39332",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "8fd8951a-dcb3-4af1-be43-69e76b8acc8d",
+            "traceId": "8fd8951adcb34af1be4369e76b8acc8d",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "093a9bf7-4774-4220-b57b-3cf1536da0dc",
+            "traceId": "093a9bf747744220b57b3cf1536da0dc",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "bf5261ae-2c6d-4070-87ce-bb1f254a9799",
+            "traceId": "bf5261ae2c6d407087cebb1f254a9799",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "6c2b55e0-4c11-4f02-ba45-7264bb37f726",
+            "traceId": "6c2b55e04c114f02ba457264bb37f726",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "ee5a3b18-5626-4e33-a2e6-ea9b8660c3e7",
+            "traceId": "ee5a3b1856264e33a2e6ea9b8660c3e7",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0,
+                "comment": "expected [], got [late_declaration]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0034069966656666666,
+        "latencyMs": {
+          "p50": 77769,
+          "p95": 97929
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "triage: gpt-4.1-mini",
+        "group": "triage",
+        "runOptions": {
+          "models": {
+            "triage": "openai/gpt-4.1-mini"
+          }
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-4.1-mini",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-43-56-870Z",
+        "startedAt": "2026-11-19T04:43:56.870Z",
+        "finishedAt": "2026-11-19T04:44:48.016Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-4.1-mini",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 0.6666666666666666,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 0.6666666666666666,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 0.6666666666666666,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 0.6666666666666666,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 0.5
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "5441833a-9329-4b1e-b1a5-e24a9248927b",
+            "traceId": "5441833a93294b1eb1a5e24a9248927b",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 0,
+                "comment": "expected covered, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0,
+                "comment": "expected [], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 0,
+                "comment": "expected file_claim, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 0,
+                "comment": "failed: coverage/verdict, drafting/action_type"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "8e2276ed-bda6-4187-9aaa-7c5bcc368238",
+            "traceId": "8e2276edbda641879aaa7c5bcc368238",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "bb96ee76-330e-4a86-920a-e83552aecd48",
+            "traceId": "bb96ee76330e4a86920ae83552aecd48",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "a114ff11-eab6-4093-8b69-ec8d49ce5b88",
+            "traceId": "a114ff11eab640938b69ec8d49ce5b88",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "3c29ab1b-2230-411d-9850-f437b58becb4",
+            "traceId": "3c29ab1b2230411d9850f437b58becb4",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 0,
+                "comment": "expected covered, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0,
+                "comment": "expected [], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 0,
+                "comment": "expected file_claim, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 0,
+                "comment": "failed: coverage/verdict, drafting/action_type"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "e9a33de1-661b-4b6f-93d2-7291cb7e0214",
+            "traceId": "e9a33de1661b4b6f93d27291cb7e0214",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0033294691658333334,
+        "latencyMs": {
+          "p50": 32390,
+          "p95": 40447
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "triage: gpt-5.4-nano",
+        "group": "triage",
+        "runOptions": {
+          "models": {
+            "triage": "openai/gpt-5.4-nano"
+          }
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5.4-nano",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:42:22.863Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5.4-nano",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 0.9166666666666666,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.875,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "bcb08792-e9d5-4c6b-b337-8dd28050b2ac",
+            "traceId": "bcb08792e9d54c6bb3378dd28050b2ac",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "5aff084d-9ebe-4fb4-ad0b-f833c6b4c5cf",
+            "traceId": "5aff084d9ebe4fb4ad0bf833c6b4c5cf",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 0.75,
+                "comment": "policyNumber: expected null, got null"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "e8496297-fe88-411b-956c-3820019f4f91",
+            "traceId": "e8496297fe88411b956c3820019f4f91",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 0.75,
+                "comment": "policyNumber: expected null, got C-81725"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "0816356b-9da1-41fc-a945-585aeffc701f",
+            "traceId": "0816356b9da141fca945585aeffc701f",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "b2549c4d-a8f0-44e9-bcf8-5e01424156ec",
+            "traceId": "b2549c4da8f044e9bcf85e01424156ec",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "c07dbeaf-2638-4732-b2da-a56406cbf37f",
+            "traceId": "c07dbeaf26384732b2daa56406cbf37f",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0018176666654999998,
+        "latencyMs": {
+          "p50": 30527,
+          "p95": 30753
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "coverage: gpt-5.4-mini",
+        "group": "coverage",
+        "runOptions": {
+          "models": {
+            "coverage": "openai/gpt-5.4-mini"
+          }
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-5.4-mini",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:42:33.620Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-5.4-mini",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 0.75,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.875,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 0.6944444444444443,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 0.5833333333333333
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "db2ab481-5ed8-4d36-bffd-6d3f6e3df512",
+            "traceId": "db2ab4815ed84d36bffd6d3f6e3df512",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "f5859465-ac26-4ad2-b8f1-7aa87f8fde54",
+            "traceId": "f5859465ac264ad2b8f17aa87f8fde54",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "9760fff4-688a-4817-96ab-a40a6c04001e",
+            "traceId": "9760fff4688a481796aba40a6c04001e",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "506badd6-6f5f-444b-838f-6447a5feecf4",
+            "traceId": "506badd66f5f444b838f6447a5feecf4",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0.5,
+                "comment": "expected [exclusion], got [exclusion, duplicate_claim]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 0,
+                "comment": "CG-HZ-4.1: excerpt not found in the clause; CG-HZ-4.1: excerpt not found in the clause"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "9715d13e-158e-4ada-a408-c813731b02dc",
+            "traceId": "9715d13e158e4adaa408c813731b02dc",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 0.6666666666666666,
+                "comment": "CG-HZ-4.2: excerpt not found in the clause"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "e6473077-79f8-4686-9a7e-68014d295359",
+            "traceId": "e647307779f846869a7e68014d295359",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0,
+                "comment": "expected [], got [late_declaration]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 0.5,
+                "comment": "CG-HZ-4.3 not cited"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.008216356666166666,
+        "latencyMs": {
+          "p50": 62520,
+          "p95": 64724
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "coverage: gpt-4.1-mini",
+        "group": "coverage",
+        "runOptions": {
+          "models": {
+            "coverage": "openai/gpt-4.1-mini"
+          }
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-4.1-mini",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:42:44.372Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-4.1-mini",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 0.6666666666666666,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "a573f948-0a37-47ce-95e1-4ef2cb0bfd7f",
+            "traceId": "a573f9480a3747ce95e14ef2cb0bfd7f",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "3d8041c7-e1f0-41f3-988f-b6f40603c7b5",
+            "traceId": "3d8041c7e1f041f3988fb6f40603c7b5",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 0,
+                "comment": "limit null/30000, deductible null/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 0,
+                "comment": "CG-HZ-12.1: excerpt not found in the clause"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "ff96b49a-c1ca-4cd4-b4c8-5e7a6588df84",
+            "traceId": "ff96b49ac1ca4cd4b4c85e7a6588df84",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "4ca2067f-29fc-45ab-90d4-0e8fb4492cab",
+            "traceId": "4ca2067f29fc45ab90d40e8fb4492cab",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "43dea5a3-ec93-4fd5-8852-1711fa6b96fa",
+            "traceId": "43dea5a3ec934fd588521711fa6b96fa",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 0.5,
+                "comment": "CG-HZ-4.2: excerpt not found in the clause"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "874eaa08-6960-41f8-87c6-50810eebaedb",
+            "traceId": "874eaa08696041f887c650810eebaedb",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0,
+                "comment": "expected [], got [late_declaration]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 0.5,
+                "comment": "CG-HZ-4.3 not cited"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0096100808325,
+        "latencyMs": {
+          "p50": 64411,
+          "p95": 78502
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "drafting: gpt-5-nano",
+        "group": "drafting",
+        "runOptions": {
+          "models": {
+            "drafting": "openai/gpt-5-nano"
+          }
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-5-nano"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:42:55.086Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-5-nano"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "1db13c3b-58eb-40a6-82ce-b3e278573482",
+            "traceId": "1db13c3b58eb40a682ceb3e278573482",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "1449440b-11e7-4d8f-928d-dc5c30f7af20",
+            "traceId": "1449440b11e74d8f928ddc5c30f7af20",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "3d9f472f-3a98-44b0-a99e-1c15625e0cb8",
+            "traceId": "3d9f472f3a9844b0a99e1c15625e0cb8",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 0,
+                "comment": "unknown amounts: 500"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 0,
+                "comment": "failed: drafting/amounts"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "fbdd23a5-a995-4c52-93b0-1ef80cdac3ab",
+            "traceId": "fbdd23a5a9954c5293b01ef80cdac3ab",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "32cb1893-3e20-4c2f-b873-bfbd591d223a",
+            "traceId": "32cb18933e204c2fb873bfbd591d223a",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "83dd061c-965a-4286-8771-a1bec9445bac",
+            "traceId": "83dd061c965a42868771a1bec9445bac",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0046960583325,
+        "latencyMs": {
+          "p50": 96704,
+          "p95": 106828
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "drafting: gpt-4.1-mini",
+        "group": "drafting",
+        "runOptions": {
+          "models": {
+            "drafting": "openai/gpt-4.1-mini"
+          }
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-4.1-mini"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:43:05.732Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-4.1-mini"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 0.5
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "ae0d6b76-40ba-4b5c-af86-14068b9785b0",
+            "traceId": "ae0d6b7640ba4b5caf8614068b9785b0",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "5dcdef0f-edbb-4dbd-888b-24ff10813128",
+            "traceId": "5dcdef0fedbb4dbd888b24ff10813128",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 0,
+                "comment": "unknown amounts: 450"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 0,
+                "comment": "failed: drafting/amounts"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "a2f5a63b-c0e8-4639-a6ac-56ce4bdbdf9c",
+            "traceId": "a2f5a63bc0e84639a6ac56ce4bdbdf9c",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "b637c817-cf85-4e24-99da-4262e783adfc",
+            "traceId": "b637c817cf854e2499da4262e783adfc",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "c69f7e9f-6963-4e10-a020-39e50b469a67",
+            "traceId": "c69f7e9f69634e10a02039e50b469a67",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 0.5,
+                "comment": "draft en/en, note en/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "f4d82a76-8e55-4c4f-8722-5b3c8c2815cf",
+            "traceId": "f4d82a768e554c4f87225b3c8c2815cf",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 0.5,
+                "comment": "draft en/en, note en/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.003589742498666667,
+        "latencyMs": {
+          "p50": 56306,
+          "p95": 72520
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "single agent (gpt-6-luna)",
+        "group": "architecture",
+        "runOptions": {
+          "architecture": "single_agent"
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:43:16.506Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "db9a4673-7bfa-487e-a7d2-5fe097057b05",
+            "traceId": "db9a46737bfa487ea7d25fe097057b05",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "bbb6dd3d-53ed-4555-aee2-260ac72195ee",
+            "traceId": "bbb6dd3d53ed4555aee2260ac72195ee",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "8015b0ab-3268-41a2-8bb9-26b1411f1fb9",
+            "traceId": "8015b0ab326841a28bb926b1411f1fb9",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "3eef1b70-c0fb-4715-b267-b3840164ce9d",
+            "traceId": "3eef1b70c0fb4715b267b3840164ce9d",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "718b9966-4094-4cdb-a93f-d912074645c7",
+            "traceId": "718b996640944cdba93fd912074645c7",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "c35d193c-24cf-4caf-b29c-a9dc0ecc7571",
+            "traceId": "c35d193c24cf4cafb29ca9dc0ecc7571",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0014891266664999998,
+        "latencyMs": {
+          "p50": 42392,
+          "p95": 64601
+        }
+      }
+    },
+    {
+      "config": {
+        "name": "reduced context",
+        "group": "optimisation",
+        "runOptions": {
+          "context": "reduced"
+        }
+      },
+      "models": {
+        "triage": "openai/gpt-5-nano",
+        "coverage": "openai/gpt-6-luna",
+        "drafting": "openai/gpt-6-luna"
+      },
+      "report": {
+        "runId": "2026-11-19T04-36-00-194Z",
+        "startedAt": "2026-11-19T04:36:00.194Z",
+        "finishedAt": "2026-11-19T04:43:27.199Z",
+        "dataset": {
+          "name": "seed-7",
+          "seed": 7,
+          "size": 6
+        },
+        "models": {
+          "triage": "openai/gpt-5-nano",
+          "coverage": "openai/gpt-6-luna",
+          "drafting": "openai/gpt-6-luna"
+        },
+        "judge": null,
+        "aggregates": [
+          {
+            "agent": "triage",
+            "scorer": "request_type",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "email_language",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "triage",
+            "scorer": "fields",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "verdict",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "alerts",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "limit_deductible",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "coverage",
+            "scorer": "citations",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "action_type",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "amounts",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "drafting",
+            "scorer": "languages",
+            "mean": 1,
+            "count": 6,
+            "byLanguage": {
+              "fr": 1,
+              "en": 1
+            }
+          },
+          {
+            "agent": "workflow",
+            "scorer": "case_correct",
+            "mean": 0.8333333333333334,
+            "count": 6,
+            "byLanguage": {
+              "fr": 0.75,
+              "en": 1
+            }
+          }
+        ],
+        "cases": [
+          {
+            "id": "eval-7-001",
+            "scenario": "covered",
+            "language": "fr",
+            "caseId": "834c82f2-5688-4076-aa2a-ee6a666b96af",
+            "traceId": "834c82f256884076aa2aee6a666b96af",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 0,
+                "comment": "expected covered, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 0,
+                "comment": "expected [], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 5000/5000, deductible 0/0"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 0,
+                "comment": "expected file_claim, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 0,
+                "comment": "failed: coverage/verdict, drafting/action_type"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-002",
+            "scenario": "policy_terminated",
+            "language": "fr",
+            "caseId": "9a1b6c30-d236-4b23-aff4-a4bb9fcb4d34",
+            "traceId": "9a1b6c30d2364b23aff4a4bb9fcb4d34",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [policy_terminated], got [policy_terminated]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 30000/30000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-003",
+            "scenario": "missing_document",
+            "language": "fr",
+            "caseId": "6057862d-1634-4250-aa81-3bcf5e4948b7",
+            "traceId": "6057862d16344250aa813bcf5e4948b7",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [missing_document], got [missing_document]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 100000/100000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-004",
+            "scenario": "exclusion",
+            "language": "fr",
+            "caseId": "bb8040b7-0623-4740-96ae-87bd3ca7be3b",
+            "traceId": "bb8040b70623474096ae87bd3ca7be3b",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected fr, got fr"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected not_covered, got not_covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [exclusion], got [exclusion]"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 150000/150000, deductible 1500/1500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected notify_denial, got notify_denial"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft fr/fr, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-012",
+            "scenario": "covered",
+            "language": "en",
+            "caseId": "45df2e38-e31c-4bb2-a6e3-9d4b2a7f7b5a",
+            "traceId": "45df2e38e31c4bb2a6e39d4b2a7f7b5a",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected covered, got covered"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 20000/20000, deductible 300/300"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected file_claim, got file_claim"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          },
+          {
+            "id": "eval-7-015",
+            "scenario": "unreadable_field",
+            "language": "en",
+            "caseId": "cfb16735-2e40-43be-bd16-4131f0610326",
+            "traceId": "cfb167352e4043bebd164131f0610326",
+            "error": null,
+            "scores": [
+              {
+                "agent": "triage",
+                "scorer": "request_type",
+                "value": 1,
+                "comment": "expected claim, got claim"
+              },
+              {
+                "agent": "triage",
+                "scorer": "email_language",
+                "value": 1,
+                "comment": "expected en, got en"
+              },
+              {
+                "agent": "triage",
+                "scorer": "fields",
+                "value": 1
+              },
+              {
+                "agent": "coverage",
+                "scorer": "verdict",
+                "value": 1,
+                "comment": "expected uncertain, got uncertain"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "alerts",
+                "value": 1,
+                "comment": "expected [], got []"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "limit_deductible",
+                "value": 1,
+                "comment": "limit 15000/15000, deductible 500/500"
+              },
+              {
+                "agent": "coverage",
+                "scorer": "citations",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "action_type",
+                "value": 1,
+                "comment": "expected request_documents, got request_documents"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "amounts",
+                "value": 1,
+                "comment": "ok"
+              },
+              {
+                "agent": "drafting",
+                "scorer": "languages",
+                "value": 1,
+                "comment": "draft en/en, note fr/fr"
+              },
+              {
+                "agent": "workflow",
+                "scorer": "case_correct",
+                "value": 1,
+                "comment": "ok"
+              }
+            ]
+          }
+        ],
+        "costPerCaseUsd": 0.0029746524995,
+        "latencyMs": {
+          "p50": 60473,
+          "p95": 72595
+        }
+      }
+    }
+  ]
+}

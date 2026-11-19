@@ -292,3 +292,14 @@ services:
       interval: 3s
       timeout: 10s
       retries: 10
+
+  # --- Local models (profile `ollama`, V8) ---
+  # Then: docker compose exec ollama ollama pull qwen3:4b (tmpfs: models are pulled again after a
+  # recreate, like every other piece of state in this demo).
+  ollama:
+    profiles: [ollama]
+    image: ollama/ollama:latest
+    ports:
+      - '${OLLAMA_PORT:-11434}:11434'
+    tmpfs:
+      - /root/.ollama

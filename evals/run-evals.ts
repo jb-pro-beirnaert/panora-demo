@@ -5,13 +5,21 @@ import {
   type EvalCaseResult,
   type EvalReport,
   type ExtranetClause,
+  type RunOptions,
 } from '@demo/shared';
 import { toCoreSeed, toExtranetSeed } from '@demo/world-generator';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { DatasetSchema, languageOf, worldOf, type EvalCase } from './lib/dataset.js';
 import { checkGate, type Thresholds } from './lib/gate.js';
-import { langfuseFromEnv, pushScore, traceCost } from './lib/langfuse.js';
+import { langfuseFromEnv, pushScore, traceCost, type LangfuseConfig } from './lib/langfuse.js';
+import {
+  effectiveModels,
+  MatrixFileSchema,
+  matrixMarkdown,
+  type MatrixConfig,
+  type MatrixRow,
+} from './lib/matrix.js';
 import { observe } from './lib/observed.js';
 import { aggregate, toMarkdown, withWorkflowScore } from './lib/report.js';
 import { scoreCoverage } from './scorers/coverage.js';
@@ -39,6 +47,13 @@ const { values } = parseArgs({
     gate: { type: 'boolean', default: false },
     'save-baseline': { type: 'boolean', default: false },
     'timeout-s': { type: 'string', default: '300' },
+    /** Compare the configurations of matrix.json on a sample (V8). */
+    matrix: { type: 'boolean', default: false },
+    /** Matrix sample size: two thirds French, one third English cases. */
+    sample: { type: 'string', default: '6' },
+    'with-ollama': { type: 'boolean', default: false },
+    /** Only the matrix configurations whose name contains this text. */
+    only: { type: 'string' },
   },
 });
 
@@ -74,9 +89,17 @@ async function waitForCase(caseId: string, timeoutMs: number): Promise<CaseDetai
   }
 }
 
+interface RunConfig {
+  runOptions?: RunOptions;
+  /** Suffix of the message ids, so the same e-mail can run once per configuration. */
+  tag?: string;
+  judge: boolean;
+}
+
 async function runCase(
   evalCase: EvalCase,
   clauses: ReadonlyMap<string, ExtranetClause>,
+  config: RunConfig,
 ): Promise<EvalCaseResult & { latencyMs: number }> {
   const started = Date.now();
   const base = {
@@ -85,7 +108,15 @@ async function runCase(
     language: languageOf(evalCase),
   };
   try {
-    const { caseId } = (await post(CORE, '/emails', evalCase.email)) as { caseId: string };
+    const email = config.tag
+      ? { ...evalCase.email, messageId: evalCase.email.messageId.replace('@', `.${config.tag}@`) }
+      : evalCase.email;
+    const { caseId } = (await post(CORE, '/emails', {
+      ...email,
+      ...(config.runOptions && Object.keys(config.runOptions).length
+        ? { runOptions: config.runOptions }
+        : {}),
+    })) as { caseId: string };
     const kase = await waitForCase(caseId, Number(values['timeout-s']) * 1_000);
     const latencyMs = Date.now() - started;
     const error =
@@ -101,7 +132,7 @@ async function runCase(
       ...scoreCoverage(truth, observed, clauses),
       ...scoreDrafting(truth, observed),
     ];
-    if (!values['no-judge'] && process.env.OPENAI_API_KEY) {
+    if (config.judge && process.env.OPENAI_API_KEY) {
       scores.push(
         ...(await judge(truth, observed, clauses, {
           apiKey: process.env.OPENAI_API_KEY,
@@ -109,7 +140,9 @@ async function runCase(
         })),
       );
     }
-    console.log(`${evalCase.id} ${base.scenario}/${base.language}: ${kase.status}`);
+    console.log(
+      `${evalCase.id}${config.tag ? ` [${config.tag}]` : ''} ${base.scenario}/${base.language}: ${kase.status}`,
+    );
     return {
       ...base,
       caseId,
@@ -150,6 +183,125 @@ async function pool<T, R>(items: T[], limit: number, task: (item: T) => Promise<
 const percentile = (sorted: number[], p: number) =>
   sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))] ?? 0;
 
+const DEFAULT_MODELS = {
+  triage: process.env.TRIAGE_MODEL ?? 'openai/gpt-5-nano',
+  coverage: process.env.COVERAGE_MODEL ?? 'openai/gpt-6-luna',
+  drafting: process.env.DRAFTING_MODEL ?? 'openai/gpt-6-luna',
+};
+
+/** Pushes the scores to Langfuse and reads the average cost per case from the traces. */
+async function finishWithLangfuse(
+  langfuse: LangfuseConfig | null,
+  results: EvalCaseResult[],
+): Promise<number | null> {
+  if (!langfuse) return null;
+  // Traces are exported asynchronously: give Langfuse a moment before reading costs.
+  await sleep(10_000);
+  const costs: number[] = [];
+  for (const result of results) {
+    if (!result.traceId) continue;
+    for (const score of result.scores) {
+      if (score.value === null) continue;
+      await pushScore(langfuse, {
+        traceId: result.traceId,
+        name: `${score.agent}/${score.scorer}`,
+        value: score.value,
+        comment: score.comment,
+      });
+    }
+    const cost = await traceCost(langfuse, result.traceId);
+    if (cost !== null) costs.push(cost);
+  }
+  return costs.length ? costs.reduce((a, b) => a + b, 0) / costs.length : null;
+}
+
+function buildReport(
+  datasetInfo: { name: string; seed: number },
+  startedAt: string,
+  results: (EvalCaseResult & { latencyMs: number })[],
+  models: Record<string, string>,
+  judgeModel: string | null,
+  costPerCaseUsd: number | null,
+): EvalReport {
+  const latencies = results.map((r) => r.latencyMs).sort((a, b) => a - b);
+  return EvalReportSchema.parse({
+    runId: startedAt.replace(/[:.]/g, '-'),
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    dataset: { ...datasetInfo, size: results.length },
+    models,
+    judge: judgeModel,
+    aggregates: aggregate(results),
+    cases: results.map(({ latencyMs: _latency, ...result }) => result),
+    costPerCaseUsd,
+    latencyMs: { p50: percentile(latencies, 50), p95: percentile(latencies, 95) },
+  });
+}
+
+/** Two thirds French, one third English: both languages appear even in a small sample. */
+function sampleCases(cases: EvalCase[], size: number): EvalCase[] {
+  const english = Math.max(1, Math.round(size / 3));
+  return [
+    ...cases.filter((c) => languageOf(c) === 'fr').slice(0, size - english),
+    ...cases.filter((c) => languageOf(c) === 'en').slice(0, english),
+  ];
+}
+
+async function runMatrix(
+  dataset: { name: string; seed: number },
+  cases: EvalCase[],
+  clauses: ReadonlyMap<string, ExtranetClause>,
+  langfuse: LangfuseConfig | null,
+): Promise<void> {
+  const file = MatrixFileSchema.parse(JSON.parse(readFileSync(here('matrix.json'), 'utf8')));
+  const configs: MatrixConfig[] = file.configs.filter(
+    (config) =>
+      (!config.requires || values['with-ollama']) &&
+      (!values.only || config.name.includes(values.only)),
+  );
+  const sample = sampleCases(cases, Number(values.sample));
+  const startedAt = new Date().toISOString();
+  console.log(`matrix: ${configs.length} configurations × ${sample.length} cases`);
+  const tasks = configs.flatMap((config, index) =>
+    sample.map((evalCase) => ({ config, index, evalCase })),
+  );
+  const results = await pool(tasks, Number(values.concurrency), ({ config, index, evalCase }) =>
+    runCase(evalCase, clauses, {
+      runOptions: config.runOptions,
+      tag: `m${index}`,
+      judge: !values['no-judge'],
+    }),
+  );
+  const rows: MatrixRow[] = [];
+  for (const [index, config] of configs.entries()) {
+    const own = results.filter((_, i) => tasks[i]!.index === index);
+    const models = effectiveModels(config.runOptions, DEFAULT_MODELS);
+    const cost = await finishWithLangfuse(langfuse, own);
+    rows.push({
+      config,
+      models,
+      report: buildReport(
+        dataset,
+        startedAt,
+        own,
+        models,
+        values['no-judge'] ? null : values['judge-model'],
+        cost,
+      ),
+    });
+  }
+  const reports = here('./reports/');
+  mkdirSync(reports, { recursive: true });
+  const stamp = startedAt.replace(/[:.]/g, '-');
+  writeFileSync(
+    new URL(`matrix-${stamp}.json`, reports),
+    `${JSON.stringify({ startedAt, sample: sample.map((c) => c.id), rows }, null, 2)}\n`,
+  );
+  const markdown = matrixMarkdown(rows, sample.length);
+  writeFileSync(new URL('matrix-latest.md', reports), markdown);
+  console.log(markdown);
+}
+
 async function main(): Promise<void> {
   const dataset = DatasetSchema.parse(JSON.parse(readFileSync(here(values.dataset), 'utf8')));
   const inLanguage = values.language
@@ -158,53 +310,31 @@ async function main(): Promise<void> {
   const cases = values.limit ? inLanguage.slice(0, Number(values.limit)) : inLanguage;
   const world = worldOf(dataset);
   const clauses = new Map(world.clauses.map((clause) => [clause.ref, clause]));
+  const langfuse = langfuseFromEnv();
   const startedAt = new Date().toISOString();
-  console.log(`seeding the eval world (seed ${dataset.seed}) and running ${cases.length} cases…`);
+  console.log(`seeding the eval world (seed ${dataset.seed})…`);
   await post(EXTRANET, '/admin/seed', toExtranetSeed(world), true);
   await post(CORE, '/admin/seed', toCoreSeed(world), true);
 
-  const results = await pool(cases, Number(values.concurrency), (c) => runCase(c, clauses));
-
-  // Traces are exported asynchronously: give Langfuse a moment before reading costs.
-  const langfuse = langfuseFromEnv();
-  let costPerCaseUsd: number | null = null;
-  if (langfuse) {
-    await sleep(10_000);
-    const costs: number[] = [];
-    for (const result of results) {
-      if (!result.traceId) continue;
-      for (const score of result.scores) {
-        if (score.value === null) continue;
-        await pushScore(langfuse, {
-          traceId: result.traceId,
-          name: `${score.agent}/${score.scorer}`,
-          value: score.value,
-          comment: score.comment,
-        });
-      }
-      const cost = await traceCost(langfuse, result.traceId);
-      if (cost !== null) costs.push(cost);
-    }
-    if (costs.length) costPerCaseUsd = costs.reduce((a, b) => a + b, 0) / costs.length;
+  const info = { name: dataset.name, seed: dataset.seed };
+  if (values.matrix) {
+    await runMatrix(info, inLanguage, clauses, langfuse);
+    return;
   }
-
-  const latencies = results.map((r) => r.latencyMs).sort((a, b) => a - b);
-  const report: EvalReport = EvalReportSchema.parse({
-    runId: startedAt.replace(/[:.]/g, '-'),
+  console.log(`running ${cases.length} cases…`);
+  const judgeOn = !values['no-judge'] && Boolean(process.env.OPENAI_API_KEY);
+  const results = await pool(cases, Number(values.concurrency), (c) =>
+    runCase(c, clauses, { judge: judgeOn }),
+  );
+  const costPerCaseUsd = await finishWithLangfuse(langfuse, results);
+  const report = buildReport(
+    info,
     startedAt,
-    finishedAt: new Date().toISOString(),
-    dataset: { name: dataset.name, seed: dataset.seed, size: cases.length },
-    models: {
-      triage: process.env.TRIAGE_MODEL ?? 'openai/gpt-5-nano',
-      coverage: process.env.COVERAGE_MODEL ?? 'openai/gpt-6-luna',
-      drafting: process.env.DRAFTING_MODEL ?? 'openai/gpt-6-luna',
-    },
-    judge: values['no-judge'] || !process.env.OPENAI_API_KEY ? null : values['judge-model'],
-    aggregates: aggregate(results),
-    cases: results.map(({ latencyMs: _latency, ...result }) => result),
+    results,
+    DEFAULT_MODELS,
+    judgeOn ? values['judge-model'] : null,
     costPerCaseUsd,
-    latencyMs: { p50: percentile(latencies, 50), p95: percentile(latencies, 95) },
-  });
+  );
 
   const reports = here('./reports/');
   mkdirSync(reports, { recursive: true });
@@ -212,12 +342,10 @@ async function main(): Promise<void> {
   writeFileSync(new URL(`${report.runId}.json`, reports), json);
   writeFileSync(new URL('latest.json', reports), json);
   const langfuseUrl = process.env.NEXT_PUBLIC_LANGFUSE_URL ?? langfuse?.baseUrl ?? '';
-  writeFileSync(
-    new URL('latest.md', reports),
-    toMarkdown(report, (traceId) => `${langfuseUrl}/trace/${traceId}`),
-  );
+  const markdown = toMarkdown(report, (traceId) => `${langfuseUrl}/trace/${traceId}`);
+  writeFileSync(new URL('latest.md', reports), markdown);
   if (values['save-baseline']) writeFileSync(new URL('baseline.json', reports), json);
-  console.log(toMarkdown(report, (traceId) => `${langfuseUrl}/trace/${traceId}`));
+  console.log(markdown);
 
   if (values.gate) {
     const thresholds = JSON.parse(readFileSync(here('thresholds.json'), 'utf8')) as Thresholds;

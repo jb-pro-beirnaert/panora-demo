@@ -12,6 +12,31 @@ export const BrokerageContextSchema = z.object({
 });
 export type BrokerageContext = z.infer<typeof BrokerageContextSchema>;
 
+/**
+ * A model spec: a Mastra model id (`openai/gpt-5-nano`) or `ollama/<model>` for a local model served
+ * by Ollama (OpenAI-compatible API, V8).
+ */
+export const ModelSpecSchema = z.string().regex(/^[a-z0-9-]+\/.+$/);
+
+/**
+ * Per-case run options, used by the eval matrix (V8) to compare models, architectures and
+ * optimisations without restarting the Mastra server. Core accepts them only in demo mode.
+ */
+export const RunOptionsSchema = z.object({
+  models: z
+    .object({
+      triage: ModelSpecSchema.optional(),
+      coverage: ModelSpecSchema.optional(),
+      drafting: ModelSpecSchema.optional(),
+    })
+    .optional(),
+  /** Three specialised agents (default) or a single agent doing everything. */
+  architecture: z.enum(['three_agents', 'single_agent']).optional(),
+  /** `reduced`: attachments trimmed to their useful pages, no attachments for the drafting agent. */
+  context: z.enum(['full', 'reduced']).optional(),
+});
+export type RunOptions = z.infer<typeof RunOptionsSchema>;
+
 /** Input of the Mastra workflow `process-email`. */
 export const ProcessEmailInputSchema = z.object({
   /**
@@ -21,6 +46,7 @@ export const ProcessEmailInputSchema = z.object({
   caseId: z.string().min(1).optional(),
   email: InboundEmailInputSchema,
   brokerage: BrokerageContextSchema,
+  options: RunOptionsSchema.optional(),
 });
 export type ProcessEmailInput = z.infer<typeof ProcessEmailInputSchema>;
 

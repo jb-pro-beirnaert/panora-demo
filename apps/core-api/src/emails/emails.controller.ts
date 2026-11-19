@@ -1,4 +1,8 @@
-import { InboundEmailInputSchema, type EmailAccepted, type InboundEmailInput } from '@demo/shared';
+import {
+  ReceiveEmailRequestSchema,
+  type EmailAccepted,
+  type ReceiveEmailRequest,
+} from '@demo/shared';
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { EmailsService } from './emails.service.js';
 
@@ -10,7 +14,7 @@ export class EmailsController {
   @Post()
   @HttpCode(202)
   receive(
-    @Body({ schema: InboundEmailInputSchema }) input: InboundEmailInput,
+    @Body({ schema: ReceiveEmailRequestSchema }) input: ReceiveEmailRequest,
   ): Promise<EmailAccepted> {
     return this.emails.receive(input);
   }

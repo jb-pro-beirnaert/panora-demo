@@ -1,4 +1,4 @@
-import type { ProcessEmailInput } from '@demo/shared';
+import { RunOptionsSchema, type ProcessEmailInput } from '@demo/shared';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
@@ -56,6 +56,7 @@ export class ProcessEmailProcessor extends WorkerHost {
         })),
       },
       brokerage: { brokerCode: kase.brokerage.brokerCode, locale: kase.brokerage.locale },
+      ...(kase.runOptions ? { options: RunOptionsSchema.parse(kase.runOptions) } : {}),
     };
 
     // The run id is stored before the run starts, so no callback can precede it.

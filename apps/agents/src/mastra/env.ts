@@ -37,6 +37,8 @@ const EnvSchema = z
     LANGFUSE_SECRET_KEY: z.string().optional(),
     LANGFUSE_BASE_URL: z.url().default('https://cloud.langfuse.com'),
     LANGFUSE_ENVIRONMENT: z.string().default('local'),
+    /** Ollama's URL, for `ollama/<model>` specs (V8, local Qwen). */
+    OLLAMA_BASE_URL: z.url().default('http://localhost:11434'),
     /** Light model: extraction only. */
     TRIAGE_MODEL: ModelIdSchema.default('openai/gpt-5-nano'),
     /** Model for multi-step tool use and reasoning over clauses. */

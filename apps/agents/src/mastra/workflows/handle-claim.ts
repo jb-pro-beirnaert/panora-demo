@@ -18,7 +18,7 @@ import {
   draftReport,
   executeReport,
 } from '../core-callbacks/step-reports.js';
-import { env } from '../env.js';
+import { modelSpecOf } from '../models.js';
 import { extranetTools } from '../mcp/extranet-client.js';
 import { annotateSpan, caseContext } from './context.js';
 import { actionTypeProblem, buildClaimFiling, toProposedAction } from './claim-filing.js';
@@ -50,7 +50,23 @@ const analyzeCoverage = createStep({
   inputSchema: TriagedEmailSchema,
   outputSchema: ClaimLoopStateSchema,
   execute: async ({ inputData, mastra, tracingContext }) => {
-    annotateSpan(tracingContext, 'coverage', env.COVERAGE_MODEL, {
+    const requestContext = caseContext(
+      inputData.brokerage.brokerCode,
+      inputData.caseId,
+      inputData.options,
+    );
+    const model = modelSpecOf('coverage', requestContext);
+    if (inputData.precomputed) {
+      // Single-agent architecture: the verdict was produced at triage.
+      for (const report of coverageReports(inputData.precomputed.coverage, {
+        model,
+        durationMs: 0,
+      })) {
+        await core.step(inputData.caseId, report);
+      }
+      return { claim: inputData, coverage: inputData.precomputed.coverage, rounds: [] };
+    }
+    annotateSpan(tracingContext, 'coverage', model, {
       emailLanguage: inputData.triage.emailLanguage,
     });
     const prompt = [
@@ -63,13 +79,13 @@ const analyzeCoverage = createStep({
     const response = await mastra.getAgent('coverageAgent').generate(prompt, {
       maxSteps: COVERAGE_MAX_STEPS,
       structuredOutput: { schema: CoverageVerdictSchema },
-      requestContext: caseContext(inputData.brokerage.brokerCode, inputData.caseId),
+      requestContext,
       tracingContext,
       onStepFinish: reportToolCalls(inputData.caseId, 'coverage'),
     });
     const coverage = CoverageVerdictSchema.parse(response.object);
     for (const report of coverageReports(coverage, {
-      model: env.COVERAGE_MODEL,
+      model,
       durationMs: Date.now() - startedAt,
       usage: response.usage,
     })) {
@@ -90,7 +106,11 @@ function draftingPrompt(state: ClaimLoopState): string {
     `The e-mail was received on ${claim.receivedDate}.`,
     `Coverage verdict from the insurer's extranet (JSON):\n${JSON.stringify(coverage, null, 2)}`,
     `Facts extracted by the triage agent (JSON):\n${JSON.stringify(claim.triage, null, 2)}`,
-    `The inbound e-mail:\n\n${claim.rendered}`,
+    // Reduced context (V8): the drafting agent works from the facts and the verdict; it only needs
+    // the e-mail itself (greeting, tone), not the attachments.
+    claim.options?.context === 'reduced'
+      ? `The inbound e-mail (attachments omitted):\n\nFrom: ${claim.email.from}\nSubject: ${claim.email.subject}\n\n${claim.email.body}`
+      : `The inbound e-mail:\n\n${claim.rendered}`,
   ];
   if (rounds.length > 0) {
     const history = rounds.map(({ action, decision }) =>
@@ -125,27 +145,37 @@ const draft = createStep({
   inputSchema: ClaimLoopStateSchema,
   outputSchema: DraftedStateSchema,
   execute: async ({ inputData, mastra, tracingContext }) => {
-    annotateSpan(tracingContext, 'drafting', env.DRAFTING_MODEL, {
-      emailLanguage: inputData.claim.triage.emailLanguage,
+    const { claim } = inputData;
+    const requestContext = caseContext(claim.brokerage.brokerCode, claim.caseId, claim.options);
+    const model = modelSpecOf('drafting', requestContext);
+    annotateSpan(tracingContext, 'drafting', model, {
+      emailLanguage: claim.triage.emailLanguage,
       revision: inputData.rounds.length + 1,
     });
     const agent = mastra.getAgent('draftingAgent');
-    const filing = buildClaimFiling(inputData.claim, inputData.coverage);
+    const filing = buildClaimFiling(claim, inputData.coverage);
     const prompt = draftingPrompt(inputData);
     const startedAt = Date.now();
-
-    const first = await agent.generate(prompt, {
-      structuredOutput: { schema: DraftSchema },
-      tracingContext,
-    });
-    let usage: Usage | undefined = first.usage;
-    let result: Draft = DraftSchema.parse(first.object);
+    let usage: Usage | undefined;
+    let result: Draft;
+    if (claim.precomputed && inputData.rounds.length === 0) {
+      // Single-agent architecture: the first draft was produced at triage.
+      result = claim.precomputed.draft;
+    } else {
+      const first = await agent.generate(prompt, {
+        structuredOutput: { schema: DraftSchema },
+        requestContext,
+        tracingContext,
+      });
+      usage = first.usage;
+      result = DraftSchema.parse(first.object);
+    }
     // The action type must be executable: one corrective retry, then fail the step.
     const problem = actionTypeProblem(result.actionType, filing);
     if (problem) {
       const retry = await agent.generate(
         `${prompt}\n\nYour previous answer was invalid: ${problem} Answer again.`,
-        { structuredOutput: { schema: DraftSchema }, tracingContext },
+        { structuredOutput: { schema: DraftSchema }, requestContext, tracingContext },
       );
       usage = addUsage(usage, retry.usage);
       result = DraftSchema.parse(retry.object);
@@ -156,7 +186,7 @@ const draft = createStep({
     await core.step(
       inputData.claim.caseId,
       draftReport(action, {
-        model: env.DRAFTING_MODEL,
+        model,
         durationMs: Date.now() - startedAt,
         usage,
       }),

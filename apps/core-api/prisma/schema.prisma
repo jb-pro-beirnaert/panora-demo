@@ -145,6 +145,8 @@ model Case {
    * Langfuse trace id: one trace per case (initial run and every resume).
    */
   traceId         String?
+  /** Eval run options (models, architecture, context), demo mode only. */
+  runOptions      Json?
   /**
    * Filled as the workflow progresses (language-neutral values).
    */
