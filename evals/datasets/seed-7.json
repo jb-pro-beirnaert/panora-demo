@@ -1,0 +1,2582 @@
+{
+  "name": "seed-7",
+  "seed": 7,
+  "mix": {
+    "en": 0.4
+  },
+  "cases": [
+    {
+      "id": "eval-7-001",
+      "email": {
+        "messageId": "<eval-7-001@evals.local>",
+        "receivedAt": "2026-11-16T09:12:00.000Z",
+        "from": "contact@transports-lefevre.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Bris de glace camion AB-456-EF",
+        "body": "Bonjour,\n\nLe pare-brise de notre camion AB-456-EF a été fissuré par un projectile sur l'A1 le 15/11. Ci-joint la facture du réparateur (420 €). Contrat F-77102.\n\nCordialement,\nFrancia Lefèvre\nTransports Lefèvre SAS\n03 00 75 69 60",
+        "attachments": [
+          {
+            "fileName": "facture_vitrage.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE MARTY\nFACTURE N° 2026-570\nDate : 16/11/2026\nClient : Transports Lefèvre SAS, 629 Place Saint-Jacques, 52813 Les Abymes\nObjet : réparation suite à sinistre bris de glace — véhicule AB-456-EF\nMain d'œuvre ........ 140,00 €\nFournitures ......... 210,00 €\nTotal HT : 350,00 €\nTVA 20 % : 70,00 €\nTotal TTC : 420,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Lefèvre SAS",
+        "policyNumber": "F-77102",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 420,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Bris de glace",
+        "limit": 5000,
+        "deductible": 0,
+        "clauseRef": "CG-AT-7.1",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-002",
+      "email": {
+        "messageId": "<eval-7-002@evals.local>",
+        "receivedAt": "2026-11-17T07:48:00.000Z",
+        "from": "contact@boulangerie-martin.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Dégât des eaux dans le fournil",
+        "body": "Bonjour,\n\nUne fuite au plafond a inondé le fournil cette nuit. Vous trouverez le constat et la facture du plombier (1 450 €).\n\nCordialement,\nJude Martin\nBoulangerie Martin SARL\n05 25 91 57 64",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Boulangerie Martin SARL — SIREN 812456931\nDate du sinistre : 17/11/2026\nLieu : 5343 Impasse d'Abbeville, 34524 Dunkerque\n--- page 2 ---\nCirconstances : Fuite au plafond vers 3 h du matin, le fournil a été inondé.\nSignature de l'assuré : Jude Martin\nFait le 17/11/2026"
+          },
+          {
+            "fileName": "facture_plombier.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE BLANCHARD\nFACTURE N° 2026-738\nDate : 17/11/2026\nClient : Boulangerie Martin SARL, 5343 Impasse d'Abbeville, 34524 Dunkerque\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 483,33 €\nFournitures ......... 725,00 €\nTotal HT : 1 208,33 €\nTVA 20 % : 241,67 €\nTotal TTC : 1 450,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "policy_terminated",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Martin SARL",
+        "policyNumber": "C-48213",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 1450,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "policy_terminated",
+        "alerts": ["policy_terminated"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 30000,
+        "deductible": 300,
+        "clauseRef": "CG-HZ-12.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-003",
+      "email": {
+        "messageId": "<eval-7-003@evals.local>",
+        "receivedAt": "2026-11-17T08:05:00.000Z",
+        "from": "direction@garage-bernard.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Incendie atelier",
+        "body": "Bonjour,\n\nUn départ de feu dans notre atelier hier soir. Que devons-nous faire ?\n\nCordialement,\nGuérin Bernard\nGarage Bernard SARL\n03 78 68 90 82",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "missing_document",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Garage Bernard SARL",
+        "policyNumber": "C-81725",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": null,
+        "documentsMissing": ["fire_report", "invoice_or_quote"],
+        "verdict": "uncertain",
+        "reason": "missing_document",
+        "alerts": ["missing_document"],
+        "coverageLabel": "Incendie",
+        "limit": 100000,
+        "deductible": 1500,
+        "clauseRef": "CG-BO-3.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-004",
+      "email": {
+        "messageId": "<eval-7-004@evals.local>",
+        "receivedAt": "2026-11-17T15:57:00.000Z",
+        "from": "accueil@fromagerie-gaillard.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Incendie dans nos locaux",
+        "body": "Bonjour Madame, Monsieur,\n\nHier, un court-circuit sur un appareil a provoqué un incendie dans la cave d’affinage. Le feu a pris très vite parce que nous stockions des bidons de solvant dans la pièce, en attendant l'armoire de sécurité que nous avions commandée. Vous trouverez ci-joint le rapport d'intervention des pompiers, le devis et des photos. Pouvez-vous déclarer le sinistre ?\n\nCordialement,\nÉpiphane Gaillard\nFromagerie Gaillard SARL\n03 38 13 92 70",
+        "attachments": [
+          {
+            "fileName": "rapport_pompiers.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERVICE DÉPARTEMENTAL D'INCENDIE ET DE SECOURS\nRAPPORT D'INTERVENTION\nDate de l'intervention : 16/11/2026\nAdresse : 62 Rue Oberkampf, 64149 Créteil\nNature : feu de local professionnel\nObservations : Un court-circuit sur un appareil a provoqué un incendie dans la cave d’affinage."
+          },
+          {
+            "fileName": "devis_renovation.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉNOVATION FLEURY\nDEVIS N° 2026-516\nDate : 16/11/2026\nClient : Fromagerie Gaillard SARL, 62 Rue Oberkampf, 64149 Créteil\nObjet : réparation suite à sinistre incendie\nMain d'œuvre ........ 8 513,33 €\nFournitures ......... 12 770,00 €\nTotal HT : 21 283,33 €\nTVA 20 % : 4 256,67 €\nTotal TTC : 25 540,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Un court-circuit sur un appareil a provoqué un incendie dans la cave d’affinage."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "exclusion",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fromagerie Gaillard SARL",
+        "policyNumber": "C-80682",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": 25540,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "exclusion",
+        "alerts": ["exclusion"],
+        "coverageLabel": "Incendie",
+        "limit": 150000,
+        "deductible": 1500,
+        "clauseRef": "CG-HZ-4.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-005",
+      "email": {
+        "messageId": "<eval-7-005@evals.local>",
+        "receivedAt": "2026-11-17T12:46:00.000Z",
+        "from": "contact@garage-legrand.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Sinistre dégât des eaux - Garage Legrand",
+        "body": "Bonjour,\n\nAvant-hier, le chauffe-eau a lâché et a inondé l'atelier. Vous trouverez ci-joint le constat et le devis (50 000 €). Merci de nous tenir informés de la suite.\n\nCordialement,\nAlbert Legrand\nGarage Legrand\n02 67 52 82 71",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Garage Legrand SARL — SIREN 134933506\nDate du sinistre : 15/11/2026\nLieu : 7 Boulevard des Lombards, 62656 Aubervilliers\n--- page 2 ---\nCirconstances : Le chauffe-eau a lâché et a inondé l'atelier.\nSignature de l'assuré : Albert Legrand\nFait le 17/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE ROBERT\nDEVIS N° 2026-348\nDate : 16/11/2026\nClient : Garage Legrand SARL, 7 Boulevard des Lombards, 62656 Aubervilliers\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 16 666,67 €\nFournitures ......... 25 000,00 €\nTotal HT : 41 666,67 €\nTVA 20 % : 8 333,33 €\nTotal TTC : 50 000,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Garage Legrand SARL",
+        "policyNumber": "C-47545",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 50000,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 30000,
+        "deductible": 500,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-006",
+      "email": {
+        "messageId": "<eval-7-006@evals.local>",
+        "receivedAt": "2026-11-16T12:35:00.000Z",
+        "from": "direction@transports-dubois.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Incendie dans nos locaux",
+        "body": "Bonjour,\n\nLe 14/11, un départ de feu s'est déclaré dans le dépôt. Vous trouverez ci-joint le rapport d'intervention des pompiers et la facture (1 150 €). Merci de faire le nécessaire auprès de l'assureur.\n\nBien cordialement,\nMamert Dubois\nTransports Dubois SAS\n04 61 99 45 09",
+        "attachments": [
+          {
+            "fileName": "rapport_pompiers.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERVICE DÉPARTEMENTAL D'INCENDIE ET DE SECOURS\nRAPPORT D'INTERVENTION\nDate de l'intervention : 14/11/2026\nAdresse : 6 Passage du Chat-qui-Pêche, 34250 Toulouse\nNature : feu de local professionnel\nObservations : Un départ de feu s'est déclaré dans le dépôt."
+          },
+          {
+            "fileName": "facture_renovation.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉNOVATION REMY\nFACTURE N° 2026-947\nDate : 16/11/2026\nClient : Transports Dubois SAS, 6 Passage du Chat-qui-Pêche, 34250 Toulouse\nObjet : réparation suite à sinistre incendie\nMain d'œuvre ........ 383,33 €\nFournitures ......... 575,00 €\nTotal HT : 958,33 €\nTVA 20 % : 191,67 €\nTotal TTC : 1 150,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "deductible",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Dubois SAS",
+        "policyNumber": "C-27445",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": 1150,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "deductible",
+        "alerts": [],
+        "coverageLabel": "Incendie",
+        "limit": 300000,
+        "deductible": 1000,
+        "clauseRef": "CG-AT-4.1",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-007",
+      "email": {
+        "messageId": "<eval-7-007@evals.local>",
+        "receivedAt": "2026-11-16T09:52:00.000Z",
+        "from": "contact@boulangerie-martinez.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Dégât des eaux dans le fournil",
+        "body": "Bonjour,\n\nLe 15/11, une fuite au plafond a inondé le fournil. Vous trouverez ci-joint le constat et le devis. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nTanguy Martinez\nBoulangerie Martinez SARL\n03 17 81 12 59",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Boulangerie Martinez SARL — SIREN 338231590\nDate du sinistre : 15/11/2026\nLieu : 3 Allée de la Paix, 63269 Bordeaux\n--- page 2 ---\nCirconstances : Une fuite au plafond a inondé le fournil.\nSignature de l'assuré : Tanguy Martinez\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE CHEVALIER\nDEVIS N° 2026-698\nDate : 15/11/2026\nClient : Boulangerie Martinez SARL, 3 Allée de la Paix, 63269 Bordeaux\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 1 496,67 €\nFournitures ......... 2 245,00 €\nTotal HT : 3 741,67 €\nTVA 20 % : 748,33 €\nTotal TTC : 4 490,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "duplicate_claim",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Martinez SARL",
+        "policyNumber": "C-38332",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 4490,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "duplicate_claim",
+        "alerts": ["duplicate_claim"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 150,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-008",
+      "email": {
+        "messageId": "<eval-7-008@evals.local>",
+        "receivedAt": "2026-11-18T11:03:00.000Z",
+        "from": "direction@imprimerie-paul.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Dégât des eaux dans l'atelier d'impression",
+        "body": "Bonjour Danielle,\n\nLa semaine dernière (mardi ou mercredi, je ne sais plus exactement), un tuyau a cédé et l'eau s'est répandue dans l'atelier d'impression. Vous trouverez ci-joint le constat et le devis. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nConception Paul\nImprimerie Paul\n01 18 01 65 48",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Imprimerie Paul — SIREN 452667991\nN° de contrat : C-85722\nDate du sinistre : (non renseignée)\nLieu : 2516 Place Saint-Denis, 97104 Tourcoing\n--- page 2 ---\nCirconstances : Un tuyau a cédé et l'eau s'est répandue dans l'atelier d'impression.\nSignature de l'assuré : Conception Paul\nFait le 18/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE ANDRE\nDEVIS N° 2026-847\nDate : 17/11/2026\nClient : Imprimerie Paul, 2516 Place Saint-Denis, 97104 Tourcoing\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 1 483,33 €\nFournitures ......... 2 225,00 €\nTotal HT : 3 708,33 €\nTVA 20 % : 741,67 €\nTotal TTC : 4 450,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "unreadable_field",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Imprimerie Paul",
+        "policyNumber": "C-85722",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": false,
+        "nature": "water_damage",
+        "amount": 4450,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "unreadable_field",
+        "alerts": [],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 30000,
+        "deductible": 150,
+        "clauseRef": "CG-AT-4.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-009",
+      "email": {
+        "messageId": "<eval-7-009@evals.local>",
+        "receivedAt": "2026-11-18T10:07:00.000Z",
+        "from": "gerance@fromagerie-petit.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Bris de glace",
+        "body": "Bonjour Madame, Monsieur,\n\nJe reviens vers vous au sujet d'un sinistre que nous n'avions pas encore déclaré, faute de temps avec l'activité de ces dernières semaines. Le 12/10/2026, nous avons constaté des dégâts sur la vitrine réfrigérée. Elle a été brisée par un projectile lancé depuis la rue. Vous trouverez ci-joint la facture. Merci de faire le nécessaire auprès de l'assureur.\n\nCordialement,\nAmarande Petit\nFromagerie Petit SARL\n02 18 76 59 27",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE LEFEVRE\nFACTURE N° 2026-385\nDate : 18/11/2026\nClient : Fromagerie Petit SARL, 6109 Rue Zadkine, 74669 Cergy\nObjet : réparation suite à sinistre bris de glace\nMain d'œuvre ........ 166,67 €\nFournitures ......... 250,00 €\nTotal HT : 416,67 €\nTVA 20 % : 83,33 €\nTotal TTC : 500,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "late_declaration",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fromagerie Petit SARL",
+        "policyNumber": "C-98887",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-10-12",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 500,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "late_declaration",
+        "alerts": ["late_declaration"],
+        "coverageLabel": "Bris de glace",
+        "limit": 8000,
+        "deductible": 0,
+        "clauseRef": "CG-HZ-3.1",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-010",
+      "email": {
+        "messageId": "<eval-7-010@evals.local>",
+        "receivedAt": "2026-11-17T14:35:00.000Z",
+        "from": "accueil@pharmacie-bertrand.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Résiliation du contrat C-58459",
+        "body": "Bonjour Madame, Monsieur,\n\nNous souhaitons résilier notre contrat C-58459 (Multirisque professionnelle) à sa prochaine échéance, le 27/04/2027. Nous cessons cette activité à la fin de l’année.\n\nBien cordialement,\nAgilberte Bertrand\nPharmacie Bertrand\n02 48 45 88 76",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "cancellation",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Pharmacie Bertrand EURL",
+        "policyNumber": "C-58459",
+        "policyNumberInEmail": true
+      }
+    },
+    {
+      "id": "eval-7-011",
+      "email": {
+        "messageId": "<eval-7-011@evals.local>",
+        "receivedAt": "2026-11-18T18:57:00.000Z",
+        "from": "contact@boulangerie-marchal.fr",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Dégât des eaux - Boulangerie Marchal",
+        "body": "Bonjour,\n\nHier soir, une canalisation a cédé dans le fournil et l'eau a abîmé une partie du matériel. Le plombier est intervenu ce matin, sa facture s'élève à 1 850 €. Pouvez-vous déclarer le sinistre auprès de notre assureur ?\n\nCordialement,\nMartine Marchal\nBoulangerie Marchal",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "unknown_client",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "en",
+        "holderName": "Boulangerie Marchal",
+        "policyNumber": null,
+        "policyNumberInEmail": false,
+        "nature": "water_damage",
+        "amount": 1850,
+        "verdict": "uncertain",
+        "alerts": ["unknown_client"],
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-012",
+      "email": {
+        "messageId": "<eval-7-012@evals.local>",
+        "receivedAt": "2026-11-17T08:40:00.000Z",
+        "from": "facilities@brightwave-solutions.com",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Water damage in our Lyon office",
+        "body": "Hello,\n\nA pipe burst in our Lyon office last night and damaged two workstations. Incident report and repair quote attached (2,300 EUR). Policy C-51877.\n\nBest regards,\nEliezer Wisozk\nBrightwave Solutions\n+33 5 03 33 87 92",
+        "attachments": [
+          {
+            "fileName": "incident_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nINCIDENT REPORT\nInsured: Brightwave Solutions — SIREN 409979119\nDate of incident: 16 November 2026\nPlace: 30 quai Perrache, 75011 Lyon\n--- page 2 ---\nCircumstances: A pipe burst and damaged two workstations\nSigned by the insured: Eliezer Wisozk\nDate: 17 November 2026"
+          },
+          {
+            "fileName": "repair_quote.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nVIDAL PLUMBING\nQUOTE No. 2026-836\nDate: 16 November 2026\nCustomer: Brightwave Solutions, 30 quai Perrache, 75011 Lyon\nSubject: repairs after water damage\nLabour .............. EUR 766.67\nParts ............... EUR 1,150.00\nTotal excl. VAT: EUR 1,916.67\nVAT 20%: EUR 383.33\nTotal incl. VAT: EUR 2,300.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Brightwave Solutions",
+        "policyNumber": "C-51877",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 2300,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 300,
+        "clauseRef": "CG-HZ-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-013",
+      "email": {
+        "messageId": "<eval-7-013@evals.local>",
+        "receivedAt": "2026-11-18T10:14:00.000Z",
+        "from": "contact@fleuriste-aubry.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Accident véhicule LW-260-JH",
+        "body": "Bonjour Madame, Monsieur,\n\nJe reviens vers vous au sujet d'un sinistre que nous n'avions pas encore déclaré, faute de temps avec l'activité de ces dernières semaines. Le 21/10/2026, notre Renault Master immatriculé LW-260-JH a percuté un poteau en manœuvrant sur le périphérique nord de Lille. Vous trouverez ci-joint le constat et le devis. Merci de faire le nécessaire auprès de l'assureur.\n\nMerci par avance,\nArsinoé Aubry\nFleuriste Aubry SARL\n02 51 69 24 15",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE D'ACCIDENT AUTOMOBILE\nAssuré : Fleuriste Aubry SARL — SIREN 445325715\nDate du sinistre : 21/10/2026\nLieu : la N7 près de Valence\nVéhicule : Renault Master, immatriculation LW-260-JH\n--- page 2 ---\nCirconstances : Notre Renault Master immatriculé LW-260-JH a percuté un poteau en manœuvrant sur le périphérique nord de Lille.\nSignature de l'assuré : Arsinoé Aubry\nFait le 18/11/2026"
+          },
+          {
+            "fileName": "devis_carrosserie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCARROSSERIE CARPENTIER\nDEVIS N° 2026-844\nDate : 17/11/2026\nClient : Fleuriste Aubry SARL, 5 Voie des Francs-Bourgeois, 68844 Saint-Maur-des-Fossés\nObjet : réparation suite à sinistre dommages tous accidents — véhicule LW-260-JH\nMain d'œuvre ........ 2 056,67 €\nFournitures ......... 3 085,00 €\nTotal HT : 5 141,67 €\nTVA 20 % : 1 028,33 €\nTotal TTC : 6 170,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "late_declaration",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fleuriste Aubry SARL",
+        "policyNumber": "F-50358",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-10-21",
+        "incidentDateReadable": true,
+        "nature": "vehicle_damage",
+        "amount": 6170,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "late_declaration",
+        "alerts": ["late_declaration"],
+        "coverageLabel": "Dommages tous accidents",
+        "limit": 25000,
+        "deductible": 500,
+        "clauseRef": "CG-HZ-3.1",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-014",
+      "email": {
+        "messageId": "<eval-7-014@evals.local>",
+        "receivedAt": "2026-11-16T17:05:00.000Z",
+        "from": "accueil@electricite-lefevre.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Départ de feu - Électricité Lefevre",
+        "body": "Bonjour,\n\nHier, un départ de feu s'est déclaré dans l'entrepôt. Le feu a pris très vite parce que nous stockions des bidons de solvant dans la pièce, en attendant l'armoire de sécurité que nous avions commandée. Vous trouverez ci-joint le rapport d'intervention des pompiers et le devis. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nAymon Lefevre\nÉlectricité Lefevre\n04 37 14 12 93",
+        "attachments": [
+          {
+            "fileName": "rapport_pompiers.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERVICE DÉPARTEMENTAL D'INCENDIE ET DE SECOURS\nRAPPORT D'INTERVENTION\nDate de l'intervention : 15/11/2026\nAdresse : 5 Allée Saint-Bernard, 06806 Bourges\nNature : feu de local professionnel\nObservations : Un départ de feu s'est déclaré dans l'entrepôt."
+          },
+          {
+            "fileName": "devis_renovation.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉNOVATION LEROUX\nDEVIS N° 2026-904\nDate : 15/11/2026\nClient : Électricité Lefevre, 5 Allée Saint-Bernard, 06806 Bourges\nObjet : réparation suite à sinistre incendie\nMain d'œuvre ........ 7 846,67 €\nFournitures ......... 11 770,00 €\nTotal HT : 19 616,67 €\nTVA 20 % : 3 923,33 €\nTotal TTC : 23 540,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "exclusion",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Électricité Lefevre",
+        "policyNumber": "C-25653",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": 23540,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "exclusion",
+        "alerts": ["exclusion"],
+        "coverageLabel": "Incendie",
+        "limit": 100000,
+        "deductible": 500,
+        "clauseRef": "CG-AT-4.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-015",
+      "email": {
+        "messageId": "<eval-7-015@evals.local>",
+        "receivedAt": "2026-11-16T10:53:00.000Z",
+        "from": "facilities@brightwave-solutions.com",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Theft claim - Brightwave Solutions",
+        "body": "Hello,\n\nLast week (Tuesday or Wednesday, I am not sure exactly), three laptops and a video projector were stolen. The back door was forced open. Please find attached the police report and the quote (EUR 3,340). Please keep us posted.\n\nThanks in advance,\nEliezer Wisozk\nBrightwave Solutions\n+33 5 03 33 87 92",
+        "attachments": [
+          {
+            "fileName": "police_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPOLICE REPORT — RECEIPT OF COMPLAINT\nPolice station of Lyon\nComplainant: Eliezer Wisozk, for Brightwave Solutions\nOffence: burglary\nDate of the offence: (not filled in)\nPlace: 30 quai Perrache, 75011 Lyon\nRegistered on 14 November 2026"
+          },
+          {
+            "fileName": "quote_locksmiths.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCHARPENTIER LOCKSMITHS\nQUOTE No. 2026-800\nDate: 15 November 2026\nCustomer: Brightwave Solutions, 30 quai Perrache, 75011 Lyon\nSubject: repairs after theft\nLabour .............. EUR 1,113.33\nParts ............... EUR 1,670.00\nTotal excl. VAT: EUR 2,783.33\nVAT 20%: EUR 556.67\nTotal incl. VAT: EUR 3,340.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "unreadable_field",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Brightwave Solutions",
+        "policyNumber": "C-51877",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-13",
+        "incidentDateReadable": false,
+        "nature": "theft",
+        "amount": 3340,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "unreadable_field",
+        "alerts": [],
+        "coverageLabel": "Vol",
+        "limit": 15000,
+        "deductible": 500,
+        "clauseRef": "CG-HZ-4.3",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-016",
+      "email": {
+        "messageId": "<eval-7-016@evals.local>",
+        "receivedAt": "2026-11-17T08:12:00.000Z",
+        "from": "contact@garage-charpentier.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Dégât des eaux - Garage Charpentier",
+        "body": "Bonjour,\n\nHier soir, une canalisation a cédé dans l'atelier et l'eau a abîmé une partie du matériel. Le plombier est intervenu ce matin, sa facture s'élève à 770 €. Pouvez-vous déclarer le sinistre auprès de notre assureur ?\n\nCordialement,\nXavière Charpentier\nGarage Charpentier",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "unknown_client",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Garage Charpentier",
+        "policyNumber": null,
+        "policyNumberInEmail": false,
+        "nature": "water_damage",
+        "amount": 770,
+        "verdict": "uncertain",
+        "alerts": ["unknown_client"],
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-017",
+      "email": {
+        "messageId": "<eval-7-017@evals.local>",
+        "receivedAt": "2026-11-16T12:00:00.000Z",
+        "from": "direction@imprimerie-marie.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Vol dans nos locaux",
+        "body": "Bonjour Madame, Monsieur,\n\nHier soir, on nous a volé deux ordinateurs et une imprimante grand format. La porte arrière a été forcée. Vous trouverez ci-joint le récépissé de dépôt de plainte et la facture. Merci de faire le nécessaire auprès de l'assureur.\n\nMerci par avance,\nMarianne Marie\nImprimerie Marie\n01 10 51 58 81",
+        "attachments": [
+          {
+            "fileName": "recepisse_plainte.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉCÉPISSÉ DE DÉPÔT DE PLAINTE\nCommissariat de Nice\nPlaignant : Marianne Marie, pour Imprimerie Marie SAS\nFaits : vol avec effraction\nDate des faits : 15/11/2026\nLieu : 434 Boulevard Royale, 33331 Nice\nEnregistré le 16/11/2026"
+          },
+          {
+            "fileName": "facture_serrurerie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERRURERIE RIVIERE\nFACTURE N° 2026-884\nDate : 16/11/2026\nClient : Imprimerie Marie SAS, 434 Boulevard Royale, 33331 Nice\nObjet : réparation suite à sinistre vol\nMain d'œuvre ........ 250,00 €\nFournitures ......... 375,00 €\nTotal HT : 625,00 €\nTVA 20 % : 125,00 €\nTotal TTC : 750,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "deductible",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Imprimerie Marie SAS",
+        "policyNumber": "C-46022",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 750,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "deductible",
+        "alerts": [],
+        "coverageLabel": "Vol",
+        "limit": 15000,
+        "deductible": 300,
+        "clauseRef": "CG-BO-4.3",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-018",
+      "email": {
+        "messageId": "<eval-7-018@evals.local>",
+        "receivedAt": "2026-11-17T16:11:00.000Z",
+        "from": "direction@imprimerie-lefevre.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Dégât des eaux dans l'atelier d'impression",
+        "body": "Bonjour Madame, Monsieur,\n\nHier, le chauffe-eau a lâché et a inondé l'atelier d'impression. Vous trouverez ci-joint le constat et le devis (35 200 €). Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nGatien Lefevre\nImprimerie Lefevre\n05 37 83 96 57",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Imprimerie Lefevre SAS — SIREN 620424911\nN° de contrat : C-43862\nDate du sinistre : 16/11/2026\nLieu : 729 Boulevard Dauphine, 48884 Dunkerque\n--- page 2 ---\nCirconstances : Le chauffe-eau a lâché et a inondé l'atelier d'impression.\nSignature de l'assuré : Gatien Lefevre\nFait le 17/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE ANDRE\nDEVIS N° 2026-706\nDate : 16/11/2026\nClient : Imprimerie Lefevre SAS, 729 Boulevard Dauphine, 48884 Dunkerque\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 11 733,33 €\nFournitures ......... 17 600,00 €\nTotal HT : 29 333,33 €\nTVA 20 % : 5 866,67 €\nTotal TTC : 35 200,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Imprimerie Lefevre SAS",
+        "policyNumber": "C-43862",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 35200,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 500,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-019",
+      "email": {
+        "messageId": "<eval-7-019@evals.local>",
+        "receivedAt": "2026-11-16T08:32:00.000Z",
+        "from": "direction@garage-bernard.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Dégât des eaux dans l'atelier",
+        "body": "Bonjour Danielle,\n\nLe 14/11, le chauffe-eau a lâché et a inondé l'atelier. Vous trouverez ci-joint le constat et le devis. Merci de nous tenir informés de la suite.\n\nCordialement,\nGuérin Bernard\nGarage Bernard SARL\n03 78 68 90 82",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Garage Bernard SARL — SIREN 541333142\nN° de contrat : C-81725\nDate du sinistre : 14/11/2026\nLieu : 871 Quai d'Assas, 39845 Quimper\n--- page 2 ---\nCirconstances : Le chauffe-eau a lâché et a inondé l'atelier.\nSignature de l'assuré : Guérin Bernard\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE LE GALL\nDEVIS N° 2026-244\nDate : 15/11/2026\nClient : Garage Bernard SARL, 871 Quai d'Assas, 39845 Quimper\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 1 170,00 €\nFournitures ......... 1 755,00 €\nTotal HT : 2 925,00 €\nTVA 20 % : 585,00 €\nTotal TTC : 3 510,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Garage Bernard SARL",
+        "policyNumber": "C-81725",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 3510,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 50000,
+        "deductible": 150,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-020",
+      "email": {
+        "messageId": "<eval-7-020@evals.local>",
+        "receivedAt": "2026-11-17T11:27:00.000Z",
+        "from": "accueil@transports-marie.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Bris de glace HR-166-SX",
+        "body": "Bonjour Madame, Monsieur,\n\nHier soir, le pare-brise de notre Citroën Jumpy immatriculé HR-166-SX a été endommagé sur l'A6 près d'Auxerre. Un projectile l'a fissuré sur toute la largeur. Vous trouverez ci-joint la facture (1 320 €). Notre numéro de contrat : F-71390. Merci de nous tenir informés de la suite.\n\nBien cordialement,\nCéline Marie\nTransports Marie\n04 24 58 10 53",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE MOULIN\nFACTURE N° 2026-856\nDate : 17/11/2026\nClient : Transports Marie SARL, 760 Boulevard Saint-Bernard, 97408 Antibes\nObjet : réparation suite à sinistre bris de glace — véhicule HR-166-SX\nMain d'œuvre ........ 440,00 €\nFournitures ......... 660,00 €\nTotal HT : 1 100,00 €\nTVA 20 % : 220,00 €\nTotal TTC : 1 320,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "policy_terminated",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Marie SARL",
+        "policyNumber": "F-71390",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 1320,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "policy_terminated",
+        "alerts": ["policy_terminated"],
+        "coverageLabel": "Bris de glace",
+        "limit": 8000,
+        "deductible": 0,
+        "clauseRef": "CG-AT-12.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-021",
+      "email": {
+        "messageId": "<eval-7-021@evals.local>",
+        "receivedAt": "2026-11-18T18:32:00.000Z",
+        "from": "accueil@menuiserie-boyer.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Accident véhicule SM-583-GL",
+        "body": "Bonjour,\n\nHier, notre Citroën Jumpy immatriculé SM-583-GL a percuté un poteau en manœuvrant sur l'A6 près d'Auxerre. Vous trouverez ci-joint le constat et le devis. Merci de nous tenir informés de la suite.\n\nBien cordialement,\nCyrille Boyer\nMenuiserie Boyer EURL\n02 98 12 32 52",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE D'ACCIDENT AUTOMOBILE\nAssuré : Menuiserie Boyer EURL — SIREN 599909231\nN° de contrat : F-45593\nDate du sinistre : 17/11/2026\nLieu : l'A43 en direction de Chambéry\nVéhicule : Citroën Jumpy, immatriculation SM-583-GL\n--- page 2 ---\nCirconstances : Notre Citroën Jumpy immatriculé SM-583-GL a percuté un poteau en manœuvrant sur l'A6 près d'Auxerre.\nSignature de l'assuré : Cyrille Boyer\nFait le 18/11/2026"
+          },
+          {
+            "fileName": "devis_carrosserie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCARROSSERIE LEROY\nDEVIS N° 2026-822\nDate : 17/11/2026\nClient : Menuiserie Boyer EURL, 98 Allée de la Chaussée-d'Antin, 45632 Dunkerque\nObjet : réparation suite à sinistre dommages tous accidents — véhicule SM-583-GL\nMain d'œuvre ........ 19 883,33 €\nFournitures ......... 29 825,00 €\nTotal HT : 49 708,33 €\nTVA 20 % : 9 941,67 €\nTotal TTC : 59 650,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Menuiserie Boyer EURL",
+        "policyNumber": "F-45593",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "vehicle_damage",
+        "amount": 59650,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Dommages tous accidents",
+        "limit": 40000,
+        "deductible": 800,
+        "clauseRef": "CG-AT-7.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-022",
+      "email": {
+        "messageId": "<eval-7-022@evals.local>",
+        "receivedAt": "2026-11-17T07:54:00.000Z",
+        "from": "contact@boulangerie-martinez.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Sinistre dégât des eaux - Boulangerie Martinez",
+        "body": "Bonjour,\n\nLe 15/11, une fuite au plafond a inondé le fournil. Vous trouverez ci-joint le constat, le devis et des photos. Merci de nous tenir informés de la suite.\n\nCordialement,\nTanguy Martinez\nBoulangerie Martinez SARL\n03 17 81 12 59",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Boulangerie Martinez SARL — SIREN 338231590\nDate du sinistre : 15/11/2026\nLieu : 3 Allée de la Paix, 63269 Bordeaux\n--- page 2 ---\nCirconstances : Une fuite au plafond a inondé le fournil.\nSignature de l'assuré : Tanguy Martinez\nFait le 17/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE GARNIER\nDEVIS N° 2026-436\nDate : 16/11/2026\nClient : Boulangerie Martinez SARL, 3 Allée de la Paix, 63269 Bordeaux\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 1 496,67 €\nFournitures ......... 2 245,00 €\nTotal HT : 3 741,67 €\nTVA 20 % : 748,33 €\nTotal TTC : 4 490,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Une fuite au plafond a inondé le fournil."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "duplicate_claim",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Martinez SARL",
+        "policyNumber": "C-38332",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 4490,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "duplicate_claim",
+        "alerts": ["duplicate_claim"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 150,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-023",
+      "email": {
+        "messageId": "<eval-7-023@evals.local>",
+        "receivedAt": "2026-11-17T18:50:00.000Z",
+        "from": "admin@langworth-solutions.com",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Theft",
+        "body": "Dear Sir or Madam,\n\nI am getting back to you about a claim we had not declared yet, as we have been very busy these last weeks. On 10 October 2026, three laptops and a video projector were stolen. The back door was forced open. Please find attached the police report, the quote and some photos. Our policy number: C-92767. Can you declare the claim?\n\nBest regards,\nMercedes Green\nLangworth Solutions SAS\n+33 4 01 11 52 85",
+        "attachments": [
+          {
+            "fileName": "police_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPOLICE REPORT — RECEIPT OF COMPLAINT\nPolice station of Bordeaux\nComplainant: Mercedes Green, for Langworth Solutions SAS\nOffence: burglary\nDate of the offence: 10 October 2026\nPlace: 63 avenue Jean Jaurès, 69007 Bordeaux\nRegistered on 11 October 2026"
+          },
+          {
+            "fileName": "quote_locksmiths.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMOREL LOCKSMITHS\nQUOTE No. 2026-469\nDate: 16 November 2026\nCustomer: Langworth Solutions SAS, 63 avenue Jean Jaurès, 69007 Bordeaux\nSubject: repairs after theft\nLabour .............. EUR 1,470.00\nParts ............... EUR 2,205.00\nTotal excl. VAT: EUR 3,675.00\nVAT 20%: EUR 735.00\nTotal incl. VAT: EUR 4,410.00"
+          },
+          {
+            "fileName": "damage_photos.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] View of the damage: Three laptops and a video projector were stolen. The back door was forced open."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "late_declaration",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Langworth Solutions SAS",
+        "policyNumber": "C-92767",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-10-10",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 4410,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "late_declaration",
+        "alerts": ["late_declaration"],
+        "coverageLabel": "Vol",
+        "limit": 10000,
+        "deductible": 500,
+        "clauseRef": "CG-BO-3.1",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-024",
+      "email": {
+        "messageId": "<eval-7-024@evals.local>",
+        "receivedAt": "2026-11-16T08:30:00.000Z",
+        "from": "gerance@garage-fontaine.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Dégât des eaux dans l'atelier",
+        "body": "Bonjour,\n\nHier soir, une fuite au plafond a inondé l'atelier. Pouvez-vous nous dire comment procéder avec l'assurance ? Notre numéro de contrat : C-31588.\n\nCordialement,\nGisèle Fontaine\nGarage Fontaine SAS\n05 72 37 42 94",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "missing_document",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Garage Fontaine SAS",
+        "policyNumber": "C-31588",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": null,
+        "documentsMissing": ["incident_report", "invoice_or_quote"],
+        "verdict": "uncertain",
+        "reason": "missing_document",
+        "alerts": ["missing_document"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 150,
+        "clauseRef": "CG-BO-3.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-025",
+      "email": {
+        "messageId": "<eval-7-025@evals.local>",
+        "receivedAt": "2026-11-16T09:15:00.000Z",
+        "from": "contact@fleuriste-joly.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Sinistre dégât des eaux - Fleuriste Joly",
+        "body": "Bonjour Madame, Monsieur,\n\nAvant-hier, un tuyau a cédé et l'eau s'est répandue dans la boutique. Vous trouverez ci-joint le constat, le devis et des photos. Merci de faire le nécessaire auprès de l'assureur.\n\nMerci par avance,\nDaniel Joly\nFleuriste Joly SARL\n02 09 89 84 81",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Fleuriste Joly SARL — SIREN 169087616\nDate du sinistre : 14/11/2026\nLieu : 33 Impasse des Lombards, 97252 Cholet\n--- page 2 ---\nCirconstances : Un tuyau a cédé et l'eau s'est répandue dans la boutique.\nSignature de l'assuré : Daniel Joly\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE BOYER\nDEVIS N° 2026-643\nDate : 15/11/2026\nClient : Fleuriste Joly SARL, 33 Impasse des Lombards, 97252 Cholet\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 1 093,33 €\nFournitures ......... 1 640,00 €\nTotal HT : 2 733,33 €\nTVA 20 % : 546,67 €\nTotal TTC : 3 280,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Un tuyau a cédé et l'eau s'est répandue dans la boutique."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fleuriste Joly SARL",
+        "policyNumber": "C-10303",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 3280,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 50000,
+        "deductible": 150,
+        "clauseRef": "CG-AT-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-026",
+      "email": {
+        "messageId": "<eval-7-026@evals.local>",
+        "receivedAt": "2026-11-16T07:52:00.000Z",
+        "from": "contact@boulangerie-martin.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Bris de glace",
+        "body": "Bonjour Madame, Monsieur,\n\nLe 15/11, nous avons constaté des dégâts sur la vitrine de la boutique. Elle a été brisée par un projectile lancé depuis la rue. Vous trouverez ci-joint la facture et des photos. Notre numéro de contrat : C-48213. Pouvez-vous déclarer le sinistre ?\n\nCordialement,\nJude Martin\nBoulangerie Martin SARL\n05 25 91 57 64",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE LOUIS\nFACTURE N° 2026-940\nDate : 16/11/2026\nClient : Boulangerie Martin SARL, 5343 Impasse d'Abbeville, 34524 Dunkerque\nObjet : réparation suite à sinistre bris de glace\nMain d'œuvre ........ 460,00 €\nFournitures ......... 690,00 €\nTotal HT : 1 150,00 €\nTVA 20 % : 230,00 €\nTotal TTC : 1 380,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Nous avons constaté des dégâts sur la vitrine de la boutique. Elle a été brisée par un projectile lancé depuis la rue."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "policy_terminated",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Martin SARL",
+        "policyNumber": "C-48213",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 1380,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "policy_terminated",
+        "alerts": ["policy_terminated"],
+        "coverageLabel": "Bris de glace",
+        "limit": 5000,
+        "deductible": 0,
+        "clauseRef": "CG-HZ-12.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-027",
+      "email": {
+        "messageId": "<eval-7-027@evals.local>",
+        "receivedAt": "2026-11-16T07:22:00.000Z",
+        "from": "gerance@garage-fontaine.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Devis - Garage Fontaine",
+        "body": "Bonjour,\n\nNous allons agrandir nos locaux au début de l’année prochaine. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant l'atelier et le matériel ?\n\nCordialement,\nGisèle Fontaine\nGarage Fontaine\n05 72 37 42 94",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "quote_request",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Garage Fontaine SAS",
+        "policyNumber": null,
+        "policyNumberInEmail": false
+      }
+    },
+    {
+      "id": "eval-7-028",
+      "email": {
+        "messageId": "<eval-7-028@evals.local>",
+        "receivedAt": "2026-11-18T17:42:00.000Z",
+        "from": "accueil@fleuriste-barbier.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Vitrine endommagée",
+        "body": "Bonjour Bohémond,\n\nAvant-hier, nous avons constaté des dégâts sur la vitrine. Elle a été brisée par un projectile lancé depuis la rue. Vous trouverez ci-joint la facture (610 €). Merci de faire le nécessaire auprès de l'assureur.\n\nCordialement,\nIrène Barbier\nFleuriste Barbier SAS\n05 92 08 94 78",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE ARNAUD\nFACTURE N° 2026-221\nDate : 18/11/2026\nClient : Fleuriste Barbier SAS, 80 Rue du Faubourg-Saint-Denis, 14906 Asnières-sur-Seine\nObjet : réparation suite à sinistre bris de glace\nMain d'œuvre ........ 203,33 €\nFournitures ......... 305,00 €\nTotal HT : 508,33 €\nTVA 20 % : 101,67 €\nTotal TTC : 610,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fleuriste Barbier SAS",
+        "policyNumber": "C-42470",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 610,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Bris de glace",
+        "limit": 3000,
+        "deductible": 0,
+        "clauseRef": "CG-AT-7.1",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-029",
+      "email": {
+        "messageId": "<eval-7-029@evals.local>",
+        "receivedAt": "2026-11-18T12:30:00.000Z",
+        "from": "office@grant-consulting.com",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Glass breakage",
+        "body": "Hello,\n\nOn 17 November, we found damage to the glass partition of the reception. It is not really broken: the surface is mostly covered in deep scratches after being cleaned with the wrong product. Please find attached the invoice (EUR 1,770). Our policy number: C-65958. Please keep us posted.\n\nThanks in advance,\nCheyenne Harris\nGrant Consulting SAS\n+33 1 28 63 75 01",
+        "attachments": [
+          {
+            "fileName": "invoice_glazing.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nBRUN GLAZING\nINVOICE No. 2026-802\nDate: 18 November 2026\nCustomer: Grant Consulting SAS, 89 avenue Jean Jaurès, 33000 Paris\nSubject: repairs after glass breakage\nLabour .............. EUR 590.00\nParts ............... EUR 885.00\nTotal excl. VAT: EUR 1,475.00\nVAT 20%: EUR 295.00\nTotal incl. VAT: EUR 1,770.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "exclusion",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Grant Consulting SAS",
+        "policyNumber": "C-65958",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 1770,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "exclusion",
+        "alerts": ["exclusion"],
+        "coverageLabel": "Bris de glace",
+        "limit": 8000,
+        "deductible": 0,
+        "clauseRef": "CG-AT-7.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-030",
+      "email": {
+        "messageId": "<eval-7-030@evals.local>",
+        "receivedAt": "2026-11-16T12:31:00.000Z",
+        "from": "direction@transports-dubois.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Demande de devis pour l'ouverture d'un second local",
+        "body": "Bonjour Bohémond,\n\nNous allons agrandir nos locaux au début de l’année prochaine. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant le dépôt et le matériel ?\n\nMerci par avance,\nMamert Dubois\nTransports Dubois\n04 61 99 45 09",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "quote_request",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Dubois SAS",
+        "policyNumber": null,
+        "policyNumberInEmail": false
+      }
+    },
+    {
+      "id": "eval-7-031",
+      "email": {
+        "messageId": "<eval-7-031@evals.local>",
+        "receivedAt": "2026-11-18T15:57:00.000Z",
+        "from": "facilities@keeling-cafe.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Fire claim - Keeling Café",
+        "body": "Hello Neoma,\n\nOn 17 November, a fire broke out in the kitchen. Please find attached the fire brigade report and the quote (EUR 19,680). Our policy number: C-18516. Could you please take care of it with the insurer?\n\nKind regards,\nBrielle Greenfelder\nKeeling Café SAS\n+33 3 60 16 40 10",
+        "attachments": [
+          {
+            "fileName": "fire_brigade_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nFIRE AND RESCUE SERVICE\nINTERVENTION REPORT\nDate of intervention: 17 November 2026\nAddress: 76 avenue Jean Jaurès, 75011 Bordeaux\nNature: fire in business premises\nRemarks: A fire broke out in the kitchen."
+          },
+          {
+            "fileName": "quote_restoration.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nARNAUD RESTORATION\nQUOTE No. 2026-555\nDate: 17 November 2026\nCustomer: Keeling Café SAS, 76 avenue Jean Jaurès, 75011 Bordeaux\nSubject: repairs after fire\nLabour .............. EUR 6,560.00\nParts ............... EUR 9,840.00\nTotal excl. VAT: EUR 16,400.00\nVAT 20%: EUR 3,280.00\nTotal incl. VAT: EUR 19,680.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Keeling Café SAS",
+        "policyNumber": "C-18516",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": 19680,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Incendie",
+        "limit": 300000,
+        "deductible": 1000,
+        "clauseRef": "CG-HZ-4.1",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-032",
+      "email": {
+        "messageId": "<eval-7-032@evals.local>",
+        "receivedAt": "2026-11-16T07:48:00.000Z",
+        "from": "gerance@transports-rolland.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Accident véhicule VX-560-WR",
+        "body": "Bonjour Madame, Monsieur,\n\nLe 14/11, notre Ford Transit immatriculé VX-560-WR a percuté un poteau en manœuvrant sur la N7 près de Valence. Vous trouverez ci-joint le constat, la facture et des photos. Merci de nous tenir informés de la suite.\n\nCordialement,\nMaxime Rolland\nTransports Rolland EURL\n01 02 82 22 75",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE D'ACCIDENT AUTOMOBILE\nAssuré : Transports Rolland EURL — SIREN 360365506\nN° de contrat : F-76577\nDate du sinistre : 14/11/2026\nLieu : l'A1 à hauteur de Senlis\nVéhicule : Ford Transit, immatriculation VX-560-WR\n--- page 2 ---\nCirconstances : Notre Ford Transit immatriculé VX-560-WR a percuté un poteau en manœuvrant sur la N7 près de Valence.\nSignature de l'assuré : Maxime Rolland\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "facture_carrosserie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCARROSSERIE CHARLES\nFACTURE N° 2026-681\nDate : 16/11/2026\nClient : Transports Rolland EURL, 1 Allée Saint-Jacques, 12762 Cholet\nObjet : réparation suite à sinistre dommages tous accidents — véhicule VX-560-WR\nMain d'œuvre ........ 433,33 €\nFournitures ......... 650,00 €\nTotal HT : 1 083,33 €\nTVA 20 % : 216,67 €\nTotal TTC : 1 300,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Notre Ford Transit immatriculé VX-560-WR a percuté un poteau en manœuvrant sur la N7 près de Valence."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "deductible",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Rolland EURL",
+        "policyNumber": "F-76577",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "vehicle_damage",
+        "amount": 1300,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "deductible",
+        "alerts": [],
+        "coverageLabel": "Dommages tous accidents",
+        "limit": 25000,
+        "deductible": 800,
+        "clauseRef": "CG-HZ-7.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-033",
+      "email": {
+        "messageId": "<eval-7-033@evals.local>",
+        "receivedAt": "2026-11-18T14:15:00.000Z",
+        "from": "facilities@brightwave-solutions.com",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Quote request for a second office",
+        "body": "Dear Sir or Madam,\n\nWe are taking over another business in a few weeks. Could you send us a quote for a commercial multi-risk policy covering the office and the equipment?\n\nThanks in advance,\nEliezer Wisozk\nBrightwave Solutions\n+33 5 03 33 87 92",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "quote_request",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Brightwave Solutions",
+        "policyNumber": null,
+        "policyNumberInEmail": false
+      }
+    },
+    {
+      "id": "eval-7-034",
+      "email": {
+        "messageId": "<eval-7-034@evals.local>",
+        "receivedAt": "2026-11-16T07:59:00.000Z",
+        "from": "accueil@transports-marie.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Vol dans nos locaux",
+        "body": "Bonjour Augustine,\n\nHier, on nous a volé des pièces détachées et deux GPS embarqués. La porte arrière a été forcée. Vous trouverez ci-joint le constat, le récépissé de dépôt de plainte et la facture. Merci de faire le nécessaire auprès de l'assureur.\n\nCordialement,\nCéline Marie\nTransports Marie\n04 24 58 10 53",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nDÉCLARATION CIRCONSTANCIÉE DE SINISTRE\nAssuré : Transports Marie SARL — SIREN 284513793\nN° de contrat : C-11741\nDate du sinistre : 15/11/2026\nLieu : 760 Boulevard Saint-Bernard, 97408 Antibes\n--- page 2 ---\nCirconstances : On nous a volé des pièces détachées et deux GPS embarqués. La porte arrière a été forcée.\nSignature de l'assuré : Céline Marie\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "recepisse_plainte.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉCÉPISSÉ DE DÉPÔT DE PLAINTE\nCommissariat de Antibes\nPlaignant : Céline Marie, pour Transports Marie SARL\nFaits : vol avec effraction\nDate des faits : 15/11/2026\nLieu : 760 Boulevard Saint-Bernard, 97408 Antibes\nEnregistré le 16/11/2026"
+          },
+          {
+            "fileName": "facture_serrurerie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERRURERIE CARRE\nFACTURE N° 2026-155\nDate : 16/11/2026\nClient : Transports Marie SARL, 760 Boulevard Saint-Bernard, 97408 Antibes\nObjet : réparation suite à sinistre vol\nMain d'œuvre ........ 613,33 €\nFournitures ......... 920,00 €\nTotal HT : 1 533,33 €\nTVA 20 % : 306,67 €\nTotal TTC : 1 840,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Marie SARL",
+        "policyNumber": "C-11741",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 1840,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Vol",
+        "limit": 10000,
+        "deductible": 500,
+        "clauseRef": "CG-HZ-4.3",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-035",
+      "email": {
+        "messageId": "<eval-7-035@evals.local>",
+        "receivedAt": "2026-11-17T12:27:00.000Z",
+        "from": "gerance@imprimerie-marty.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Fuite d'eau dans nos locaux",
+        "body": "Bonjour Madame, Monsieur,\n\nLe 16/11, un tuyau a cédé et l'eau s'est répandue dans l'atelier d'impression. Vous trouverez ci-joint le constat, la facture et des photos. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nMaureen Marty\nImprimerie Marty SARL\n05 48 32 27 84",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Imprimerie Marty SARL — SIREN 835610585\nDate du sinistre : 16/11/2026\nLieu : 25 Avenue des Lombards, 21666 Reims\n--- page 2 ---\nCirconstances : Un tuyau a cédé et l'eau s'est répandue dans l'atelier d'impression.\nSignature de l'assuré : Maureen Marty\nFait le 17/11/2026"
+          },
+          {
+            "fileName": "facture_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE DUBOIS\nFACTURE N° 2026-318\nDate : 17/11/2026\nClient : Imprimerie Marty SARL, 25 Avenue des Lombards, 21666 Reims\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 290,00 €\nFournitures ......... 435,00 €\nTotal HT : 725,00 €\nTVA 20 % : 145,00 €\nTotal TTC : 870,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Un tuyau a cédé et l'eau s'est répandue dans l'atelier d'impression."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "deductible",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Imprimerie Marty SARL",
+        "policyNumber": "C-51240",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 870,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "deductible",
+        "alerts": [],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 30000,
+        "deductible": 500,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-036",
+      "email": {
+        "messageId": "<eval-7-036@evals.local>",
+        "receivedAt": "2026-11-18T11:08:00.000Z",
+        "from": "direction@imprimerie-paul.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Demande de devis assurance",
+        "body": "Bonjour Madame, Monsieur,\n\nNous ouvrons un second établissement dans quelques semaines. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant l'atelier d'impression et le matériel ?\n\nMerci par avance,\nConception Paul\nImprimerie Paul\n01 18 01 65 48",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "quote_request",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Imprimerie Paul",
+        "policyNumber": null,
+        "policyNumberInEmail": false
+      }
+    },
+    {
+      "id": "eval-7-037",
+      "email": {
+        "messageId": "<eval-7-037@evals.local>",
+        "receivedAt": "2026-11-18T10:37:00.000Z",
+        "from": "admin@tromp-solutions.com",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Water damage at our premises",
+        "body": "Dear Sir or Madam,\n\nOn 16 November, a leak in the ceiling flooded the office. Please find attached the incident report and the invoice. Could you please take care of it with the insurer?\n\nBest regards,\nZetta Parker\nTromp Solutions SAS\n+33 1 23 46 37 66",
+        "attachments": [
+          {
+            "fileName": "incident_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nINCIDENT REPORT\nInsured: Tromp Solutions SAS — SIREN 124670761\nPolicy number: C-47527\nDate of incident: 16 November 2026\nPlace: 41 rue Garibaldi, 69007 Bordeaux\n--- page 2 ---\nCircumstances: A leak in the ceiling flooded the office.\nSigned by the insured: Zetta Parker\nDate: 18 November 2026"
+          },
+          {
+            "fileName": "invoice_plumbing.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nBLANC PLUMBING\nINVOICE No. 2026-579\nDate: 18 November 2026\nCustomer: Tromp Solutions SAS, 41 rue Garibaldi, 69007 Bordeaux\nSubject: repairs after water damage\nLabour .............. EUR 810.00\nParts ............... EUR 1,215.00\nTotal excl. VAT: EUR 2,025.00\nVAT 20%: EUR 405.00\nTotal incl. VAT: EUR 2,430.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Tromp Solutions SAS",
+        "policyNumber": "C-47527",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 2430,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 50000,
+        "deductible": 300,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-038",
+      "email": {
+        "messageId": "<eval-7-038@evals.local>",
+        "receivedAt": "2026-11-16T10:47:00.000Z",
+        "from": "accueil@fromagerie-morel.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Vol dans nos locaux",
+        "body": "Bonjour Madame, Monsieur,\n\nHier soir, on nous a volé la balance électronique et le terminal de paiement. La porte arrière a été forcée. Vous trouverez ci-joint le constat, le récépissé de dépôt de plainte et le devis (15 600 €). Merci de faire le nécessaire auprès de l'assureur.\n\nBien cordialement,\nHéloïse Morel\nFromagerie Morel EURL\n03 72 87 87 65",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nDÉCLARATION CIRCONSTANCIÉE DE SINISTRE\nAssuré : Fromagerie Morel EURL — SIREN 894292465\nN° de contrat : C-23921\nDate du sinistre : 15/11/2026\nLieu : 3 Quai Saint-Bernard, 84139 Rouen\n--- page 2 ---\nCirconstances : On nous a volé la balance électronique et le terminal de paiement. La porte arrière a été forcée.\nSignature de l'assuré : Héloïse Morel\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "recepisse_plainte.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉCÉPISSÉ DE DÉPÔT DE PLAINTE\nCommissariat de Rouen\nPlaignant : Héloïse Morel, pour Fromagerie Morel EURL\nFaits : vol avec effraction\nDate des faits : 15/11/2026\nLieu : 3 Quai Saint-Bernard, 84139 Rouen\nEnregistré le 16/11/2026"
+          },
+          {
+            "fileName": "devis_serrurerie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERRURERIE REMY\nDEVIS N° 2026-567\nDate : 15/11/2026\nClient : Fromagerie Morel EURL, 3 Quai Saint-Bernard, 84139 Rouen\nObjet : réparation suite à sinistre vol\nMain d'œuvre ........ 5 200,00 €\nFournitures ......... 7 800,00 €\nTotal HT : 13 000,00 €\nTVA 20 % : 2 600,00 €\nTotal TTC : 15 600,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fromagerie Morel EURL",
+        "policyNumber": "C-23921",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 15600,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Vol",
+        "limit": 10000,
+        "deductible": 300,
+        "clauseRef": "CG-AT-4.3",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-039",
+      "email": {
+        "messageId": "<eval-7-039@evals.local>",
+        "receivedAt": "2026-11-17T14:09:00.000Z",
+        "from": "office@feeney-studio.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Water damage claim - Feeney Studio",
+        "body": "Hello Olivia,\n\nOn 12 November, the water heater failed and flooded the design studio. Please find attached the incident report and the quote. Sorry, the scan of the invoice is not very clear. Please keep us posted.\n\nKind regards,\nEmmalee McCullough\nFeeney Studio SAS\n+33 1 13 89 41 32",
+        "attachments": [
+          {
+            "fileName": "incident_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nINCIDENT REPORT\nInsured: Feeney Studio SAS — SIREN 396279465\nPolicy number: C-98680\nDate of incident: 12 November 2026\nPlace: 115 avenue Jean Jaurès, 69007 Paris\n--- page 2 ---\nCircumstances: The water heater failed and flooded the design studio.\nSigned by the insured: Emmalee McCullough\nDate: 17 November 2026"
+          },
+          {
+            "fileName": "quote_plumbing.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nFAURE PLUMBING\nQUOTE No. 2026-756\nDate: 16 November 2026\nCustomer: Feeney Studio SAS, 115 avenue Jean Jaurès, 69007 Paris\nSubject: repairs after water damage\nLabour .............. EUR ▒▒▒.▒▒\nParts ............... EUR ▒,▒▒▒.▒▒\nTotal incl. VAT: EUR ▒,▒▒▒.▒▒  [unreadable area: document scanned askew]"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "unreadable_field",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Feeney Studio SAS",
+        "policyNumber": "C-98680",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-12",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": null,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "unreadable_field",
+        "alerts": [],
+        "coverageLabel": "Water damage",
+        "limit": 20000,
+        "deductible": 300,
+        "clauseRef": "CG-NB-4.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-040",
+      "email": {
+        "messageId": "<eval-7-040@evals.local>",
+        "receivedAt": "2026-11-16T17:34:00.000Z",
+        "from": "contact@boulangerie-martinez.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Dégât des eaux dans le fournil",
+        "body": "Bonjour Augustine,\n\nHier, un tuyau a cédé et l'eau s'est répandue dans le fournil. Vous trouverez ci-joint le constat et le devis. Merci de nous tenir informés de la suite.\n\nBien cordialement,\nTanguy Martinez\nBoulangerie Martinez\n03 17 81 12 59",
+        "attachments": [
+          {
+            "fileName": "constat.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE DE DÉGÂT DES EAUX\nAssuré : Boulangerie Martinez SARL — SIREN 338231590\nDate du sinistre : 15/11/2026\nLieu : 3 Allée de la Paix, 63269 Bordeaux\n--- page 2 ---\nCirconstances : Un tuyau a cédé et l'eau s'est répandue dans le fournil.\nSignature de l'assuré : Tanguy Martinez\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "devis_plomberie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPLOMBERIE GERARD\nDEVIS N° 2026-141\nDate : 15/11/2026\nClient : Boulangerie Martinez SARL, 3 Allée de la Paix, 63269 Bordeaux\nObjet : réparation suite à sinistre dégât des eaux\nMain d'œuvre ........ 1 496,67 €\nFournitures ......... 2 245,00 €\nTotal HT : 3 741,67 €\nTVA 20 % : 748,33 €\nTotal TTC : 4 490,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "duplicate_claim",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Martinez SARL",
+        "policyNumber": "C-38332",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 4490,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "duplicate_claim",
+        "alerts": ["duplicate_claim"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 150,
+        "clauseRef": "CG-BO-4.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-041",
+      "email": {
+        "messageId": "<eval-7-041@evals.local>",
+        "receivedAt": "2026-11-18T14:54:00.000Z",
+        "from": "admin@effertz-consulting.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Water damage at our premises",
+        "body": "Dear Sir or Madam,\n\nThe day before yesterday, a leak in the ceiling flooded the meeting room. Please find attached the incident report, the quote and some photos. Please keep us posted.\n\nThanks in advance,\nEmely Batz\nEffertz Consulting SAS\n+33 5 52 88 83 83",
+        "attachments": [
+          {
+            "fileName": "incident_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nINCIDENT REPORT\nInsured: Effertz Consulting SAS — SIREN 306234238\nPolicy number: C-59905\nDate of incident: 16 November 2026\nPlace: 13 boulevard Haussmann, 69007 Lyon\n--- page 2 ---\nCircumstances: A leak in the ceiling flooded the meeting room.\nSigned by the insured: Emely Batz\nDate: 18 November 2026"
+          },
+          {
+            "fileName": "quote_plumbing.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nAUBRY PLUMBING\nQUOTE No. 2026-994\nDate: 17 November 2026\nCustomer: Effertz Consulting SAS, 13 boulevard Haussmann, 69007 Lyon\nSubject: repairs after water damage\nLabour .............. EUR 10,766.67\nParts ............... EUR 16,150.00\nTotal excl. VAT: EUR 26,916.67\nVAT 20%: EUR 5,383.33\nTotal incl. VAT: EUR 32,300.00"
+          },
+          {
+            "fileName": "damage_photos.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] View of the damage: A leak in the ceiling flooded the meeting room."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Effertz Consulting SAS",
+        "policyNumber": "C-59905",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 32300,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Water damage",
+        "limit": 20000,
+        "deductible": 500,
+        "clauseRef": "CG-NB-4.2",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-042",
+      "email": {
+        "messageId": "<eval-7-042@evals.local>",
+        "receivedAt": "2026-11-18T11:52:00.000Z",
+        "from": "accueil@transports-sanchez.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Bris de glace VE-025-CC",
+        "body": "Bonjour Madame, Monsieur,\n\nAvant-hier, le pare-brise de notre Renault Trafic immatriculé VE-025-CC a été endommagé sur la N7 près de Valence. Un projectile l'a fissuré sur toute la largeur. Vous trouverez ci-joint la facture et des photos (910 €). Notre numéro de contrat : F-65414. Pouvez-vous déclarer le sinistre ?\n\nCordialement,\nAbigaïl Sanchez\nTransports Sanchez\n02 45 90 38 81",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE ROY\nFACTURE N° 2026-843\nDate : 18/11/2026\nClient : Transports Sanchez SAS, 19 Rue des Panoramas, 51523 Clichy\nObjet : réparation suite à sinistre bris de glace — véhicule VE-025-CC\nMain d'œuvre ........ 303,33 €\nFournitures ......... 455,00 €\nTotal HT : 758,33 €\nTVA 20 % : 151,67 €\nTotal TTC : 910,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Le pare-brise de notre Renault Trafic immatriculé VE-025-CC a été endommagé sur la N7 près de Valence. Un projectile l'a fissuré sur toute la largeur."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Sanchez SAS",
+        "policyNumber": "F-65414",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 910,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Bris de glace",
+        "limit": 5000,
+        "deductible": 0,
+        "clauseRef": "CG-AT-7.1",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-043",
+      "email": {
+        "messageId": "<eval-7-043@evals.local>",
+        "receivedAt": "2026-11-18T08:14:00.000Z",
+        "from": "admin@cummerata-studio.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Theft",
+        "body": "Hello,\n\nLast night, two workstations and a camera kit were stolen. The back door was forced open. Please find attached the police report, the quote and some photos (EUR 13,900). Can you declare the claim?\n\nBest regards,\nMathilde Funk\nCummerata Studio SAS\n+33 3 80 75 07 49",
+        "attachments": [
+          {
+            "fileName": "police_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nPOLICE REPORT — RECEIPT OF COMPLAINT\nPolice station of Lyon\nComplainant: Mathilde Funk, for Cummerata Studio SAS\nOffence: burglary\nDate of the offence: 17 November 2026\nPlace: 28 boulevard Haussmann, 69002 Lyon\nRegistered on 18 November 2026"
+          },
+          {
+            "fileName": "quote_locksmiths.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMASSON LOCKSMITHS\nQUOTE No. 2026-964\nDate: 17 November 2026\nCustomer: Cummerata Studio SAS, 28 boulevard Haussmann, 69002 Lyon\nSubject: repairs after theft\nLabour .............. EUR 4,633.33\nParts ............... EUR 6,950.00\nTotal excl. VAT: EUR 11,583.33\nVAT 20%: EUR 2,316.67\nTotal incl. VAT: EUR 13,900.00"
+          },
+          {
+            "fileName": "damage_photos.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] View of the damage: Two workstations and a camera kit were stolen. The back door was forced open."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Cummerata Studio SAS",
+        "policyNumber": "C-86642",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 13900,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Theft",
+        "limit": 10000,
+        "deductible": 750,
+        "clauseRef": "CG-NB-4.3",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-044",
+      "email": {
+        "messageId": "<eval-7-044@evals.local>",
+        "receivedAt": "2026-11-17T08:31:00.000Z",
+        "from": "office@thompson-solutions.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Fire",
+        "body": "Hello Olivia,\n\nThe day before yesterday, a short circuit on an appliance started a fire in the office. What should we do?\n\nKind regards,\nIsabel Miller\nThompson Solutions SAS\n+33 1 79 18 07 63",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "missing_document",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Thompson Solutions SAS",
+        "policyNumber": "C-83319",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": null,
+        "documentsMissing": ["fire_report", "invoice_or_quote"],
+        "verdict": "uncertain",
+        "reason": "missing_document",
+        "alerts": ["missing_document"],
+        "coverageLabel": "Fire",
+        "limit": 100000,
+        "deductible": 500,
+        "clauseRef": "CG-NB-3.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-045",
+      "email": {
+        "messageId": "<eval-7-045@evals.local>",
+        "receivedAt": "2026-11-18T16:15:00.000Z",
+        "from": "accueil@transports-sanchez.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Déclaration de vol - Transports Sanchez",
+        "body": "Bonjour,\n\nLe 17/11, on nous a volé des pièces détachées et deux GPS embarqués. La porte arrière a été forcée. Vous trouverez ci-joint le récépissé de dépôt de plainte et le devis (31 500 €). Notre numéro de contrat : C-70631. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nAbigaïl Sanchez\nTransports Sanchez\n02 45 90 38 81",
+        "attachments": [
+          {
+            "fileName": "recepisse_plainte.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉCÉPISSÉ DE DÉPÔT DE PLAINTE\nCommissariat de Clichy\nPlaignant : Abigaïl Sanchez, pour Transports Sanchez SAS\nFaits : vol avec effraction\nDate des faits : 17/11/2026\nLieu : 19 Rue des Panoramas, 51523 Clichy\nEnregistré le 18/11/2026"
+          },
+          {
+            "fileName": "devis_serrurerie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERRURERIE ROUSSEL\nDEVIS N° 2026-387\nDate : 17/11/2026\nClient : Transports Sanchez SAS, 19 Rue des Panoramas, 51523 Clichy\nObjet : réparation suite à sinistre vol\nMain d'œuvre ........ 10 500,00 €\nFournitures ......... 15 750,00 €\nTotal HT : 26 250,00 €\nTVA 20 % : 5 250,00 €\nTotal TTC : 31 500,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "limit_exceeded",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Sanchez SAS",
+        "policyNumber": "C-70631",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 31500,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "limit_exceeded",
+        "alerts": ["limit_exceeded"],
+        "coverageLabel": "Vol",
+        "limit": 25000,
+        "deductible": 300,
+        "clauseRef": "CG-BO-4.3",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-046",
+      "email": {
+        "messageId": "<eval-7-046@evals.local>",
+        "receivedAt": "2026-11-16T13:11:00.000Z",
+        "from": "gerance@librairie-vasseur.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Déclaration de vol - Librairie Vasseur",
+        "body": "Bonjour Bohémond,\n\nAvant-hier, on nous a volé la caisse et les liseuses exposées en vitrine. La porte arrière a été forcée. Que devons-nous faire ? Notre numéro de contrat : C-21218.\n\nCordialement,\nAmarande Vasseur\nLibrairie Vasseur\n01 31 74 16 73",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "missing_document",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Librairie Vasseur",
+        "policyNumber": "C-21218",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": null,
+        "documentsMissing": ["police_report", "invoice_or_quote"],
+        "verdict": "uncertain",
+        "reason": "missing_document",
+        "alerts": ["missing_document"],
+        "coverageLabel": "Vol",
+        "limit": 15000,
+        "deductible": 750,
+        "clauseRef": "CG-HZ-3.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-047",
+      "email": {
+        "messageId": "<eval-7-047@evals.local>",
+        "receivedAt": "2026-11-18T12:14:00.000Z",
+        "from": "contact@menuiserie-guerin.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Demande de devis pour l'ouverture d'un second local",
+        "body": "Bonjour,\n\nNous allons agrandir nos locaux dans quelques semaines. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant l'atelier et le matériel ?\n\nBien cordialement,\nBastien Guerin\nMenuiserie Guerin SARL\n05 53 42 57 58",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "quote_request",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Menuiserie Guerin SARL",
+        "policyNumber": null,
+        "policyNumberInEmail": false
+      }
+    },
+    {
+      "id": "eval-7-048",
+      "email": {
+        "messageId": "<eval-7-048@evals.local>",
+        "receivedAt": "2026-11-18T07:42:00.000Z",
+        "from": "gerance@boulangerie-barbier.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Bris de glace",
+        "body": "Bonjour,\n\nLe 14/11, nous avons constaté des dégâts sur la vitrine de la boutique. Elle a été brisée par un projectile lancé depuis la rue. Vous trouverez ci-joint la facture. Désolé, le scan de la facture n'est pas très net. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nTaurin Barbier\nBoulangerie Barbier\n04 30 29 41 28",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE LACROIX\nFACTURE N° 2026-441\nDate : 18/11/2026\nClient : Boulangerie Barbier, 8195 Allée de Tilsitt, 39750 Avignon\nObjet : réparation suite à sinistre bris de glace\nMain d'œuvre ........ ▒▒▒,▒▒ €\nFournitures ......... ▒▒▒▒,▒▒ €\nTotal TTC : ▒ ▒▒▒,▒▒ €  [zone illisible : document scanné de travers]"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "unreadable_field",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Barbier",
+        "policyNumber": "C-23430",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": null,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "unreadable_field",
+        "alerts": [],
+        "coverageLabel": "Bris de glace",
+        "limit": 3000,
+        "deductible": 150,
+        "clauseRef": "CG-HZ-7.1",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-049",
+      "email": {
+        "messageId": "<eval-7-049@evals.local>",
+        "receivedAt": "2026-11-17T08:24:00.000Z",
+        "from": "contact@boulangerie-fontaine.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Vitrine endommagée",
+        "body": "Bonjour Danielle,\n\nLe 16/11, nous avons constaté des dégâts sur la vitrine de la boutique. Elle a été brisée par un projectile lancé depuis la rue. Vous trouverez ci-joint la facture. Merci de faire le nécessaire auprès de l'assureur.\n\nCordialement,\nIsabeau Fontaine\nBoulangerie Fontaine\n04 38 38 75 16",
+        "attachments": [
+          {
+            "fileName": "facture_miroiterie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nMIROITERIE OLIVIER\nFACTURE N° 2026-479\nDate : 17/11/2026\nClient : Boulangerie Fontaine, 70 Rue de l'Odéon, 93289 Aubervilliers\nObjet : réparation suite à sinistre bris de glace\nMain d'œuvre ........ 730,00 €\nFournitures ......... 1 095,00 €\nTotal HT : 1 825,00 €\nTVA 20 % : 365,00 €\nTotal TTC : 2 190,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "policy_terminated",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Fontaine",
+        "policyNumber": "C-75165",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "glass_breakage",
+        "amount": 2190,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "policy_terminated",
+        "alerts": ["policy_terminated"],
+        "coverageLabel": "Bris de glace",
+        "limit": 5000,
+        "deductible": 150,
+        "clauseRef": "CG-AT-12.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-050",
+      "email": {
+        "messageId": "<eval-7-050@evals.local>",
+        "receivedAt": "2026-11-18T15:29:00.000Z",
+        "from": "facilities@blick-solutions.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Fire",
+        "body": "Hello Olivia,\n\nLast night, a fire broke out in the office. Please find attached the fire brigade report and the invoice. Please keep us posted.\n\nKind regards,\nHollie McDermott\nBlick Solutions SAS\n+33 3 80 74 81 11",
+        "attachments": [
+          {
+            "fileName": "fire_brigade_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nFIRE AND RESCUE SERVICE\nINTERVENTION REPORT\nDate of intervention: 17 November 2026\nAddress: 86 rue Garibaldi, 69002 Bordeaux\nNature: fire in business premises\nRemarks: A fire broke out in the office."
+          },
+          {
+            "fileName": "invoice_restoration.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nDURAND RESTORATION\nINVOICE No. 2026-415\nDate: 18 November 2026\nCustomer: Blick Solutions SAS, 86 rue Garibaldi, 69002 Bordeaux\nSubject: repairs after fire\nLabour .............. EUR 713.33\nParts ............... EUR 1,070.00\nTotal excl. VAT: EUR 1,783.33\nVAT 20%: EUR 356.67\nTotal incl. VAT: EUR 2,140.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "deductible",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Blick Solutions SAS",
+        "policyNumber": "C-92910",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": 2140,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "deductible",
+        "alerts": [],
+        "coverageLabel": "Incendie",
+        "limit": 100000,
+        "deductible": 1500,
+        "clauseRef": "CG-AT-4.1",
+        "expectedAction": "file_claim"
+      }
+    },
+    {
+      "id": "eval-7-051",
+      "email": {
+        "messageId": "<eval-7-051@evals.local>",
+        "receivedAt": "2026-11-17T07:05:00.000Z",
+        "from": "contact@boulangerie-fontaine.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Vol dans nos locaux",
+        "body": "Bonjour,\n\nLe 16/11, on nous a volé le terminal de paiement et le fond de caisse. La porte arrière a été forcée. Vous trouverez ci-joint le récépissé de dépôt de plainte et le devis (3 630 €). Merci de nous tenir informés de la suite.\n\nMerci par avance,\nIsabeau Fontaine\nBoulangerie Fontaine\n04 38 38 75 16",
+        "attachments": [
+          {
+            "fileName": "recepisse_plainte.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nRÉCÉPISSÉ DE DÉPÔT DE PLAINTE\nCommissariat de Aubervilliers\nPlaignant : Isabeau Fontaine, pour Boulangerie Fontaine\nFaits : vol avec effraction\nDate des faits : 16/11/2026\nLieu : 70 Rue de l'Odéon, 93289 Aubervilliers\nEnregistré le 17/11/2026"
+          },
+          {
+            "fileName": "devis_serrurerie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nSERRURERIE DUPUIS\nDEVIS N° 2026-811\nDate : 16/11/2026\nClient : Boulangerie Fontaine, 70 Rue de l'Odéon, 93289 Aubervilliers\nObjet : réparation suite à sinistre vol\nMain d'œuvre ........ 1 210,00 €\nFournitures ......... 1 815,00 €\nTotal HT : 3 025,00 €\nTVA 20 % : 605,00 €\nTotal TTC : 3 630,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "policy_terminated",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Boulangerie Fontaine",
+        "policyNumber": "C-75165",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "theft",
+        "amount": 3630,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "policy_terminated",
+        "alerts": ["policy_terminated"],
+        "coverageLabel": "Vol",
+        "limit": 25000,
+        "deductible": 500,
+        "clauseRef": "CG-AT-12.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-052",
+      "email": {
+        "messageId": "<eval-7-052@evals.local>",
+        "receivedAt": "2026-11-18T13:57:00.000Z",
+        "from": "facilities@brightwave-solutions.com",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Fire",
+        "body": "Hello,\n\nYesterday, a short circuit on an appliance started a fire in the office. I should mention that the annual inspection of the electrical installation was not done this year: the electrician was due next month. Please find attached the fire brigade report and the quote (EUR 25,650). Please keep us posted.\n\nBest regards,\nEliezer Wisozk\nBrightwave Solutions\n+33 5 03 33 87 92",
+        "attachments": [
+          {
+            "fileName": "fire_brigade_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nFIRE AND RESCUE SERVICE\nINTERVENTION REPORT\nDate of intervention: 17 November 2026\nAddress: 30 quai Perrache, 75011 Lyon\nNature: fire in business premises\nRemarks: A short circuit on an appliance started a fire in the office."
+          },
+          {
+            "fileName": "quote_restoration.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCHARLES RESTORATION\nQUOTE No. 2026-215\nDate: 17 November 2026\nCustomer: Brightwave Solutions, 30 quai Perrache, 75011 Lyon\nSubject: repairs after fire\nLabour .............. EUR 8,550.00\nParts ............... EUR 12,825.00\nTotal excl. VAT: EUR 21,375.00\nVAT 20%: EUR 4,275.00\nTotal incl. VAT: EUR 25,650.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "exclusion",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Brightwave Solutions",
+        "policyNumber": "C-51877",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-17",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": 25650,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "exclusion",
+        "alerts": ["exclusion"],
+        "coverageLabel": "Incendie",
+        "limit": 300000,
+        "deductible": 1500,
+        "clauseRef": "CG-HZ-4.1",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-053",
+      "email": {
+        "messageId": "<eval-7-053@evals.local>",
+        "receivedAt": "2026-11-17T17:09:00.000Z",
+        "from": "accueil@pharmacie-bertrand.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Incendie dans nos locaux",
+        "body": "Bonjour,\n\nHier, un départ de feu s'est déclaré dans l'arrière-boutique. Que devons-nous faire ? Notre numéro de contrat : C-58459.\n\nBien cordialement,\nAgilberte Bertrand\nPharmacie Bertrand EURL\n02 48 45 88 76",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "missing_document",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Pharmacie Bertrand EURL",
+        "policyNumber": "C-58459",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "fire",
+        "amount": null,
+        "documentsMissing": ["fire_report", "invoice_or_quote"],
+        "verdict": "uncertain",
+        "reason": "missing_document",
+        "alerts": ["missing_document"],
+        "coverageLabel": "Incendie",
+        "limit": 100000,
+        "deductible": 1000,
+        "clauseRef": "CG-HZ-3.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-054",
+      "email": {
+        "messageId": "<eval-7-054@evals.local>",
+        "receivedAt": "2026-11-15T13:13:00.000Z",
+        "from": "office@thiel-solutions.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Water damage claim - Thiel Solutions",
+        "body": "Hello Neoma,\n\nThe day before yesterday, a leak in the ceiling flooded the office. Please find attached the incident report and the quote. Our policy number: C-60085. Can you declare the claim?\n\nKind regards,\nEdison Kling\nThiel Solutions SAS\n+33 5 66 46 97 53",
+        "attachments": [
+          {
+            "fileName": "incident_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nINCIDENT REPORT\nInsured: Thiel Solutions SAS — SIREN 719572299\nDate of incident: 13 November 2026\nPlace: 28 avenue Jean Jaurès, 75008 Bordeaux\n--- page 2 ---\nCircumstances: A leak in the ceiling flooded the office.\nSigned by the insured: Edison Kling\nDate: 15 November 2026"
+          },
+          {
+            "fileName": "quote_plumbing.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nLE ROUX PLUMBING\nQUOTE No. 2026-490\nDate: 14 November 2026\nCustomer: Thiel Solutions SAS, 28 avenue Jean Jaurès, 75008 Bordeaux\nSubject: repairs after water damage\nLabour .............. EUR 1,923.33\nParts ............... EUR 2,885.00\nTotal excl. VAT: EUR 4,808.33\nVAT 20%: EUR 961.67\nTotal incl. VAT: EUR 5,770.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "duplicate_claim",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Thiel Solutions SAS",
+        "policyNumber": "C-60085",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-13",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 5770,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "duplicate_claim",
+        "alerts": ["duplicate_claim"],
+        "coverageLabel": "Water damage",
+        "limit": 20000,
+        "deductible": 500,
+        "clauseRef": "CG-NB-4.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-055",
+      "email": {
+        "messageId": "<eval-7-055@evals.local>",
+        "receivedAt": "2026-11-17T18:32:00.000Z",
+        "from": "contact@fleuriste-menard.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Fuite d'eau dans nos locaux",
+        "body": "Bonjour Madame, Monsieur,\n\nAvant-hier, un tuyau a cédé et l'eau s'est répandue dans la boutique. Que devons-nous faire ? Notre numéro de contrat : C-90523.\n\nBien cordialement,\nMartial Menard\nFleuriste Menard EURL\n02 02 74 82 88",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "missing_document",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fleuriste Menard EURL",
+        "policyNumber": "C-90523",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": null,
+        "documentsMissing": ["incident_report", "invoice_or_quote"],
+        "verdict": "uncertain",
+        "reason": "missing_document",
+        "alerts": ["missing_document"],
+        "coverageLabel": "Dégât des eaux",
+        "limit": 20000,
+        "deductible": 500,
+        "clauseRef": "CG-BO-3.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-056",
+      "email": {
+        "messageId": "<eval-7-056@evals.local>",
+        "receivedAt": "2026-11-17T11:58:00.000Z",
+        "from": "contact@transports-marchand.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Accident véhicule GY-417-SX",
+        "body": "Bonjour Madame, Monsieur,\n\nLe 16/11, notre Renault Master immatriculé GY-417-SX a percuté un poteau en manœuvrant sur une aire de livraison. Le chauffeur, embauché la semaine dernière, nous a avoué après coup que son permis était suspendu. Vous trouverez ci-joint le constat, la facture et des photos (2 460 €). Notre numéro de contrat : F-21146. Pouvez-vous déclarer le sinistre ?\n\nBien cordialement,\nArmande Marchand\nTransports Marchand SAS\n01 37 28 76 80",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE D'ACCIDENT AUTOMOBILE\nAssuré : Transports Marchand SAS — SIREN 395669450\nDate du sinistre : 16/11/2026\nLieu : l'A1 à hauteur de Senlis\nVéhicule : Renault Master, immatriculation GY-417-SX\n--- page 2 ---\nCirconstances : Notre Renault Master immatriculé GY-417-SX a percuté un poteau en manœuvrant sur une aire de livraison.\nSignature de l'assuré : Armande Marchand\nFait le 17/11/2026"
+          },
+          {
+            "fileName": "facture_carrosserie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCARROSSERIE PERROT\nFACTURE N° 2026-462\nDate : 17/11/2026\nClient : Transports Marchand SAS, 9907 Allée Bonaparte, 12239 Le Mans\nObjet : réparation suite à sinistre dommages tous accidents — véhicule GY-417-SX\nMain d'œuvre ........ 820,00 €\nFournitures ......... 1 230,00 €\nTotal HT : 2 050,00 €\nTVA 20 % : 410,00 €\nTotal TTC : 2 460,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Notre Renault Master immatriculé GY-417-SX a percuté un poteau en manœuvrant sur une aire de livraison."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "exclusion",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Marchand SAS",
+        "policyNumber": "F-21146",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-16",
+        "incidentDateReadable": true,
+        "nature": "vehicle_damage",
+        "amount": 2460,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "exclusion",
+        "alerts": ["exclusion"],
+        "coverageLabel": "Dommages tous accidents",
+        "limit": 40000,
+        "deductible": 800,
+        "clauseRef": "CG-HZ-7.2",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-057",
+      "email": {
+        "messageId": "<eval-7-057@evals.local>",
+        "receivedAt": "2026-11-16T15:35:00.000Z",
+        "from": "contact@transports-lefevre.fr",
+        "to": "sinistres@delorme-courtage.fr",
+        "subject": "Accident véhicule DF-517-WA",
+        "body": "Bonjour,\n\nLa semaine dernière (mardi ou mercredi, je ne sais plus exactement), notre Ford Transit immatriculé DF-517-WA a percuté un poteau en manœuvrant sur le périphérique nord de Lille. Vous trouverez ci-joint le constat, le devis et des photos (8 040 €). Notre numéro de contrat : F-77102. Merci de nous tenir informés de la suite.\n\nBien cordialement,\nFrancia Lefèvre\nTransports Lefèvre SAS\n03 00 75 69 60",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE D'ACCIDENT AUTOMOBILE\nAssuré : Transports Lefèvre SAS — SIREN 434749172\nDate du sinistre : (non renseignée)\nLieu : l'A1 à hauteur de Senlis\nVéhicule : Ford Transit, immatriculation DF-517-WA\n--- page 2 ---\nCirconstances : Notre Ford Transit immatriculé DF-517-WA a percuté un poteau en manœuvrant sur le périphérique nord de Lille.\nSignature de l'assuré : Francia Lefèvre\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "devis_carrosserie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCARROSSERIE MOREL\nDEVIS N° 2026-600\nDate : 15/11/2026\nClient : Transports Lefèvre SAS, 629 Place Saint-Jacques, 52813 Les Abymes\nObjet : réparation suite à sinistre dommages tous accidents — véhicule DF-517-WA\nMain d'œuvre ........ 2 680,00 €\nFournitures ......... 4 020,00 €\nTotal HT : 6 700,00 €\nTVA 20 % : 1 340,00 €\nTotal TTC : 8 040,00 €"
+          },
+          {
+            "fileName": "photos_degats.jpg",
+            "contentType": "image/jpeg",
+            "extractedText": "[Photo] Vue des dégâts : Notre Ford Transit immatriculé DF-517-WA a percuté un poteau en manœuvrant sur le périphérique nord de Lille."
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "unreadable_field",
+        "requestType": "claim",
+        "brokerCode": "DLM-075",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Lefèvre SAS",
+        "policyNumber": "F-77102",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-12",
+        "incidentDateReadable": false,
+        "nature": "vehicle_damage",
+        "amount": 8040,
+        "documentsMissing": [],
+        "verdict": "uncertain",
+        "reason": "unreadable_field",
+        "alerts": [],
+        "coverageLabel": "Dommages tous accidents",
+        "limit": 60000,
+        "deductible": 1000,
+        "clauseRef": "CG-AT-7.2",
+        "expectedAction": "request_documents"
+      }
+    },
+    {
+      "id": "eval-7-058",
+      "email": {
+        "messageId": "<eval-7-058@evals.local>",
+        "receivedAt": "2026-11-16T16:17:00.000Z",
+        "from": "office@thompson-solutions.com",
+        "to": "claims@hartley-finch.eu",
+        "subject": "Water damage claim - Thompson Solutions",
+        "body": "Hello,\n\nThe day before yesterday, the water heater failed and flooded the office. The walls have been damp for weeks because of rising damp from the ground, and the stock stored against the wall got damaged. Please find attached the incident report and the quote (EUR 4,300). Could you please take care of it with the insurer?\n\nKind regards,\nIsabel Miller\nThompson Solutions SAS\n+33 1 79 18 07 63",
+        "attachments": [
+          {
+            "fileName": "incident_report.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nINCIDENT REPORT\nInsured: Thompson Solutions SAS — SIREN 991130295\nDate of incident: 14 November 2026\nPlace: 102 quai Perrache, 33000 Lyon\n--- page 2 ---\nCircumstances: The water heater failed and flooded the office.\nSigned by the insured: Isabel Miller\nDate: 16 November 2026"
+          },
+          {
+            "fileName": "quote_plumbing.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nAUBERT PLUMBING\nQUOTE No. 2026-475\nDate: 15 November 2026\nCustomer: Thompson Solutions SAS, 102 quai Perrache, 33000 Lyon\nSubject: repairs after water damage\nLabour .............. EUR 1,433.33\nParts ............... EUR 2,150.00\nTotal excl. VAT: EUR 3,583.33\nVAT 20%: EUR 716.67\nTotal incl. VAT: EUR 4,300.00"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "exclusion",
+        "requestType": "claim",
+        "brokerCode": "HTF-092",
+        "emailLanguage": "en",
+        "expectedDraftLanguage": "en",
+        "expectedNoteLanguage": "en",
+        "holderName": "Thompson Solutions SAS",
+        "policyNumber": "C-83319",
+        "policyNumberInEmail": false,
+        "incidentDate": "2026-11-14",
+        "incidentDateReadable": true,
+        "nature": "water_damage",
+        "amount": 4300,
+        "documentsMissing": [],
+        "verdict": "not_covered",
+        "reason": "exclusion",
+        "alerts": ["exclusion"],
+        "coverageLabel": "Water damage",
+        "limit": 50000,
+        "deductible": 500,
+        "clauseRef": "CG-NB-4.2",
+        "expectedAction": "notify_denial"
+      }
+    },
+    {
+      "id": "eval-7-059",
+      "email": {
+        "messageId": "<eval-7-059@evals.local>",
+        "receivedAt": "2026-11-18T07:25:00.000Z",
+        "from": "accueil@fromagerie-gaillard.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Demande de devis pour l'ouverture d'un second local",
+        "body": "Bonjour Augustine,\n\nNous allons agrandir nos locaux le mois prochain. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant la cave d’affinage et le matériel ?\n\nMerci par avance,\nÉpiphane Gaillard\nFromagerie Gaillard\n03 38 13 92 70",
+        "attachments": []
+      },
+      "groundTruth": {
+        "scenario": "non_claim",
+        "requestType": "quote_request",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Fromagerie Gaillard SARL",
+        "policyNumber": null,
+        "policyNumberInEmail": false
+      }
+    },
+    {
+      "id": "eval-7-060",
+      "email": {
+        "messageId": "<eval-7-060@evals.local>",
+        "receivedAt": "2026-11-16T14:39:00.000Z",
+        "from": "direction@transports-dubois.fr",
+        "to": "sinistres@vasseur-associes.fr",
+        "subject": "Accident véhicule XW-063-TN",
+        "body": "Bonjour Madame, Monsieur,\n\nHier soir, notre Citroën Jumpy immatriculé XW-063-TN a percuté un poteau en manœuvrant sur le parking du dépôt. Vous trouverez ci-joint le constat et le devis. Notre numéro de contrat : F-51604. Pouvez-vous déclarer le sinistre ?\n\nMerci par avance,\nMamert Dubois\nTransports Dubois SAS\n04 61 99 45 09",
+        "attachments": [
+          {
+            "fileName": "constat_amiable.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCONSTAT AMIABLE D'ACCIDENT AUTOMOBILE\nAssuré : Transports Dubois SAS — SIREN 993657071\nDate du sinistre : 15/11/2026\nLieu : la N7 près de Valence\nVéhicule : Citroën Jumpy, immatriculation XW-063-TN\n--- page 2 ---\nCirconstances : Notre Citroën Jumpy immatriculé XW-063-TN a percuté un poteau en manœuvrant sur le parking du dépôt.\nSignature de l'assuré : Mamert Dubois\nFait le 16/11/2026"
+          },
+          {
+            "fileName": "devis_carrosserie.pdf",
+            "contentType": "application/pdf",
+            "extractedText": "--- page 1 ---\nCARROSSERIE MOREL\nDEVIS N° 2026-710\nDate : 15/11/2026\nClient : Transports Dubois SAS, 6 Passage du Chat-qui-Pêche, 34250 Toulouse\nObjet : réparation suite à sinistre dommages tous accidents — véhicule XW-063-TN\nMain d'œuvre ........ 1 723,33 €\nFournitures ......... 2 585,00 €\nTotal HT : 4 308,33 €\nTVA 20 % : 861,67 €\nTotal TTC : 5 170,00 €"
+          }
+        ]
+      },
+      "groundTruth": {
+        "scenario": "covered",
+        "requestType": "claim",
+        "brokerCode": "VSR-069",
+        "emailLanguage": "fr",
+        "expectedDraftLanguage": "fr",
+        "expectedNoteLanguage": "fr",
+        "holderName": "Transports Dubois SAS",
+        "policyNumber": "F-51604",
+        "policyNumberInEmail": true,
+        "incidentDate": "2026-11-15",
+        "incidentDateReadable": true,
+        "nature": "vehicle_damage",
+        "amount": 5170,
+        "documentsMissing": [],
+        "verdict": "covered",
+        "reason": "covered",
+        "alerts": [],
+        "coverageLabel": "Dommages tous accidents",
+        "limit": 60000,
+        "deductible": 800,
+        "clauseRef": "CG-AT-7.2",
+        "expectedAction": "file_claim"
+      }
+    }
+  ]
+}

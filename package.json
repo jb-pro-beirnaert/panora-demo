@@ -8,7 +8,8 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "evals"
   ],
   "scripts": {
     "dev": "npm run infra:reset && turbo run dev",
@@ -23,7 +24,9 @@
     "format:check": "prettier --check .",
     "test:integration": "turbo run test:integration",
     "infra:reset:langfuse": "docker compose --profile langfuse up -d --force-recreate --wait postgres redis langfuse-web langfuse-worker",
-    "dev:langfuse": "npm run infra:reset:langfuse && turbo run dev"
+    "dev:langfuse": "npm run infra:reset:langfuse && turbo run dev",
+    "gen:evals": "npm run gen -w evals --",
+    "evals": "npm run run -w evals --"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

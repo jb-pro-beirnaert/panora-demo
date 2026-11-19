@@ -1,0 +1,503 @@
+{
+  "runId": "2026-11-19T04-16-18-425Z",
+  "startedAt": "2026-11-19T04:16:18.425Z",
+  "finishedAt": "2026-11-19T04:19:18.388Z",
+  "dataset": {
+    "name": "seed-7",
+    "seed": 7,
+    "size": 4
+  },
+  "models": {
+    "triage": "openai/gpt-5-nano",
+    "coverage": "openai/gpt-6-luna",
+    "drafting": "openai/gpt-6-luna"
+  },
+  "judge": "gpt-5-nano",
+  "aggregates": [
+    {
+      "agent": "triage",
+      "scorer": "request_type",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "triage",
+      "scorer": "email_language",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "triage",
+      "scorer": "fields",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "verdict",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "alerts",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "limit_deductible",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "citations",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "action_type",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "amounts",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "languages",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "tone_completeness_judge",
+      "mean": 0.75,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 0.75
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "citations_judge",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    },
+    {
+      "agent": "workflow",
+      "scorer": "case_correct",
+      "mean": 1,
+      "count": 4,
+      "byLanguage": {
+        "fr": null,
+        "en": 1
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "eval-7-012",
+      "scenario": "covered",
+      "language": "en",
+      "caseId": "2c7f5639-6b21-448d-aff6-cad75e3e233e",
+      "traceId": "2c7f56396b21448daff6cad75e3e233e",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected en, got en"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected covered, got covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [], got []"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 20000/20000, deductible 300/300"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected file_claim, got file_claim"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft en/en, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "The CG-HZ-4.2 coverage clause directly supports that water damage caused by leaks or bursts is covered within the policy limits, and the deductible/limit clause justifies the stated payout of 2,300 minus 300 equals 2,000. The email is courteous and factual, confirms declaration with deductible and limit, and presents the estimated payout as subject to insurer assessment."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "The CG-HZ-4.2 coverage clause directly supports that water damage caused by leaks or bursts is covered within the policy limits, and the deductible/limit clause justifies the stated payout of 2,300 minus 300 equals 2,000. The email is courteous and factual, confirms declaration with deductible and limit, and presents the estimated payout as subject to insurer assessment."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-015",
+      "scenario": "unreadable_field",
+      "language": "en",
+      "caseId": "73e8eb03-c87d-45b7-9477-49d963671b89",
+      "traceId": "73e8eb03c87d45b7947749d963671b89",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected en, got en"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected uncertain, got uncertain"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [], got []"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 15000/15000, deductible 500/500"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected request_documents, got request_documents"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft en/en, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "The email references the applicable reporting deadline (2 days for theft) to justify requesting the loss date and explanation for late reporting, aligning with CG-HZ-3.1. It maintains a courteous, factual tone and seeks the essential information needed to proceed; it could optionally remind about the deductible/limit or list required documents, but it is generally adequate."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "The email references the applicable reporting deadline (2 days for theft) to justify requesting the loss date and explanation for late reporting, aligning with CG-HZ-3.1. It maintains a courteous, factual tone and seeks the essential information needed to proceed; it could optionally remind about the deductible/limit or list required documents, but it is generally adequate."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-023",
+      "scenario": "late_declaration",
+      "language": "en",
+      "caseId": "3f69677d-abc8-4ca9-8b56-0dd209322234",
+      "traceId": "3f69677dabc84ca98b560dd209322234",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected en, got en"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected uncertain, got uncertain"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [late_declaration], got [late_declaration]"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 10000/10000, deductible 500/500"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected request_documents, got request_documents"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft en/en, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 0,
+          "comment": "The CG-BO-3.1 and CG-BO-4.3 clauses correctly justify uncertainty about coverage due to late declaration and establish the claim's financial constraints (limit, deductible) that can affect payout. The draft email is courteous and factual but incomplete for action, as it does not provide a concrete list of required documents or clearly confirm the policy's deductible and limit."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "The CG-BO-3.1 and CG-BO-4.3 clauses correctly justify uncertainty about coverage due to late declaration and establish the claim's financial constraints (limit, deductible) that can affect payout. The draft email is courteous and factual but incomplete for action, as it does not provide a concrete list of required documents or clearly confirm the policy's deductible and limit."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-029",
+      "scenario": "exclusion",
+      "language": "en",
+      "caseId": "e6f4ef73-17e7-4c2b-8f1e-b1e207e5ee74",
+      "traceId": "e6f4ef7317e74c2b8f1eb1e207e5ee74",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected en, got en"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected not_covered, got not_covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [exclusion], got [exclusion]"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 8000/8000, deductible 0/0"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected notify_denial, got notify_denial"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft en/en, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "CG-AT-7.1 excludes simple scratches, ébréchures ou écaillures, which justifies not_covered for a scratch-only glass claim. The draft email is courteous, clearly states the denial with the clause, and invites discussion."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "CG-AT-7.1 excludes simple scratches, ébréchures ou écaillures, which justifies not_covered for a scratch-only glass claim. The draft email is courteous, clearly states the denial with the clause, and invites discussion."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    }
+  ],
+  "costPerCaseUsd": 0.0031402849992499997,
+  "latencyMs": {
+    "p50": 76685,
+    "p95": 86720
+  }
+}

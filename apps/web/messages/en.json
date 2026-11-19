@@ -7,7 +7,8 @@
     "inbox": "Inbox",
     "language": "Language",
     "broker": "Signed in as",
-    "brokerPlaceholder": "Choose a broker"
+    "brokerPlaceholder": "Choose a broker",
+    "evals": "Evals"
   },
   "locale": {
     "fr": "Français",
@@ -153,7 +154,8 @@
     "system": "System",
     "triage": "Triage agent",
     "coverage": "Coverage agent",
-    "drafting": "Drafting agent"
+    "drafting": "Drafting agent",
+    "workflow": "Workflow"
   },
   "actor": {
     "system": "System",
@@ -210,5 +212,36 @@
       "find_client": "{agent} looks up the sender {email} in the brokerage's records",
       "other": "{agent} calls {tool}"
     }
+  },
+  "evals": {
+    "title": "Evals",
+    "subtitle": "Agent scores on the generated dataset, per scorer and per language",
+    "empty": "No eval report yet. Run npm run evals.",
+    "latest": "Latest run",
+    "history": "History",
+    "failing": "Failing cases",
+    "noFailing": "No failing case.",
+    "run": "Run {runId}",
+    "models": "Models",
+    "judge": "Judge",
+    "judgeOff": "off",
+    "cost": "Average cost per case",
+    "latency": "Latency per case (p50 / p95)",
+    "columns": {
+      "agent": "Agent",
+      "scorer": "Scorer",
+      "score": "Score",
+      "fr": "FR",
+      "en": "EN",
+      "cases": "Cases",
+      "date": "Date",
+      "dataset": "Dataset",
+      "caseCorrect": "Cases entirely correct",
+      "case": "Case",
+      "scenario": "Scenario",
+      "language": "Language",
+      "reason": "Reason"
+    },
+    "viewTrace": "Trace"
   }
 }

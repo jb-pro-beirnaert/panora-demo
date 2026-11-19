@@ -22,6 +22,14 @@ export function AppHeader() {
           <div className="text-lg font-semibold">{t('app.title')}</div>
           <div className="text-xs text-muted-foreground">{t('app.subtitle')}</div>
         </Link>
+        <nav className="flex gap-4 text-sm">
+          <Link href="/" className="hover:underline">
+            {t('header.inbox')}
+          </Link>
+          <Link href="/evals" className="hover:underline">
+            {t('header.evals')}
+          </Link>
+        </nav>
         <label className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">{t('header.broker')}</span>
           <select

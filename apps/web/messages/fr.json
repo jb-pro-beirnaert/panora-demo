@@ -7,7 +7,8 @@
     "inbox": "Boîte de réception",
     "language": "Langue",
     "broker": "Connecté en tant que",
-    "brokerPlaceholder": "Choisir un courtier"
+    "brokerPlaceholder": "Choisir un courtier",
+    "evals": "Evals"
   },
   "locale": {
     "fr": "Français",
@@ -153,7 +154,8 @@
     "system": "Système",
     "triage": "Agent Tri",
     "coverage": "Agent Garanties",
-    "drafting": "Agent Rédaction"
+    "drafting": "Agent Rédaction",
+    "workflow": "Workflow"
   },
   "actor": {
     "system": "Système",
@@ -210,5 +212,36 @@
       "find_client": "{agent} cherche l'expéditeur {email} dans les fichiers du cabinet",
       "other": "{agent} appelle {tool}"
     }
+  },
+  "evals": {
+    "title": "Evals",
+    "subtitle": "Scores des agents sur le jeu généré, par scorer et par langue",
+    "empty": "Aucun rapport d'evals pour l'instant. Lancez npm run evals.",
+    "latest": "Dernière exécution",
+    "history": "Historique",
+    "failing": "Cas en échec",
+    "noFailing": "Aucun cas en échec.",
+    "run": "Exécution {runId}",
+    "models": "Modèles",
+    "judge": "Juge",
+    "judgeOff": "désactivé",
+    "cost": "Coût moyen par dossier",
+    "latency": "Latence par dossier (p50 / p95)",
+    "columns": {
+      "agent": "Agent",
+      "scorer": "Scorer",
+      "score": "Score",
+      "fr": "FR",
+      "en": "EN",
+      "cases": "Cas",
+      "date": "Date",
+      "dataset": "Jeu",
+      "caseCorrect": "Dossiers entièrement corrects",
+      "case": "Cas",
+      "scenario": "Scénario",
+      "language": "Langue",
+      "reason": "Raison"
+    },
+    "viewTrace": "Trace"
   }
 }

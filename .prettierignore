@@ -12,3 +12,6 @@ skills-lock.json
 next-env.d.ts
 apps/core-api/AGENTS.md
 apps/web/AGENTS.md
+evals/reports
+evals/datasets
+docs/versions/*.json

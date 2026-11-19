@@ -1,0 +1,74 @@
+name: Evals
+
+# Runs the agents on the generated dataset when a PR touches the agents (prompts, models, workflow)
+# and fails if a score falls under its threshold or drops by more than 2 points against main.
+on:
+  pull_request:
+    paths:
+      - 'apps/agents/**'
+      - 'evals/**'
+      - 'packages/shared/**'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Number of cases (default 60)
+        required: false
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CORE_SERVICE_TOKEN: ci-core-service-token-0123456789
+  MCP_TOKEN_SECRET: ci-mcp-token-secret-0123456789-0123456789
+  ADMIN_TOKEN: ci-admin-token-0123456789
+  DEMO_MODE: 'true'
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  # Optional: scores attached to the traces of a Langfuse project.
+  LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+  LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+  LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL || 'https://cloud.langfuse.com' }}
+  AGENTS_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/agents
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Start Postgres and Redis
+        run: npm run infra:reset
+      - name: Start the stack
+        run: |
+          npx turbo run dev --filter=@demo/core-api --filter=@demo/mcp-extranet --filter=@demo/agents > stack.log 2>&1 &
+          for i in $(seq 1 120); do
+            curl -sf localhost:3001/health && curl -sf localhost:3002/health && curl -sf localhost:4111/health && exit 0
+            sleep 2
+          done
+          cat stack.log; exit 1
+      - name: Baseline from main
+        run: |
+          git show origin/main:evals/reports/baseline.json > evals/reports/main-baseline.json \
+            || echo 'no baseline on main: thresholds only'
+      - name: Run the evals
+        run: |
+          npm run evals -- --gate --baseline reports/main-baseline.json \
+            ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
+      - name: Report
+        if: always()
+        run: cat evals/reports/latest.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: |
+            evals/reports/latest.json
+            evals/reports/latest.md
+            stack.log

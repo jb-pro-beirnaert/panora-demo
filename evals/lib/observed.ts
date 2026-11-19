@@ -1,0 +1,43 @@
+import type { CaseDetail, Locale, StepParams, StepSource } from '@demo/shared';
+
+/** What the agents produced for one case, read back from Core's case detail. */
+export interface Observed {
+  status: CaseDetail['status'];
+  triage: StepParams | null;
+  coverage: { params: StepParams; citations: StepSource[] } | null;
+  proposal: {
+    actionType: string;
+    draftSubject: string;
+    draftBody: string;
+    internalNote: string;
+    draftLanguage: Locale;
+    noteLanguage: Locale;
+  } | null;
+}
+
+export function observe(kase: CaseDetail): Observed {
+  const step = (type: string) => kase.steps.find((candidate) => candidate.stepType === type);
+  const triage = step('triage.completed');
+  const verdict = step('coverage.verdict');
+  const first = kase.proposedActions[0];
+  return {
+    status: kase.status,
+    triage: triage?.params ?? null,
+    coverage: verdict
+      ? {
+          params: verdict.params,
+          citations: verdict.sources.filter((source) => source.kind === 'clause'),
+        }
+      : null,
+    proposal: first
+      ? {
+          actionType: first.actionType,
+          draftSubject: first.draftSubject,
+          draftBody: first.draftBody,
+          internalNote: first.internalNote,
+          draftLanguage: first.draftLanguage,
+          noteLanguage: first.noteLanguage,
+        }
+      : null,
+  };
+}

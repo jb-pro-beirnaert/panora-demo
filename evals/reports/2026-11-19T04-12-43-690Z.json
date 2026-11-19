@@ -1,0 +1,677 @@
+{
+  "runId": "2026-11-19T04-12-43-690Z",
+  "startedAt": "2026-11-19T04:12:43.690Z",
+  "finishedAt": "2026-11-19T04:16:06.349Z",
+  "dataset": {
+    "name": "seed-7",
+    "seed": 7,
+    "size": 6
+  },
+  "models": {
+    "triage": "openai/gpt-5-nano",
+    "coverage": "openai/gpt-6-luna",
+    "drafting": "openai/gpt-6-luna"
+  },
+  "judge": "gpt-5-nano",
+  "aggregates": [
+    {
+      "agent": "triage",
+      "scorer": "request_type",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "triage",
+      "scorer": "email_language",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "triage",
+      "scorer": "fields",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "verdict",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "alerts",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "limit_deductible",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "citations",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "action_type",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "amounts",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "languages",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "drafting",
+      "scorer": "tone_completeness_judge",
+      "mean": 0.8333333333333334,
+      "count": 6,
+      "byLanguage": {
+        "fr": 0.8333333333333334,
+        "en": null
+      }
+    },
+    {
+      "agent": "coverage",
+      "scorer": "citations_judge",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    },
+    {
+      "agent": "workflow",
+      "scorer": "case_correct",
+      "mean": 1,
+      "count": 6,
+      "byLanguage": {
+        "fr": 1,
+        "en": null
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "eval-7-001",
+      "scenario": "covered",
+      "language": "fr",
+      "caseId": "55765d94-d943-4337-a986-83efb0b3d2ca",
+      "traceId": "55765d94d9434337a98683efb0b3d2ca",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected fr, got fr"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected covered, got covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [], got []"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 5000/5000, deductible 0/0"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected file_claim, got file_claim"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft fr/fr, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 0,
+          "comment": "Le CG-AT-7.1 prévoit l’indemnisation du bris accidentel des vitrages dans la limite du plafond et sous franchise, ce qui justifie le verdict 'covered'. Le brouillon d’e-mail omet d’indiquer expressément la limite de garantie et les documents nécessaires, ce qui le rend incomplet pour guider le client vers l’action."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "Le CG-AT-7.1 prévoit l’indemnisation du bris accidentel des vitrages dans la limite du plafond et sous franchise, ce qui justifie le verdict 'covered'. Le brouillon d’e-mail omet d’indiquer expressément la limite de garantie et les documents nécessaires, ce qui le rend incomplet pour guider le client vers l’action."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-002",
+      "scenario": "policy_terminated",
+      "language": "fr",
+      "caseId": "9bb34841-833c-46ac-b219-99d810c24c8e",
+      "traceId": "9bb34841833c46acb21999d810c24c8e",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected fr, got fr"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected not_covered, got not_covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [policy_terminated], got [policy_terminated]"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 30000/30000, deductible 300/300"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected notify_denial, got notify_denial"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft fr/fr, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "The CG-HZ-12.1 clause directly supports that no coverage applies since the policy was terminated before the loss, matching the verdict of not_covered. The draft email explains the denial with the clause, remains courteous, does not promise payment, and provides the client with the reason for denial."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "The CG-HZ-12.1 clause directly supports that no coverage applies since the policy was terminated before the loss, matching the verdict of not_covered. The draft email explains the denial with the clause, remains courteous, does not promise payment, and provides the client with the reason for denial."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-003",
+      "scenario": "missing_document",
+      "language": "fr",
+      "caseId": "cff1c8a5-c5c3-4dc7-bdab-867451386742",
+      "traceId": "cff1c8a5c5c34dc7bdab867451386742",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected fr, got fr"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected uncertain, got uncertain"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [missing_document], got [missing_document]"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 100000/100000, deductible 1500/1500"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected request_documents, got request_documents"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft fr/fr, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "Citational CG-BO-3.2 correctly justifies that the insurer cannot decide without the required documents. The draft email is courteous and factual, lists the documents to send and cites the clause, enabling action; it does not explicitly state the deductible and limit, but this is not strictly required to initiate the document submission."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "Citational CG-BO-3.2 correctly justifies that the insurer cannot decide without the required documents. The draft email is courteous and factual, lists the documents to send and cites the clause, enabling action; it does not explicitly state the deductible and limit, but this is not strictly required to initiate the document submission."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-004",
+      "scenario": "exclusion",
+      "language": "fr",
+      "caseId": "28251054-841f-4686-a656-9c3ac67d0961",
+      "traceId": "28251054841f4686a6569c3ac67d0961",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected fr, got fr"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected not_covered, got not_covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [exclusion], got [exclusion]"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 150000/150000, deductible 1500/1500"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected notify_denial, got notify_denial"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft fr/fr, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "CG-HZ-4.1 explicitly excludes damages aggravated by storage of flammable liquids outside a compliant safety cabinet, which justifies a not_covered verdict; the email draft communicates this denial, cites the clause, and maintains a courteous, informative tone."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "CG-HZ-4.1 explicitly excludes damages aggravated by storage of flammable liquids outside a compliant safety cabinet, which justifies a not_covered verdict; the email draft communicates this denial, cites the clause, and maintains a courteous, informative tone."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-005",
+      "scenario": "limit_exceeded",
+      "language": "fr",
+      "caseId": "1006d4dc-f798-4b43-b2ec-9ad7848621eb",
+      "traceId": "1006d4dcf7984b43b2ec9ad7848621eb",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected fr, got fr"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected covered, got covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [limit_exceeded], got [limit_exceeded]"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 30000/30000, deductible 500/500"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected file_claim, got file_claim"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft fr/fr, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "CG-BO-4.2 states that damages are indemnified within the limit and after the deductible, which aligns with the 30,000 EUR cap and 500 EUR deductible leading to 29,500 EUR payout. The email draft is courteous, factual, notes the declaration, and provides the limit and deductible without promising payment beyond the approved amount."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "CG-BO-4.2 states that damages are indemnified within the limit and after the deductible, which aligns with the 30,000 EUR cap and 500 EUR deductible leading to 29,500 EUR payout. The email draft is courteous, factual, notes the declaration, and provides the limit and deductible without promising payment beyond the approved amount."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    },
+    {
+      "id": "eval-7-006",
+      "scenario": "deductible",
+      "language": "fr",
+      "caseId": "e425ce10-38fa-412b-83ef-8f00c8ec8f8a",
+      "traceId": "e425ce1038fa412b83ef8f00c8ec8f8a",
+      "error": null,
+      "scores": [
+        {
+          "agent": "triage",
+          "scorer": "request_type",
+          "value": 1,
+          "comment": "expected claim, got claim"
+        },
+        {
+          "agent": "triage",
+          "scorer": "email_language",
+          "value": 1,
+          "comment": "expected fr, got fr"
+        },
+        {
+          "agent": "triage",
+          "scorer": "fields",
+          "value": 1
+        },
+        {
+          "agent": "coverage",
+          "scorer": "verdict",
+          "value": 1,
+          "comment": "expected covered, got covered"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "alerts",
+          "value": 1,
+          "comment": "expected [], got []"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "limit_deductible",
+          "value": 1,
+          "comment": "limit 300000/300000, deductible 1000/1000"
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "action_type",
+          "value": 1,
+          "comment": "expected file_claim, got file_claim"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "amounts",
+          "value": 1,
+          "comment": "ok"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "languages",
+          "value": 1,
+          "comment": "draft fr/fr, note fr/fr"
+        },
+        {
+          "agent": "drafting",
+          "scorer": "tone_completeness_judge",
+          "value": 1,
+          "comment": "CG-AT-4.1 covers damages caused by fire up to the policy limit and after the deductible, which justifies the 'covered' verdict and the estimated payout of 150 €. The email draft correctly confirms the declaration action, states the deductible and limit, and provides an estimated payout without promising payment."
+        },
+        {
+          "agent": "coverage",
+          "scorer": "citations_judge",
+          "value": 1,
+          "comment": "CG-AT-4.1 covers damages caused by fire up to the policy limit and after the deductible, which justifies the 'covered' verdict and the estimated payout of 150 €. The email draft correctly confirms the declaration action, states the deductible and limit, and provides an estimated payout without promising payment."
+        },
+        {
+          "agent": "workflow",
+          "scorer": "case_correct",
+          "value": 1,
+          "comment": "ok"
+        }
+      ]
+    }
+  ],
+  "costPerCaseUsd": 0.0031487424993333333,
+  "latencyMs": {
+    "p50": 80533,
+    "p95": 96648
+  }
+}

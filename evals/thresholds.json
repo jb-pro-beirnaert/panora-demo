@@ -1,0 +1,12 @@
+{
+  "triage/request_type": 0.95,
+  "triage/fields": 0.8,
+  "triage/email_language": 0.95,
+  "coverage/verdict": 0.7,
+  "coverage/limit_deductible": 0.8,
+  "coverage/citations": 0.7,
+  "drafting/action_type": 0.7,
+  "drafting/amounts": 0.8,
+  "drafting/languages": 0.9,
+  "workflow/case_correct": 0.5
+}
