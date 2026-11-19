@@ -103,7 +103,7 @@ export class EmailsService {
       { jobId: created.emailId },
     );
     const reference = caseReference(created.number);
-    this.realtime.publish('case.created', created.caseId, { reference });
+    this.realtime.publish('case.created', created.caseId, { reference }, brokerage.id);
     return { caseId: created.caseId, reference, created: true };
   }
 

@@ -22,6 +22,8 @@ env:
   CORE_SERVICE_TOKEN: ci-core-service-token-0123456789
   MCP_TOKEN_SECRET: ci-mcp-token-secret-0123456789-0123456789
   ADMIN_TOKEN: ci-admin-token-0123456789
+  INBOUND_EMAIL_TOKEN: ci-inbound-email-token-0123456789
+  MASTRA_API_TOKEN: ci-mastra-api-token-0123456789
   DEMO_MODE: 'true'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   # Optional: scores attached to the traces of a Langfuse project.

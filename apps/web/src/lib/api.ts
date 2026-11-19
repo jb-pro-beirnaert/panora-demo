@@ -22,6 +22,8 @@ async function request<T>(base: string, path: string, init: RequestInit = {}): P
     ...init,
     headers: { 'content-type': 'application/json', ...init.headers },
     cache: 'no-store',
+    // The broker's session cookie (V10).
+    credentials: base === CORE_API_URL ? 'include' : 'same-origin',
   });
   if (!response.ok) {
     let message = response.statusText;
@@ -36,21 +38,37 @@ async function request<T>(base: string, path: string, init: RequestInit = {}): P
   return (await response.json()) as T;
 }
 
+export interface SignedInBroker {
+  kind: 'broker';
+  id: string;
+  name: string;
+  email: string;
+  brokerage: { id: string; name: string; brokerCode: string };
+}
+
 export const coreApi = {
+  login: (email: string, password: string) =>
+    request<{ status: string }>(CORE_API_URL, '/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+  logout: () => request<{ status: string }>(CORE_API_URL, '/auth/logout', { method: 'POST' }),
+  me: () => request<SignedInBroker | { kind: 'admin' }>(CORE_API_URL, '/auth/me'),
+  demoAccounts: () =>
+    request<{ password: string; accounts: { email: string; name: string; brokerage: string }[] }>(
+      CORE_API_URL,
+      '/auth/demo-accounts',
+    ),
   brokers: () => request<BrokerView[]>(CORE_API_URL, '/brokers'),
   cases: () => request<CaseSummary[]>(CORE_API_URL, '/cases'),
   stats: () => request<CaseStats>(CORE_API_URL, '/cases/stats'),
   metrics: () => request<CaseMetrics>(CORE_API_URL, '/cases/metrics'),
-  retry: (id: string, brokerId: string) =>
-    request<{ status: string }>(CORE_API_URL, `/cases/${id}/retry`, {
-      method: 'POST',
-      headers: { 'x-broker-id': brokerId },
-    }),
+  retry: (id: string) =>
+    request<{ status: string }>(CORE_API_URL, `/cases/${id}/retry`, { method: 'POST' }),
   case: (id: string) => request<CaseDetail>(CORE_API_URL, `/cases/${id}`),
-  decide: (id: string, brokerId: string, decision: DecisionRequest) =>
+  decide: (id: string, decision: DecisionRequest) =>
     request<{ status: string }>(CORE_API_URL, `/cases/${id}/decision`, {
       method: 'POST',
-      headers: { 'x-broker-id': brokerId },
       body: JSON.stringify(decision),
     }),
 };

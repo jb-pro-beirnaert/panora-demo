@@ -27,12 +27,18 @@ export class InternalService {
     private readonly realtime: RealtimeService,
   ) {}
 
-  private async exists(caseId: string): Promise<boolean> {
-    return (await this.prisma.case.count({ where: { id: caseId } })) > 0;
+  /** The case's brokerage, or null when the case no longer exists. */
+  private async brokerageOf(caseId: string): Promise<string | null> {
+    const kase = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      select: { brokerageId: true },
+    });
+    return kase?.brokerageId ?? null;
   }
 
   async recordStep(caseId: string, input: AgentStepCallback): Promise<CallbackOutcome> {
-    if (!(await this.exists(caseId))) return IGNORED;
+    const brokerageId = await this.brokerageOf(caseId);
+    if (!brokerageId) return IGNORED;
     const step = AgentStepCallbackSchema.parse(input);
     const params = { ...step.params };
 
@@ -89,22 +95,33 @@ export class InternalService {
       );
       return row;
     });
-    this.realtime.publish('case.step', caseId, { stepId: created.id, stepType: step.stepType });
+    this.realtime.publish(
+      'case.step',
+      caseId,
+      { stepId: created.id, stepType: step.stepType },
+      brokerageId,
+    );
     return { status: 'recorded' };
   }
 
   /** A tool call while an agent works: live timeline only (the audit keeps business steps). */
   async recordAgentEvent(caseId: string, event: AgentEventCallback): Promise<CallbackOutcome> {
-    if (!(await this.exists(caseId))) return IGNORED;
+    const brokerageId = await this.brokerageOf(caseId);
+    if (!brokerageId) return IGNORED;
     const row = await this.prisma.agentEvent.create({
       data: { caseId, agent: event.agent, eventType: event.eventType, params: event.params },
     });
-    this.realtime.publish('case.agent_event', caseId, {
-      eventId: row.id,
-      agent: event.agent,
-      eventType: event.eventType,
-      params: event.params,
-    });
+    this.realtime.publish(
+      'case.agent_event',
+      caseId,
+      {
+        eventId: row.id,
+        agent: event.agent,
+        eventType: event.eventType,
+        params: event.params,
+      },
+      brokerageId,
+    );
     return { status: 'recorded' };
   }
 
@@ -112,7 +129,8 @@ export class InternalService {
     caseId: string,
     input: ProposedActionCallback,
   ): Promise<CallbackOutcome> {
-    if (!(await this.exists(caseId))) return IGNORED;
+    const brokerageId = await this.brokerageOf(caseId);
+    if (!brokerageId) return IGNORED;
     const { action } = input;
     // Idempotent: a retried callback for the same revision changes nothing (no second audit row,
     // no status rollback if the broker already decided).
@@ -157,10 +175,15 @@ export class InternalService {
         tx,
       );
     });
-    this.realtime.publish('case.action_proposed', caseId, {
-      revision: action.revision,
-      actionType: action.actionType,
-    });
+    this.realtime.publish(
+      'case.action_proposed',
+      caseId,
+      {
+        revision: action.revision,
+        actionType: action.actionType,
+      },
+      brokerageId,
+    );
     return { status: 'recorded' };
   }
 
@@ -168,7 +191,8 @@ export class InternalService {
     caseId: string,
     input: ExecutedActionCallback,
   ): Promise<CallbackOutcome> {
-    if (!(await this.exists(caseId))) return IGNORED;
+    const brokerageId = await this.brokerageOf(caseId);
+    if (!brokerageId) return IGNORED;
     const { result } = input;
     await this.prisma.$transaction(async (tx) => {
       if (result.outcome === 'classified') {
@@ -213,12 +237,13 @@ export class InternalService {
         tx,
       );
     });
-    this.realtime.publish('case.closed', caseId, { outcome: result.outcome });
+    this.realtime.publish('case.closed', caseId, { outcome: result.outcome }, brokerageId);
     return { status: 'recorded' };
   }
 
   async recordFailure(caseId: string, input: WorkflowFailedCallback): Promise<CallbackOutcome> {
-    if (!(await this.exists(caseId))) return IGNORED;
+    const brokerageId = await this.brokerageOf(caseId);
+    if (!brokerageId) return IGNORED;
     const reason = input.error.slice(0, 1_000);
     await this.prisma.$transaction(async (tx) => {
       await tx.case.update({
@@ -236,7 +261,7 @@ export class InternalService {
         tx,
       );
     });
-    this.realtime.publish('case.updated', caseId, { status: 'failed' });
+    this.realtime.publish('case.updated', caseId, { status: 'failed' }, brokerageId);
     return { status: 'recorded' };
   }
 

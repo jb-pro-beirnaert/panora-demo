@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { routing, type AppLocale } from '@/i18n/routing';
+import { Button } from '@/components/ui/button';
 import { useBroker } from '@/lib/broker';
 
 const selectClass =
@@ -13,7 +14,7 @@ export function AppHeader() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const { brokers, broker, select } = useBroker();
+  const { broker, signOut } = useBroker();
 
   return (
     <header className="border-b bg-background">
@@ -30,21 +31,17 @@ export function AppHeader() {
             {t('header.evals')}
           </Link>
         </nav>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">{t('header.broker')}</span>
-          <select
-            className={selectClass}
-            value={broker?.id ?? ''}
-            onChange={(event) => select(event.target.value)}
-          >
-            {!broker && <option value="">{t('header.brokerPlaceholder')}</option>}
-            {brokers.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.name} — {candidate.brokerage.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {broker && (
+          <span className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">{t('header.broker')}</span>
+            <span>
+              {t('auth.signedInAs', { name: broker.name, brokerage: broker.brokerage.name })}
+            </span>
+            <Button size="sm" variant="ghost" onClick={signOut}>
+              {t('auth.signOut')}
+            </Button>
+          </span>
+        )}
         <label className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">{t('header.language')}</span>
           <select

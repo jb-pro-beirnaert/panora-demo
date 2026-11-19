@@ -18,6 +18,11 @@ export class FakeMastraClient {
     this.started.push({ runId, input, tracing });
   }
   restarted: string[] = [];
+  purged: { runIds: string[]; traceIds: string[] }[] = [];
+  async purge(runIds: string[], traceIds: string[]): Promise<{ runs: number; traces: number }> {
+    this.purged.push({ runIds, traceIds });
+    return { runs: runIds.length, traces: traceIds.length };
+  }
   async restart(runId: string): Promise<void> {
     this.restarted.push(runId);
   }

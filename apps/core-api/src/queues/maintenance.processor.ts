@@ -1,4 +1,7 @@
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Inject } from '@nestjs/common';
+import { ENV, type Env } from '../env.js';
+import { PurgeService } from './purge.service.js';
 import type { OnModuleInit } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
 import { MAINTENANCE_QUEUE } from './queue-names.js';
@@ -11,7 +14,9 @@ export const WATCHDOG_EVERY_MS = 30_000;
 export class MaintenanceProcessor extends WorkerHost implements OnModuleInit {
   constructor(
     private readonly watchdog: WatchdogService,
+    private readonly purge: PurgeService,
     @InjectQueue(MAINTENANCE_QUEUE) private readonly queue: Queue,
+    @Inject(ENV) private readonly env: Env,
   ) {
     super();
   }
@@ -22,10 +27,16 @@ export class MaintenanceProcessor extends WorkerHost implements OnModuleInit {
       { every: WATCHDOG_EVERY_MS },
       { name: 'watchdog' },
     );
+    await this.queue.upsertJobScheduler(
+      'purge',
+      { every: this.env.PURGE_EVERY_MS },
+      { name: 'purge' },
+    );
   }
 
   async process(job: Job): Promise<unknown> {
     if (job.name === 'watchdog') return this.watchdog.run();
+    if (job.name === 'purge') return this.purge.run();
     return null;
   }
 }

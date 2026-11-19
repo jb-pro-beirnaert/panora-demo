@@ -127,7 +127,7 @@ function FailedBanner({ kase, onRetried }: { kase: CaseDetail; onRetried: () => 
           onClick={async () => {
             setSending(true);
             try {
-              await coreApi.retry(kase.id, broker.id);
+              await coreApi.retry(kase.id);
               onRetried();
             } finally {
               setSending(false);
@@ -365,7 +365,7 @@ function Proposal({
     setSending(true);
     setError(null);
     try {
-      await coreApi.decide(kase.id, broker.id, {
+      await coreApi.decide(kase.id, {
         approved,
         ...(comment.trim() ? { comment: comment.trim() } : {}),
       });

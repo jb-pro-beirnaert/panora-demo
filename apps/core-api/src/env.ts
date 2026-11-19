@@ -45,6 +45,26 @@ const EnvSchema = z
       .min(16, 'CORE_SERVICE_TOKEN (16+ characters) is required (see .env.example)'),
     /** Origin of the web UI allowed by CORS. */
     WEB_ORIGIN: z.string().default('http://localhost:3000'),
+    /** Bearer token of the inbound e-mail gateway on `POST /emails` (the simulator in the demo). */
+    INBOUND_EMAIL_TOKEN: z
+      .string()
+      .min(16, 'INBOUND_EMAIL_TOKEN (16+ characters) is required (see .env.example)'),
+    /** Broker sessions (V10). */
+    SESSION_TTL_HOURS: z.coerce.number().positive().default(12),
+    COOKIE_SECURE: booleanString,
+    /** Password of every seeded broker account (demo mode only). */
+    DEMO_BROKER_PASSWORD: z.string().min(8).default('demo-password'),
+    /** V10 retention: closed cases' workflow snapshots and traces are purged after this delay. */
+    RETENTION_DAYS: z.coerce.number().positive().default(30),
+    PURGE_EVERY_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(6 * 3_600_000),
+    /** Bearer token Core presents to the Mastra server (V10). */
+    MASTRA_API_TOKEN: z
+      .string()
+      .min(16, 'MASTRA_API_TOKEN (16+ characters) is required (see .env.example)'),
     DEMO_MODE: booleanString,
     ADMIN_TOKEN: z.string().optional(),
   })

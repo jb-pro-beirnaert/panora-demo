@@ -7,7 +7,6 @@
     "inbox": "Inbox",
     "language": "Language",
     "broker": "Signed in as",
-    "brokerPlaceholder": "Choose a broker",
     "evals": "Evals"
   },
   "locale": {
@@ -203,7 +202,8 @@
     "ready_to_send": "E-mail ready to send",
     "workflow_failed": "Processing failed",
     "workflow_restarted": "Processing restarted after an interruption (attempt {attempt})",
-    "workflow_retried": "Case relaunched by the broker"
+    "workflow_retried": "Case relaunched by the broker",
+    "data_purged": "Workflow snapshot and trace deleted (retention: {retentionDays} days)"
   },
   "common": {
     "none": "none",
@@ -251,5 +251,15 @@
       "reason": "Reason"
     },
     "viewTrace": "Trace"
+  },
+  "auth": {
+    "title": "Sign in",
+    "email": "E-mail",
+    "password": "Password",
+    "submit": "Sign in",
+    "signOut": "Sign out",
+    "wrong": "Wrong e-mail or password.",
+    "demoAccounts": "Demo accounts (password: {password})",
+    "signedInAs": "{name} — {brokerage}"
   }
 }

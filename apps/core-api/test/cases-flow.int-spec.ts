@@ -7,11 +7,12 @@ import request from 'supertest';
 import { AuditService } from '../src/audit/audit.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { ProcessEmailProcessor } from '../src/queues/process-email.processor.js';
+import { PurgeService } from '../src/queues/purge.service.js';
 import { MAX_RESTARTS, WatchdogService } from '../src/queues/watchdog.service.js';
 import { PROCESS_EMAIL_QUEUE, RESUME_WORKFLOW_QUEUE } from '../src/queues/queue-names.js';
 import { RealtimeService } from '../src/realtime/realtime.service.js';
 import { createTestApp, type FakeMastraClient } from './app.js';
-import { TEST_ADMIN_TOKEN, TEST_SERVICE_TOKEN } from './test-env.js';
+import { TEST_ADMIN_TOKEN, TEST_INBOUND_TOKEN, TEST_SERVICE_TOKEN } from './test-env.js';
 
 const world = generateWorld({ seed: 42, locale: 'fr' });
 const emails = generateEmails(world, { seed: 42, count: 10 });
@@ -23,6 +24,7 @@ const otherBroker = world.brokers.find((b) => b.brokerageId !== delorme.id)!;
 
 const admin = { authorization: `Bearer ${TEST_ADMIN_TOKEN}` };
 const service = { authorization: `Bearer ${TEST_SERVICE_TOKEN}` };
+const inbound = { authorization: `Bearer ${TEST_INBOUND_TOKEN}` };
 
 const proposal = (revision: number, actionType = 'notify_denial') => ({
   workflowRunId: 'run-1',
@@ -42,12 +44,13 @@ const proposal = (revision: number, actionType = 'notify_denial') => ({
 describe('case lifecycle (Postgres + Redis)', () => {
   let app: INestApplication;
   let mastra: FakeMastraClient;
-  let http: ReturnType<typeof request>;
+  // The demo admin (as the simulator and the evals): sees every brokerage.
+  let http: ReturnType<typeof request.agent>;
   const events: RealtimeEvent[] = [];
 
   beforeAll(async () => {
     ({ app, mastra } = await createTestApp());
-    http = request(app.getHttpServer());
+    http = request.agent(app.getHttpServer()).set(admin);
     app
       .get(RealtimeService)
       .stream()
@@ -59,7 +62,7 @@ describe('case lifecycle (Postgres + Redis)', () => {
     await app.close();
   });
 
-  const receive = (email: InboundEmailInput) => http.post('/emails').send(email);
+  const receive = (email: InboundEmailInput) => http.post('/emails').set(inbound).send(email);
   const detail = async (caseId: string) =>
     (await http.get(`/cases/${caseId}`).expect(200)).body as CaseDetail;
 
@@ -93,7 +96,9 @@ describe('case lifecycle (Postgres + Redis)', () => {
 
   it('rejects an e-mail sent to an unknown inbox and an invalid payload', async () => {
     await receive({ ...terminated, messageId: '<x@y>', to: 'nobody@nowhere.fr' }).expect(422);
-    await http.post('/emails').send({ subject: 'no sender' }).expect(400);
+    await http.post('/emails').set(inbound).send({ subject: 'no sender' }).expect(400);
+    // Only the inbound gateway may post e-mails.
+    await request(app.getHttpServer()).post('/emails').send(terminated).expect(401);
   });
 
   it('the worker starts the workflow and stores the run id without waiting', async () => {
@@ -226,7 +231,8 @@ describe('case lifecycle (Postgres + Redis)', () => {
   });
 
   it('checks who decides', async () => {
-    await http.post(`/cases/${caseId}/decision`).send({ approved: true }).expect(401);
+    // The admin must name the broker it acts for.
+    await http.post(`/cases/${caseId}/decision`).send({ approved: true }).expect(400);
     await http
       .post(`/cases/${caseId}/decision`)
       .set('x-broker-id', otherBroker.id)
@@ -424,6 +430,24 @@ describe('case lifecycle (Postgres + Redis)', () => {
       .expect(200, { status: 'ignored', reason: 'unknown case (reset?)' });
   });
 
+  it('purges the snapshot and the trace of cases closed for longer than the retention delay', async () => {
+    const purge = app.get(PurgeService);
+    // Closed today: kept.
+    expect((await purge.run(new Date())).cases).toBe(0);
+    const later = new Date(Date.now() + 31 * 86_400_000);
+    const result = await purge.run(later);
+    expect(result.cases).toBe(1);
+    expect(mastra.purged.at(-1)).toEqual({
+      runIds: ['run-1'],
+      traceIds: [caseId.replace(/-/g, '')],
+    });
+    const view = await detail(caseId);
+    expect(view.auditLogs.at(-1)).toMatchObject({ actor: 'system', action: 'data_purged' });
+    // The case and its audit trail stay; a second run has nothing left to purge.
+    expect(view.status).toBe('ready_to_send');
+    expect((await purge.run(later)).cases).toBe(0);
+  });
+
   it('has no route that modifies the audit trail', async () => {
     for (const method of ['put', 'patch', 'delete'] as const) {
       await http[method](`/cases/${caseId}/audit`).expect(404);
@@ -431,7 +455,7 @@ describe('case lifecycle (Postgres + Redis)', () => {
   });
 
   it('reset empties the tables, restarts numbering and tells the UI', async () => {
-    await http.post('/admin/reset').expect(401);
+    await request(app.getHttpServer()).post('/admin/reset').expect(401);
     await http.post('/admin/reset').set(admin).expect(200);
     expect(events.at(-1)?.type).toBe('demo.reset');
     expect((await http.get('/cases').expect(200)).body).toEqual([]);

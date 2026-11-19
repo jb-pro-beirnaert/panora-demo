@@ -63,12 +63,15 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? '';
 const here = (path: string) => new URL(path, import.meta.url);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const INBOUND_TOKEN = process.env.INBOUND_EMAIL_TOKEN ?? '';
+
 async function post(base: string, path: string, body: unknown, admin = false): Promise<unknown> {
   const response = await fetch(new URL(path, base), {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      ...(admin ? { authorization: `Bearer ${ADMIN_TOKEN}` } : {}),
+      // Admin routes: the admin token; `POST /emails`: the inbound gateway token (V10).
+      authorization: `Bearer ${admin ? ADMIN_TOKEN : INBOUND_TOKEN}`,
     },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(30_000),
@@ -82,7 +85,9 @@ const DONE = new Set(['awaiting_approval', 'classified', 'ready_to_send', 'claim
 async function waitForCase(caseId: string, timeoutMs: number): Promise<CaseDetail> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
-    const response = await fetch(new URL(`/cases/${caseId}`, CORE));
+    const response = await fetch(new URL(`/cases/${caseId}`, CORE), {
+      headers: { authorization: `Bearer ${ADMIN_TOKEN}` },
+    });
     const kase = CaseDetailSchema.parse(await response.json());
     if (DONE.has(kase.status) || Date.now() > deadline) return kase;
     await sleep(2_000);

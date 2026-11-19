@@ -232,6 +232,8 @@ export const AuditActionSchema = z.enum([
   /** V9: the watchdog restarted a stuck run, or a broker relaunched a failed case. */
   'workflow_restarted',
   'workflow_retried',
+  /** V10 retention: the workflow snapshot and the trace of a closed case were deleted. */
+  'data_purged',
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 
@@ -251,6 +253,8 @@ export type RealtimeEventType = z.infer<typeof RealtimeEventTypeSchema>;
 export const RealtimeEventSchema = z.object({
   type: RealtimeEventTypeSchema,
   caseId: z.string().nullable(),
+  /** Brokerage of the case: a broker only receives their brokerage's events (null: everyone). */
+  brokerageId: z.string().nullable().default(null),
   /** Small payload: the UI refetches the case when it needs more. */
   data: z.record(z.string(), z.unknown()).default({}),
 });

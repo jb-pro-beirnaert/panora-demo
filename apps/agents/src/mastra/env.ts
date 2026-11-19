@@ -50,6 +50,8 @@ const EnvSchema = z
     WORKFLOW_STEP_ATTEMPTS: z.coerce.number().int().min(1).default(3),
     AGENTS_MODE: z.enum(['llm', 'simulated']).default('llm'),
     SIMULATED_LLM_LATENCY_MS: z.coerce.number().int().min(0).default(800),
+    /** Bearer token Core presents on every API call (V10). Unset: the API is open (dev only). */
+    MASTRA_API_TOKEN: z.string().min(16).optional(),
     /** Ollama's URL, for `ollama/<model>` specs (V8, local Qwen). */
     OLLAMA_BASE_URL: z.url().default('http://localhost:11434'),
     /** Light model: extraction only. */

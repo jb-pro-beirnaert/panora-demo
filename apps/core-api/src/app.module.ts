@@ -1,5 +1,10 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module, type DynamicModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthController } from './auth/auth.controller.js';
+import { AuthGuard } from './auth/auth.guard.js';
+import { SessionsService } from './auth/sessions.service.js';
+import { InboundTokenGuard } from './emails/inbound-token.guard.js';
 import { AdminModule } from './admin/admin.module.js';
 import { CasesController } from './cases/cases.controller.js';
 import { CasesService } from './cases/cases.service.js';
@@ -13,6 +18,7 @@ import { InternalService } from './internal/internal.service.js';
 import { ServiceTokenGuard } from './internal/service-token.guard.js';
 import { MaintenanceProcessor } from './queues/maintenance.processor.js';
 import { ProcessEmailProcessor } from './queues/process-email.processor.js';
+import { PurgeService } from './queues/purge.service.js';
 import { WatchdogService } from './queues/watchdog.service.js';
 import { QueuesModule } from './queues/queues.module.js';
 import { ResumeWorkflowProcessor } from './queues/resume-workflow.processor.js';
@@ -44,6 +50,7 @@ export class AppModule {
       ],
       controllers: [
         HealthController,
+        AuthController,
         EmailsController,
         CasesController,
         InternalController,
@@ -54,7 +61,11 @@ export class AppModule {
         CasesService,
         InternalService,
         ServiceTokenGuard,
+        InboundTokenGuard,
+        SessionsService,
+        { provide: APP_GUARD, useClass: AuthGuard },
         WatchdogService,
+        PurgeService,
         ...(workers ? [ProcessEmailProcessor, ResumeWorkflowProcessor, MaintenanceProcessor] : []),
       ],
     };

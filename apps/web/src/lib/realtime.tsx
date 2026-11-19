@@ -27,7 +27,7 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const source = new EventSource(new URL('/realtime', CORE_API_URL));
+    const source = new EventSource(new URL('/realtime', CORE_API_URL), { withCredentials: true });
     source.onopen = () => setConnected(true);
     source.onerror = () => setConnected(false);
     const dispatch = (message: MessageEvent<string>) => {

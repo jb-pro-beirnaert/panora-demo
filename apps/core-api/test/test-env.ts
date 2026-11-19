@@ -8,3 +8,6 @@ export const TEST_REDIS_URL = process.env.CORE_TEST_REDIS_URL ?? 'redis://localh
 
 export const TEST_SERVICE_TOKEN = 'test-service-token-0123456789';
 export const TEST_ADMIN_TOKEN = 'test-admin-token-0123456789';
+export const TEST_INBOUND_TOKEN = 'test-inbound-token-0123456789';
+export const TEST_MASTRA_API_TOKEN = 'test-mastra-api-token-0123456789';
+export const TEST_BROKER_PASSWORD = 'test-broker-password';

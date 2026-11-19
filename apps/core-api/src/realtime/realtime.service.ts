@@ -18,8 +18,9 @@ export class RealtimeService implements BeforeApplicationShutdown {
     type: RealtimeEvent['type'],
     caseId: string | null,
     data: RealtimeEvent['data'] = {},
+    brokerageId: string | null = null,
   ): void {
-    this.events.next({ type, caseId, data });
+    this.events.next({ type, caseId, brokerageId, data });
   }
 
   stream(): Observable<RealtimeEvent> {

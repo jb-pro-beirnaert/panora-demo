@@ -71,6 +71,23 @@ model Broker {
   name            String
   email           String    @unique
   preferredLocale Locale
+  /**
+   * scrypt hash (`salt:hash`, hex) of the demo password, set at seed.
+   */
+  passwordHash    String?
+  sessions        Session[]
+}
+
+/**
+ * A signed-in broker (V10). Only a hash of the token is stored.
+ */
+model Session {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  brokerId  String
+  broker    Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Client {
@@ -145,8 +162,14 @@ model Case {
    * Langfuse trace id: one trace per case (initial run and every resume).
    */
   traceId         String?
-  /** Eval run options (models, architecture, context), demo mode only. */
+  /**
+   * Eval run options (models, architecture, context), demo mode only.
+   */
   runOptions      Json?
+  /**
+   * V10 retention: when the workflow snapshot and the trace of this closed case were purged.
+   */
+  purgedAt        DateTime?
   /**
    * Filled as the workflow progresses (language-neutral values).
    */

@@ -21,6 +21,7 @@
     "@mastra/mcp": "^2.10.0",
     "@mastra/observability": "^1.24.2",
     "@mastra/pg": "^1.37.0",
+    "hono": "^4.13.19",
     "zod": "^4.6.7"
   },
   "devDependencies": {

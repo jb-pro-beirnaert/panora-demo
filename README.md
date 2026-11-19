@@ -135,3 +135,37 @@ How it holds:
   waiting behind the rate limiter (now it skips cases with a pending job), and a stopping Core waited
   forever for open SSE streams (they now complete on shutdown, and the SSE client reconnects after
   45 s of silence).
+
+## Security and personal data
+
+**Access.** Brokers sign in (accounts of the seed in the demo); Core keeps the session (httpOnly
+cookie, only a hash of the token is stored). Every Core query is filtered by the broker's
+brokerage — another brokerage's case answers 404 — and the realtime stream only carries the
+brokerage's events. The brokerage's `brokerCode` travels with the case to Mastra and into the MCP
+token, so an agent cannot read another brokerage's policies whatever its prompt says. Each hop has
+its own credential: inbound e-mail gateway → Core, Core → Mastra, Mastra → Core, Mastra → MCP
+(`read` for the agents, `write` only in the code step after approval), simulator → `/admin/*`
+(which only exists with `DEMO_MODE=true`). These rules are covered by an isolation test suite that
+runs in CI (Core API and MCP server, real Postgres).
+
+**Data processed.** Claim e-mails and their attachments (names, addresses, company identifiers,
+amounts, circumstances of incidents), policy data from the insurer, drafts and internal notes, the
+brokers' decisions. All data in this demo is generated: no real person is involved.
+
+| Where                      | What                                                 | Kept                                                     |
+| -------------------------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| Core (`core` database)     | cases, e-mails, steps, proposals, decisions          | the case file's legal retention (not purged by the demo) |
+| Core `AuditLog`            | who did what, when                                   | append-only: no route updates or deletes it              |
+| Mastra (`agents` database) | workflow snapshots (e-mail, extracted facts, drafts) | purged `RETENTION_DAYS` (30) after the case closes       |
+| Langfuse                   | prompts, completions, tokens, costs                  | trace deleted with the snapshot                          |
+| Redis                      | jobs in flight                                       | short-lived (completed jobs trimmed)                     |
+
+The purge is a BullMQ repeated job in Core: it asks Mastra to delete the snapshots and the Langfuse
+traces of cases closed for longer than the retention delay, marks the case and writes an audit row.
+
+**What production would add**: encryption at rest (database, backups, object storage) and in
+transit between services (TLS/mTLS), hosting in France (HDS-grade providers are not required for
+claims data, but EU hosting and a data processing agreement with the LLM provider are), secrets in a
+vault with rotation, SSO for brokers with MFA, periodic access reviews, a records-of-processing
+entry and a DPIA for the automated analysis, PII redaction in traces, and a retention policy agreed
+with the brokerage's DPO for the case files themselves.

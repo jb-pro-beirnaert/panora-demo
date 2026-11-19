@@ -91,7 +91,7 @@ export class ProcessEmailProcessor extends WorkerHost {
       action: 'workflow_started',
       params: { workflowRunId },
     });
-    this.realtime.publish('case.updated', kase.id, { status: 'processing' });
+    this.realtime.publish('case.updated', kase.id, { status: 'processing' }, kase.brokerageId);
     return { workflowRunId };
   }
 }

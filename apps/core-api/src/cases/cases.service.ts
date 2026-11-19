@@ -8,6 +8,7 @@ import type {
 } from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -16,6 +17,7 @@ import {
 } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import { AuditService } from '../audit/audit.service.js';
+import { brokerageScope, type Principal } from '../auth/principal.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   PROCESS_EMAIL_QUEUE,
@@ -89,6 +91,7 @@ export class CasesService {
 
   /** A failed case is relaunched from the start (a new workflow run; the history is kept). */
   async retry(caseId: string, brokerId: string): Promise<void> {
+    // Callers pass the resolved actor (see `actor`).
     const broker = await this.prisma.broker.findUnique({ where: { id: brokerId } });
     if (!broker) throw new UnauthorizedException(`Unknown broker ${brokerId}.`);
     const kase = await this.prisma.case.findUnique({ where: { id: caseId } });
@@ -115,11 +118,19 @@ export class CasesService {
       { caseId },
       { jobId: `${kase.emailId}-retry-${Date.now()}` },
     );
-    this.realtime.publish('case.updated', caseId, { status: 'received' });
+    this.realtime.publish('case.updated', caseId, { status: 'received' }, kase.brokerageId);
   }
 
-  async listBrokers(): Promise<BrokerView[]> {
+  /** The broker who decides: the signed-in broker, or the one the demo admin acts for. */
+  actor(principal: Principal, actAs: string | undefined): string {
+    if (principal.kind === 'broker') return principal.brokerId;
+    if (!actAs) throw new BadRequestException('The admin must name a broker in x-broker-id.');
+    return actAs;
+  }
+
+  async listBrokers(principal: Principal): Promise<BrokerView[]> {
     const brokers = await this.prisma.broker.findMany({
+      where: brokerageScope(principal),
       include: { brokerage: true },
       orderBy: [{ brokerage: { name: 'asc' } }, { name: 'asc' }],
     });
@@ -136,8 +147,9 @@ export class CasesService {
     }));
   }
 
-  async list(): Promise<CaseSummary[]> {
+  async list(principal: Principal): Promise<CaseSummary[]> {
     const cases = await this.prisma.case.findMany({
+      where: brokerageScope(principal),
       include: caseSummaryInclude,
       orderBy: { number: 'desc' },
       take: LIST_LIMIT,
@@ -145,8 +157,12 @@ export class CasesService {
     return cases.map(toCaseSummary);
   }
 
-  async stats(): Promise<CaseStats> {
-    const groups = await this.prisma.case.groupBy({ by: ['status'], _count: { _all: true } });
+  async stats(principal: Principal): Promise<CaseStats> {
+    const groups = await this.prisma.case.groupBy({
+      by: ['status'],
+      where: brokerageScope(principal),
+      _count: { _all: true },
+    });
     const count = (statuses: string[]) =>
       groups
         .filter((group) => statuses.includes(group.status))
@@ -160,9 +176,10 @@ export class CasesService {
     };
   }
 
-  async detail(caseId: string): Promise<CaseDetail> {
-    const kase = await this.prisma.case.findUnique({
-      where: { id: caseId },
+  async detail(caseId: string, principal: Principal): Promise<CaseDetail> {
+    // Another brokerage's case is reported as missing: its existence is not disclosed.
+    const kase = await this.prisma.case.findFirst({
+      where: { id: caseId, ...brokerageScope(principal) },
       include: caseDetailInclude,
     });
     if (!kase) throw new NotFoundException(`No case ${caseId}.`);
@@ -244,6 +261,6 @@ export class CasesService {
       },
       { jobId: `${caseId}-r${action.revision}` },
     );
-    this.realtime.publish('case.updated', caseId, { status: 'processing' });
+    this.realtime.publish('case.updated', caseId, { status: 'processing' }, kase.brokerageId);
   }
 }

@@ -34,7 +34,10 @@ function workflowInput(email: InboundEmailInput): ProcessEmailInput {
 async function deliver(email: InboundEmailInput): Promise<void> {
   const response = await fetch(new URL('/emails', env.CORE_API_URL), {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${env.INBOUND_EMAIL_TOKEN}`,
+    },
     body: JSON.stringify(email),
     signal: AbortSignal.timeout(10_000),
   });
@@ -59,7 +62,7 @@ for (const broker of world.brokers) {
     broker.id,
   ]);
 }
-const autoValidator = new AutoValidator(env.CORE_API_URL, brokersByBrokerage);
+const autoValidator = new AutoValidator(env.CORE_API_URL, brokersByBrokerage, env.ADMIN_TOKEN);
 
 const app = express();
 app.use(express.json());

@@ -8,6 +8,8 @@ import { triageAgent } from './agents/triage.js';
 import { env } from './env.js';
 import { buildObservability } from './observability.js';
 import { resilienceStats } from './resilience.js';
+import { purge, PurgeRequestSchema, workflowsStore } from './retention.js';
+import { requireServiceToken } from './security.js';
 import { processEmailWorkflow } from './workflows/process-email.js';
 
 export const mastra = new Mastra({
@@ -20,7 +22,22 @@ export const mastra = new Mastra({
   server: {
     port: env.MASTRA_PORT,
     host: env.MASTRA_HOST,
+    middleware: [
+      { path: '/api/*', handler: requireServiceToken },
+      { path: '/maintenance/*', handler: requireServiceToken },
+      { path: '/resilience-stats', handler: requireServiceToken },
+    ],
     apiRoutes: [
+      // Retention (V10): called by Core's purge job.
+      registerApiRoute('/maintenance/purge', {
+        method: 'POST',
+        handler: async (c) => {
+          const parsed = PurgeRequestSchema.safeParse(await c.req.json());
+          if (!parsed.success) return c.json({ error: 'invalid purge request' }, 400);
+          const mastra = c.get('mastra');
+          return c.json(await purge(await workflowsStore(mastra), parsed.data));
+        },
+      }),
       // Load tests (V9): MCP calls, retries and definitive failures of this instance.
       registerApiRoute('/resilience-stats', {
         method: 'GET',

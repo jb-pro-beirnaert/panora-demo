@@ -11,13 +11,17 @@
     "typecheck": "prisma generate && tsc --noEmit",
     "generate": "prisma generate",
     "token": "tsx --env-file-if-exists=../../.env src/scripts/issue-token.ts",
-    "test": "tsx --test 'src/**/*.test.ts'"
+    "test": "tsx --test 'src/chaos/*.test.ts'",
+    "test:integration": "prisma generate && tsx --test 'src/**/*.int.test.ts'"
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",
     "@demo/tsconfig": "^0.0.0",
     "@types/express": "^5.0.6",
-    "prisma": "^7.10.1"
+    "prisma": "^7.10.1",
+    "@demo/world-generator": "^0.0.0",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6"
   },
   "dependencies": {
     "@demo/shared": "^0.0.0",

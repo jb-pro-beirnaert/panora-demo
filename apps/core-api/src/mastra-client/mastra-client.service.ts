@@ -46,7 +46,11 @@ export class MastraClient {
       try {
         const response = await fetch(new URL(path, base), {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            // Core → Mastra service token (V10).
+            authorization: `Bearer ${this.env.MASTRA_API_TOKEN}`,
+          },
           body: JSON.stringify(body),
           signal: AbortSignal.timeout(TIMEOUT_MS),
         });
@@ -79,6 +83,17 @@ export class MastraClient {
       `/api/workflows/${PROCESS_EMAIL_WORKFLOW}/start?runId=${encodeURIComponent(runId)}`,
       { inputData: input, tracingOptions: tracing },
     );
+  }
+
+  /**
+   * Retention (V10): deletes the snapshots of finished runs and their Langfuse traces. Returns how
+   * many of each were deleted.
+   */
+  async purge(runIds: string[], traceIds: string[]): Promise<{ runs: number; traces: number }> {
+    return (await this.post('/maintenance/purge', { runIds, traceIds })) as {
+      runs: number;
+      traces: number;
+    };
   }
 
   /** Restarts an active run from its last snapshot (instance lost mid-run), in the background. */

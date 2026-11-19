@@ -1,5 +1,6 @@
 import { Controller, Sse, type MessageEvent } from '@nestjs/common';
-import { interval, map, merge, takeUntil, type Observable } from 'rxjs';
+import { CurrentPrincipal, type Principal } from '../auth/principal.js';
+import { filter, interval, map, merge, takeUntil, type Observable } from 'rxjs';
 import { RealtimeService } from './realtime.service.js';
 
 const HEARTBEAT_MS = 15_000;
@@ -10,10 +11,17 @@ export class RealtimeController {
 
   /** Server-sent events: `case.created`, `case.step`, `case.action_proposed`, `case.closed`… */
   @Sse()
-  stream(): Observable<MessageEvent> {
-    const events = this.realtime
-      .stream()
-      .pipe(map((event): MessageEvent => ({ type: event.type, data: event })));
+  stream(@CurrentPrincipal() principal: Principal): Observable<MessageEvent> {
+    // A broker only hears about their brokerage's cases (and demo-wide events such as a reset).
+    const events = this.realtime.stream().pipe(
+      filter(
+        (event) =>
+          principal.kind === 'admin' ||
+          event.brokerageId === null ||
+          event.brokerageId === principal.brokerageId,
+      ),
+      map((event): MessageEvent => ({ type: event.type, data: event })),
+    );
     // Keeps proxies from closing an idle connection.
     const heartbeat = interval(HEARTBEAT_MS).pipe(
       map((): MessageEvent => ({ type: 'heartbeat', data: {} })),

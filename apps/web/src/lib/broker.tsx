@@ -1,63 +1,44 @@
 'use client';
 
-import type { BrokerView } from '@demo/shared';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { coreApi } from './api';
-import { useRealtime } from './realtime';
-
-const STORAGE_KEY = 'demo.brokerId';
-
-function readStoredBrokerId(): string | null {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { ApiError, coreApi, type SignedInBroker } from './api';
 
 interface BrokerContextValue {
-  brokers: BrokerView[];
-  broker: BrokerView | null;
-  select: (brokerId: string) => void;
+  /** The signed-in broker (V10), null while loading or signed out. */
+  broker: SignedInBroker | null;
+  signOut: () => Promise<void>;
 }
 
 const BrokerContext = createContext<BrokerContextValue | null>(null);
 
-/** V3 "sign-in": the broker picked in the header, remembered in the browser. */
+/** The broker's session: everything the UI shows is limited to their brokerage (by Core). */
 export function BrokerProvider({ children }: { children: ReactNode }) {
-  const [brokers, setBrokers] = useState<BrokerView[]>([]);
-  const [brokerId, setBrokerId] = useState<string | null>(null);
+  const [broker, setBroker] = useState<SignedInBroker | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const load = useCallback(() => {
     coreApi
-      .brokers()
-      .then((list) => {
-        setBrokers(list);
-        setBrokerId((current) => current ?? readStoredBrokerId());
-      })
-      .catch(() => setBrokers([]));
-  }, []);
+      .me()
+      .then((me) => setBroker(me.kind === 'broker' ? me : null))
+      .catch((error) => {
+        setBroker(null);
+        if (error instanceof ApiError && error.status === 401 && pathname !== '/login') {
+          router.replace('/login');
+        }
+      });
+  }, [pathname, router]);
 
   useEffect(load, [load]);
 
-  // The seed is replayed after a reset: reload the list.
-  useRealtime((event) => {
-    if (event.type === 'demo.reset') setTimeout(load, 1_500);
-  });
-
-  const select = (id: string) => {
-    setBrokerId(id);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, id);
-    } catch {
-      // storage unavailable
-    }
+  const signOut = async () => {
+    await coreApi.logout().catch(() => undefined);
+    setBroker(null);
+    router.replace('/login');
   };
 
-  const broker = brokers.find((candidate) => candidate.id === brokerId) ?? brokers[0] ?? null;
-  return (
-    <BrokerContext.Provider value={{ brokers, broker, select }}>{children}</BrokerContext.Provider>
-  );
+  return <BrokerContext.Provider value={{ broker, signOut }}>{children}</BrokerContext.Provider>;
 }
 
 export function useBroker(): BrokerContextValue {

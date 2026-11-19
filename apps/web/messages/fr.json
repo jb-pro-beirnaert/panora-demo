@@ -7,7 +7,6 @@
     "inbox": "Boîte de réception",
     "language": "Langue",
     "broker": "Connecté en tant que",
-    "brokerPlaceholder": "Choisir un courtier",
     "evals": "Evals"
   },
   "locale": {
@@ -203,7 +202,8 @@
     "ready_to_send": "E-mail prêt à envoyer",
     "workflow_failed": "Le traitement a échoué",
     "workflow_restarted": "Traitement relancé après une interruption (tentative {attempt})",
-    "workflow_retried": "Dossier relancé par le courtier"
+    "workflow_retried": "Dossier relancé par le courtier",
+    "data_purged": "Snapshot du workflow et trace supprimés (conservation : {retentionDays} jours)"
   },
   "common": {
     "none": "aucune",
@@ -251,5 +251,15 @@
       "reason": "Raison"
     },
     "viewTrace": "Trace"
+  },
+  "auth": {
+    "title": "Connexion",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "signOut": "Se déconnecter",
+    "wrong": "E-mail ou mot de passe incorrect.",
+    "demoAccounts": "Comptes de démo (mot de passe : {password})",
+    "signedInAs": "{name} — {brokerage}"
   }
 }

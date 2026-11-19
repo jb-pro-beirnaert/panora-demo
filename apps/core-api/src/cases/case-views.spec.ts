@@ -22,6 +22,7 @@ describe('toCaseSummary', () => {
       workflowRunId: 'run-1',
       traceId: null,
       runOptions: null,
+      purgedAt: null,
       requestType: 'claim',
       verdict: 'not_covered',
       alerts: ['policy_terminated'],

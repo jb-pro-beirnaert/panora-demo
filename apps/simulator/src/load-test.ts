@@ -28,7 +28,16 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function json(url: string, init?: RequestInit): Promise<unknown> {
   const response = await fetch(url, {
     ...init,
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      // Core's metrics and Mastra's stats need the demo admin / service tokens (V10).
+      ...(url.startsWith(CORE) && process.env.ADMIN_TOKEN
+        ? { authorization: `Bearer ${process.env.ADMIN_TOKEN}` }
+        : {}),
+      ...(MASTRA.some((m) => url.startsWith(m)) && process.env.MASTRA_API_TOKEN
+        ? { authorization: `Bearer ${process.env.MASTRA_API_TOKEN}` }
+        : {}),
+    },
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) throw new Error(`${url}: ${response.status} ${await response.text()}`);

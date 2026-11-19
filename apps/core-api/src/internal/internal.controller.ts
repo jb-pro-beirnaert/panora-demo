@@ -14,11 +14,13 @@ import {
   type WorkflowFailedCallback,
 } from '@demo/shared';
 import { Body, Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Public } from '../auth/principal.js';
 import { InternalService, type CallbackOutcome } from './internal.service.js';
 import { ServiceTokenGuard } from './service-token.guard.js';
 
 /** Routes called by the Mastra server only (service token). */
 @Controller('internal')
+@Public()
 @UseGuards(ServiceTokenGuard)
 export class InternalController {
   constructor(private readonly internal: InternalService) {}

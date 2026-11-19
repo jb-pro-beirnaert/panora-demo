@@ -71,8 +71,14 @@ export class AutoValidator {
     private readonly coreUrl: string,
     /** Brokers per brokerage id: the decision is made by a broker of the case's brokerage. */
     private readonly brokersByBrokerage: ReadonlyMap<string, readonly string[]>,
+    /** The simulated broker acts through the demo admin identity (V10), naming the broker. */
+    private readonly adminToken: string,
     private readonly random: () => number = Math.random,
   ) {}
+
+  private headers(extra: Record<string, string> = {}): Record<string, string> {
+    return { authorization: `Bearer ${this.adminToken}`, ...extra };
+  }
 
   update(settings: Partial<AutoValidationSettings>): AutoValidationSettings {
     this.settings = { ...this.settings, ...settings };
@@ -100,7 +106,7 @@ export class AutoValidator {
         try {
           const response = await fetch(new URL('/realtime', this.coreUrl), {
             signal: abort.signal,
-            headers: { accept: 'text/event-stream' },
+            headers: this.headers({ accept: 'text/event-stream' }),
           });
           if (response.ok && response.body) {
             for await (const message of readSse(response.body)) {
@@ -143,6 +149,7 @@ export class AutoValidator {
   async decide(caseId: string, revision: number): Promise<void> {
     if (!this.settings.enabled) return;
     const response = await fetch(new URL(`/cases/${caseId}`, this.coreUrl), {
+      headers: this.headers(),
       signal: AbortSignal.timeout(5_000),
     });
     if (!response.ok) return;
@@ -156,7 +163,7 @@ export class AutoValidator {
     const decision = chooseDecision(this.random, this.settings.rejectionRate, revision);
     const posted = await fetch(new URL(`/cases/${caseId}/decision`, this.coreUrl), {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-broker-id': brokerId },
+      headers: this.headers({ 'content-type': 'application/json', 'x-broker-id': brokerId }),
       body: JSON.stringify(decision),
       signal: AbortSignal.timeout(5_000),
     });

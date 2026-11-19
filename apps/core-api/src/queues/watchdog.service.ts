@@ -99,7 +99,7 @@ export class WatchdogService {
           action: 'workflow_failed',
           params: { error: 'stuck' },
         });
-        this.realtime.publish('case.updated', kase.id, { status: 'failed' });
+        this.realtime.publish('case.updated', kase.id, { status: 'failed' }, kase.brokerageId);
         counts.failed += 1;
         continue;
       }
