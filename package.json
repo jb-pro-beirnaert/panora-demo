@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "npm run infra:reset && turbo run dev",
     "infra:reset": "docker compose up -d --force-recreate --wait postgres redis",
-    "infra:down": "docker compose --profile apps down --remove-orphans",
+    "infra:down": "docker compose --profile apps --profile langfuse down --remove-orphans",
     "start:docker": "docker compose --profile apps up -d --build --force-recreate --wait",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -21,7 +21,9 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:integration": "turbo run test:integration"
+    "test:integration": "turbo run test:integration",
+    "infra:reset:langfuse": "docker compose --profile langfuse up -d --force-recreate --wait postgres redis langfuse-web langfuse-worker",
+    "dev:langfuse": "npm run infra:reset:langfuse && turbo run dev"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
