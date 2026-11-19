@@ -1,0 +1,196 @@
+{
+  "app": {
+    "title": "Pôle sinistres",
+    "subtitle": "Gestion des sinistres assistée par IA"
+  },
+  "header": {
+    "inbox": "Boîte de réception",
+    "language": "Langue",
+    "broker": "Connecté en tant que",
+    "brokerPlaceholder": "Choisir un courtier"
+  },
+  "locale": {
+    "fr": "Français",
+    "en": "English"
+  },
+  "demo": {
+    "title": "Panneau de démo",
+    "start": "Démarrer",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "reset": "Reset",
+    "resetting": "Réinitialisation…",
+    "sendOne": "Envoyer 1 e-mail",
+    "speed": "E-mails par minute",
+    "autoValidation": "Validation automatique",
+    "rejectionRate": "Refus : {rate}",
+    "unavailable": "Simulateur injoignable",
+    "seeding": "Remplissage des bases…",
+    "status": {
+      "ready": "Prêt",
+      "running": "En cours",
+      "paused": "En pause"
+    },
+    "counters": {
+      "sent": "Envoyés",
+      "inProgress": "En cours",
+      "awaitingApproval": "En attente de validation",
+      "closed": "Traités",
+      "failed": "En erreur"
+    },
+    "counter": "{label} : <strong>{value}</strong>"
+  },
+  "inbox": {
+    "title": "Boîte de réception",
+    "live": "En direct",
+    "offline": "Reconnexion…",
+    "empty": "Aucun dossier pour l'instant. Démarrez le flux d'e-mails depuis le panneau de démo.",
+    "columns": {
+      "reference": "Dossier",
+      "receivedAt": "Reçu",
+      "from": "Expéditeur",
+      "subject": "Objet",
+      "client": "Client",
+      "status": "Statut",
+      "verdict": "Verdict"
+    },
+    "unknownClient": "Expéditeur inconnu"
+  },
+  "case": {
+    "back": "Retour à la boîte de réception",
+    "loading": "Chargement du dossier…",
+    "notFound": "Ce dossier n'existe pas (la démo a peut-être été réinitialisée).",
+    "email": "E-mail reçu",
+    "from": "De",
+    "to": "À",
+    "receivedAt": "Reçu le",
+    "attachments": "Pièces jointes",
+    "noAttachment": "Aucune pièce jointe",
+    "timeline": "Déroulé",
+    "timelineEmpty": "Les agents n'ont pas encore commencé.",
+    "sources": "Sources",
+    "proposal": "Action proposée",
+    "noProposal": "Pas encore de proposition.",
+    "revision": "Proposition {revision}",
+    "draft": "Brouillon d'e-mail au client",
+    "internalNote": "Note interne",
+    "approve": "Valider",
+    "reject": "Refuser",
+    "commentPlaceholder": "Que faut-il changer ? (renvoyé à l'agent de rédaction)",
+    "chooseBroker": "Choisissez un courtier dans l'en-tête pour décider.",
+    "otherBrokerage": "Ce dossier appartient à un autre cabinet.",
+    "decided": "{status} par {name} le {date}",
+    "comment": "Commentaire : {comment}",
+    "audit": "Journal d'audit",
+    "policyMismatch": "Le cabinet croit le contrat {policyNumber} {known}, mais l'assureur le déclare {actual}.",
+    "failed": "Le traitement a échoué : {reason}",
+    "claimFiled": "Sinistre {claimNumber} déclaré chez l'assureur.",
+    "claimFiling": "Sinistre à déclarer : {amount}, survenu le {date}",
+    "brokerage": "Cabinet",
+    "policy": "Contrat",
+    "client": "Client",
+    "decisionError": "La décision n'a pas pu être enregistrée : {message}"
+  },
+  "status": {
+    "received": "Reçu",
+    "processing": "En traitement",
+    "awaiting_approval": "En attente de validation",
+    "classified": "Classé",
+    "claim_filed": "Sinistre déclaré",
+    "ready_to_send": "Prêt à envoyer",
+    "failed": "En erreur"
+  },
+  "verdict": {
+    "covered": "Couvert",
+    "not_covered": "Non couvert",
+    "uncertain": "Incertain"
+  },
+  "alert": {
+    "policy_terminated": "Contrat résilié",
+    "exclusion": "Exclusion",
+    "limit_exceeded": "Plafond dépassé",
+    "late_declaration": "Déclaration tardive",
+    "missing_document": "Pièce manquante",
+    "duplicate_claim": "Doublon",
+    "unknown_client": "Client inconnu"
+  },
+  "actionType": {
+    "request_documents": "Demander des pièces",
+    "file_claim": "Déclarer le sinistre",
+    "notify_denial": "Notifier le refus"
+  },
+  "requestType": {
+    "claim": "Sinistre",
+    "quote_request": "Demande de devis",
+    "cancellation": "Résiliation",
+    "other": "Autre"
+  },
+  "proposalStatus": {
+    "pending": "En attente",
+    "approved": "Validée",
+    "rejected": "Refusée"
+  },
+  "policyStatus": {
+    "active": "actif",
+    "suspended": "suspendu",
+    "terminated": "résilié"
+  },
+  "peril": {
+    "water_damage": "dégât des eaux",
+    "fire": "incendie",
+    "theft": "vol",
+    "glass_breakage": "bris de glace",
+    "vehicle_damage": "dommage au véhicule"
+  },
+  "agent": {
+    "system": "Système",
+    "triage": "Agent Tri",
+    "coverage": "Agent Garanties",
+    "drafting": "Agent Rédaction"
+  },
+  "actor": {
+    "system": "Système",
+    "agent": "Agent",
+    "broker": "Courtier"
+  },
+  "steps": {
+    "prepare": {
+      "completed": "E-mail reçu et préparé ({attachments} pièces jointes)"
+    },
+    "triage": {
+      "client_found": "Expéditeur identifié : {companyName} ({policyCount} contrats)",
+      "client_not_found": "L'expéditeur {email} n'est pas un client connu",
+      "completed": "E-mail analysé : {requestType}, {nature}, montant {amount}, survenu le {incidentDate}",
+      "classified": "Hors sinistre : classé comme {requestType}"
+    },
+    "coverage": {
+      "policy_checked": "Contrat {policyNumber} consulté chez l'assureur : {status}",
+      "verdict": "Verdict : {verdict} ({coverage}), alertes : {alerts}"
+    },
+    "drafting": {
+      "proposed": "Proposition {revision} : {actionType}"
+    },
+    "execute": {
+      "claim_filed": "Sinistre {claimNumber} déclaré chez l'assureur",
+      "ready_to_send": "E-mail prêt à envoyer ({actionType})"
+    }
+  },
+  "audit": {
+    "email_received": "E-mail reçu de {from}",
+    "workflow_started": "Traitement démarré",
+    "agent_step": "Étape : {step}",
+    "action_proposed": "Proposition {revision} soumise : {actionType}",
+    "action_approved": "Proposition {revision} validée",
+    "action_rejected": "Proposition {revision} refusée",
+    "workflow_resumed": "Traitement repris après la décision",
+    "case_classified": "Classé comme {requestType}",
+    "claim_filed": "Sinistre {claimNumber} déclaré",
+    "ready_to_send": "E-mail prêt à envoyer",
+    "workflow_failed": "Le traitement a échoué"
+  },
+  "common": {
+    "none": "aucune",
+    "unknown": "inconnu",
+    "error": "Une erreur est survenue."
+  }
+}

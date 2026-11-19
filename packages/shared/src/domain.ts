@@ -88,6 +88,8 @@ export const AlertTypeSchema = z.enum([
   'late_declaration',
   'missing_document',
   'duplicate_claim',
+  /** The sender is not a client of the brokerage: the broker must identify them. */
+  'unknown_client',
 ]);
 export type AlertType = z.infer<typeof AlertTypeSchema>;
 

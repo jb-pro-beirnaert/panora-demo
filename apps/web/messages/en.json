@@ -1,0 +1,196 @@
+{
+  "app": {
+    "title": "Claims desk",
+    "subtitle": "AI-assisted claims handling"
+  },
+  "header": {
+    "inbox": "Inbox",
+    "language": "Language",
+    "broker": "Signed in as",
+    "brokerPlaceholder": "Choose a broker"
+  },
+  "locale": {
+    "fr": "Français",
+    "en": "English"
+  },
+  "demo": {
+    "title": "Demo panel",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "reset": "Reset",
+    "resetting": "Resetting…",
+    "sendOne": "Send 1 e-mail",
+    "speed": "E-mails per minute",
+    "autoValidation": "Auto-validation",
+    "rejectionRate": "Rejections: {rate}",
+    "unavailable": "Simulator unreachable",
+    "seeding": "Seeding…",
+    "status": {
+      "ready": "Ready",
+      "running": "Running",
+      "paused": "Paused"
+    },
+    "counters": {
+      "sent": "Sent",
+      "inProgress": "In progress",
+      "awaitingApproval": "Awaiting approval",
+      "closed": "Processed",
+      "failed": "Failed"
+    },
+    "counter": "{label}: <strong>{value}</strong>"
+  },
+  "inbox": {
+    "title": "Inbox",
+    "live": "Live",
+    "offline": "Reconnecting…",
+    "empty": "No case yet. Start the e-mail stream from the demo panel.",
+    "columns": {
+      "reference": "Case",
+      "receivedAt": "Received",
+      "from": "From",
+      "subject": "Subject",
+      "client": "Client",
+      "status": "Status",
+      "verdict": "Verdict"
+    },
+    "unknownClient": "Unknown sender"
+  },
+  "case": {
+    "back": "Back to the inbox",
+    "loading": "Loading the case…",
+    "notFound": "This case does not exist (the demo may have been reset).",
+    "email": "Inbound e-mail",
+    "from": "From",
+    "to": "To",
+    "receivedAt": "Received",
+    "attachments": "Attachments",
+    "noAttachment": "No attachment",
+    "timeline": "Timeline",
+    "timelineEmpty": "The agents have not started yet.",
+    "sources": "Sources",
+    "proposal": "Proposed action",
+    "noProposal": "No proposal yet.",
+    "revision": "Proposal {revision}",
+    "draft": "E-mail draft to the client",
+    "internalNote": "Internal note",
+    "approve": "Approve",
+    "reject": "Reject",
+    "commentPlaceholder": "What should be changed? (sent back to the drafting agent)",
+    "chooseBroker": "Choose a broker in the header to decide.",
+    "otherBrokerage": "This case belongs to another brokerage.",
+    "decided": "{status} by {name} on {date}",
+    "comment": "Comment: {comment}",
+    "audit": "Audit log",
+    "policyMismatch": "The brokerage believes policy {policyNumber} is {known}, but the insurer says it is {actual}.",
+    "failed": "Processing failed: {reason}",
+    "claimFiled": "Claim {claimNumber} filed at the insurer.",
+    "claimFiling": "Claim to file: {amount}, incident on {date}",
+    "brokerage": "Brokerage",
+    "policy": "Policy",
+    "client": "Client",
+    "decisionError": "The decision could not be saved: {message}"
+  },
+  "status": {
+    "received": "Received",
+    "processing": "Processing",
+    "awaiting_approval": "Awaiting approval",
+    "classified": "Classified",
+    "claim_filed": "Claim filed",
+    "ready_to_send": "Ready to send",
+    "failed": "Failed"
+  },
+  "verdict": {
+    "covered": "Covered",
+    "not_covered": "Not covered",
+    "uncertain": "Uncertain"
+  },
+  "alert": {
+    "policy_terminated": "Policy terminated",
+    "exclusion": "Exclusion",
+    "limit_exceeded": "Limit exceeded",
+    "late_declaration": "Late declaration",
+    "missing_document": "Missing document",
+    "duplicate_claim": "Duplicate claim",
+    "unknown_client": "Unknown client"
+  },
+  "actionType": {
+    "request_documents": "Request documents",
+    "file_claim": "File the claim",
+    "notify_denial": "Notify the denial"
+  },
+  "requestType": {
+    "claim": "Claim",
+    "quote_request": "Quote request",
+    "cancellation": "Cancellation",
+    "other": "Other"
+  },
+  "proposalStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "policyStatus": {
+    "active": "active",
+    "suspended": "suspended",
+    "terminated": "terminated"
+  },
+  "peril": {
+    "water_damage": "water damage",
+    "fire": "fire",
+    "theft": "theft",
+    "glass_breakage": "glass breakage",
+    "vehicle_damage": "vehicle damage"
+  },
+  "agent": {
+    "system": "System",
+    "triage": "Triage agent",
+    "coverage": "Coverage agent",
+    "drafting": "Drafting agent"
+  },
+  "actor": {
+    "system": "System",
+    "agent": "Agent",
+    "broker": "Broker"
+  },
+  "steps": {
+    "prepare": {
+      "completed": "E-mail received and prepared ({attachments} attachments)"
+    },
+    "triage": {
+      "client_found": "Sender identified: {companyName} ({policyCount} policies)",
+      "client_not_found": "Sender {email} is not a known client",
+      "completed": "E-mail analysed: {requestType}, {nature}, amount {amount}, incident on {incidentDate}",
+      "classified": "Not a claim: classified as {requestType}"
+    },
+    "coverage": {
+      "policy_checked": "Policy {policyNumber} checked at the insurer: {status}",
+      "verdict": "Verdict: {verdict} ({coverage}), alerts: {alerts}"
+    },
+    "drafting": {
+      "proposed": "Proposal {revision}: {actionType}"
+    },
+    "execute": {
+      "claim_filed": "Claim {claimNumber} filed at the insurer",
+      "ready_to_send": "E-mail ready to send ({actionType})"
+    }
+  },
+  "audit": {
+    "email_received": "E-mail received from {from}",
+    "workflow_started": "Processing started",
+    "agent_step": "Step: {step}",
+    "action_proposed": "Proposal {revision} submitted: {actionType}",
+    "action_approved": "Proposal {revision} approved",
+    "action_rejected": "Proposal {revision} rejected",
+    "workflow_resumed": "Processing resumed after the decision",
+    "case_classified": "Classified as {requestType}",
+    "claim_filed": "Claim {claimNumber} filed",
+    "ready_to_send": "E-mail ready to send",
+    "workflow_failed": "Processing failed"
+  },
+  "common": {
+    "none": "none",
+    "unknown": "unknown",
+    "error": "Something went wrong."
+  }
+}

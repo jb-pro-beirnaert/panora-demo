@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-The repository currently contains **only specifications** in `specs/` (written in French). No code exists yet. Implementation proceeds version by version (V1 → V11); each version spec lists the services it touches, its scope, its acceptance criteria, and what is explicitly out of scope. Before implementing anything, read `specs/00-overview.md`, `specs/00-demo-data-and-scenarios.md` and the spec for the version being built. Do not build features from a later version early.
+Specifications are in `specs/` (written in French). Implementation proceeds version by version (V1 → V11), one git branch per version created from the previous one; what each version did and how is written in `docs/versions/vNN-*.md`. Each version spec lists the services it touches, its scope, its acceptance criteria, and what is explicitly out of scope. Before implementing anything, read `specs/00-overview.md`, `specs/00-demo-data-and-scenarios.md` and the spec for the version being built. Do not build features from a later version early.
 
 The project is a demo built for a job application to Panora (an insurance-brokerage AI startup): a claim e-mail reaches a brokerage, three AI agents analyze it, check coverage at the insurer through an MCP connector, and a broker approves the proposed action before it is executed and audited.
 

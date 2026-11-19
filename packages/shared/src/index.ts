@@ -8,3 +8,5 @@ export * from './drafting.js';
 export * from './process-email.js';
 export * from './ground-truth.js';
 export * from './extranet-seed.js';
+export * from './core.js';
+export * from './language.js';

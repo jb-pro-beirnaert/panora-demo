@@ -14,6 +14,11 @@ export type BrokerageContext = z.infer<typeof BrokerageContextSchema>;
 
 /** Input of the Mastra workflow `process-email`. */
 export const ProcessEmailInputSchema = z.object({
+  /**
+   * Core case the run belongs to: steps are reported to Core's `/internal/cases/:caseId/*` routes.
+   * Absent when the workflow is run by hand (Mastra Studio): nothing is reported.
+   */
+  caseId: z.string().min(1).optional(),
   email: InboundEmailInputSchema,
   brokerage: BrokerageContextSchema,
 });

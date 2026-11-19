@@ -1,0 +1,206 @@
+// Database of the brokerage platform. Only the Core API reads or writes it.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Locale {
+  fr
+}
+
+enum PolicyStatus {
+  active
+  suspended
+  terminated
+}
+
+enum CaseStatus {
+  received
+  processing
+  awaiting_approval
+  classified
+  claim_filed
+  ready_to_send
+  failed
+}
+
+enum ActionType {
+  request_documents
+  file_claim
+  notify_denial
+}
+
+enum ProposedActionStatus {
+  pending
+  approved
+  rejected
+}
+
+enum AuditActor {
+  system
+  agent
+  broker
+}
+
+model Brokerage {
+  id         String   @id
+  name       String
+  brokerCode String   @unique
+  locale     Locale
+  /** Claims inbox the clients write to: routes an inbound e-mail to its brokerage. */
+  inboxEmail String   @unique
+  brokers    Broker[]
+  clients    Client[]
+  cases      Case[]
+}
+
+model Broker {
+  id              String    @id
+  brokerageId     String
+  brokerage       Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  name            String
+  email           String    @unique
+  preferredLocale Locale
+}
+
+model Client {
+  id          String    @id
+  brokerageId String
+  brokerage   Brokerage @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  companyName String
+  siren       String
+  email       String
+  contactName String
+  policies    Policy[]
+  cases       Case[]
+
+  @@unique([brokerageId, email])
+}
+
+/** A policy as the brokerage's own software knows it: `knownStatus` may be out of date. */
+model Policy {
+  number      String       @id
+  clientId    String
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  insurerName String
+  product     String
+  knownStatus PolicyStatus
+  renewalDate DateTime     @db.Date
+}
+
+model InboundEmail {
+  id          String       @id @default(uuid())
+  /** RFC 5322 Message-ID: the same e-mail received twice creates a single case. */
+  messageId   String       @unique
+  from        String
+  to          String
+  subject     String
+  body        String
+  receivedAt  DateTime
+  language    Locale
+  attachments Attachment[]
+  case        Case?
+}
+
+model Attachment {
+  id            String       @id @default(uuid())
+  emailId       String
+  email         InboundEmail @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  fileName      String
+  type          String
+  extractedText String
+  position      Int
+}
+
+model Case {
+  id              String           @id @default(uuid())
+  /** Human-readable reference: CASE-0001. */
+  number          Int              @unique @default(autoincrement())
+  brokerageId     String
+  brokerage       Brokerage        @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  emailId         String           @unique
+  email           InboundEmail     @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  policyNumber    String?
+  status          CaseStatus       @default(received)
+  workflowRunId   String?          @unique
+  /** Filled as the workflow progresses (language-neutral values). */
+  requestType     String?
+  verdict         String?
+  alerts          String[]
+  claimNumber     String?
+  failureReason   String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  steps           AgentStep[]
+  proposedActions ProposedAction[]
+  auditLogs       AuditLog[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/** A business-level step of the workflow, stored as type + params and translated by the UI. */
+model AgentStep {
+  id         String   @id @default(uuid())
+  caseId     String
+  case       Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  agent      String
+  stepType   String
+  params     Json
+  sources    Json
+  model      String?
+  durationMs Int?
+  costUsd    Float?
+  createdAt  DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+model ProposedAction {
+  id               String               @id @default(uuid())
+  caseId           String
+  case             Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  revision         Int
+  workflowRunId    String
+  actionType       ActionType
+  draftSubject     String
+  draftBody        String
+  draftLanguage    Locale
+  internalNote     String
+  noteLanguage     Locale
+  /** Arguments of `file_claim` (null for other action types). */
+  claimFiling      Json?
+  status           ProposedActionStatus @default(pending)
+  decidedById      String?
+  comment          String?
+  decidedAt        DateTime?
+  createdAt        DateTime             @default(now())
+
+  @@unique([caseId, revision])
+}
+
+/** Append-only: no route updates or deletes a row (only a demo reset wipes the table). */
+model AuditLog {
+  id        String     @id @default(uuid())
+  caseId    String?
+  case      Case?      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actor     AuditActor
+  /** Broker id, agent name or "system". */
+  actorId   String
+  action    String
+  params    Json
+  /** Where the fact comes from (step type, tool, clause…). */
+  source    String?
+  createdAt DateTime   @default(now())
+
+  @@index([caseId, createdAt])
+}

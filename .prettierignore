@@ -8,3 +8,7 @@ CLAUDE.md
 .claude
 skills-lock.json
 **/src/generated
+.next
+next-env.d.ts
+apps/core-api/AGENTS.md
+apps/web/AGENTS.md

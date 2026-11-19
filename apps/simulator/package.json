@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node --env-file-if-exists=../../.env dist/index.js",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test 'src/**/*.test.ts'"
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",

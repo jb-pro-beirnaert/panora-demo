@@ -1,4 +1,5 @@
 import {
+  detectLanguage,
   ApprovalDecisionSchema,
   CoverageVerdictSchema,
   DraftSchema,
@@ -8,9 +9,12 @@ import {
   type Locale,
   type ProcessEmailResult,
 } from '@demo/shared';
-import { RequestContext } from '@mastra/core/request-context';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
-import { BROKER_CODE_KEY, extranetTools } from '../mcp/extranet-client.js';
+import { core } from '../core-callbacks/core-client.js';
+import { coverageReports, draftReport, executeReport } from '../core-callbacks/step-reports.js';
+import { env } from '../env.js';
+import { extranetTools } from '../mcp/extranet-client.js';
+import { caseContext } from './context.js';
 import { actionTypeProblem, buildClaimFiling, toProposedAction } from './claim-filing.js';
 import {
   ApprovalSuspendSchema,
@@ -18,6 +22,7 @@ import {
   DraftedStateSchema,
   TriagedEmailSchema,
   type ClaimLoopState,
+  type TriagedEmail,
 } from './schemas.js';
 
 /** Upper bound on LLM round-trips for the coverage agent (about 7 tool calls + the answer). */
@@ -25,8 +30,12 @@ const COVERAGE_MAX_STEPS = 16;
 
 const LANGUAGE_NAMES: Record<Locale, string> = { fr: 'French' };
 
-function brokerageContext(brokerCode: string): RequestContext {
-  return new RequestContext([[BROKER_CODE_KEY, brokerCode]]);
+/** What the brokerage's own software knows about the sender, for the coverage agent. */
+function clientSection(claim: TriagedEmail): string {
+  if (!claim.client) {
+    return "Brokerage's records (find_client): the sender's address is not a known client of the brokerage.";
+  }
+  return `Brokerage's records for the sender (find_client; statuses as the brokerage knows them, the insurer is authoritative):\n${JSON.stringify(claim.client, null, 2)}`;
 }
 
 const analyzeCoverage = createStep({
@@ -37,19 +46,24 @@ const analyzeCoverage = createStep({
   execute: async ({ inputData, mastra }) => {
     const prompt = [
       `The e-mail was received on ${inputData.receivedDate}.`,
+      clientSection(inputData),
       `Facts extracted by the triage agent (JSON):\n${JSON.stringify(inputData.triage, null, 2)}`,
       `The e-mail:\n\n${inputData.rendered}`,
     ].join('\n\n');
+    const startedAt = Date.now();
     const response = await mastra.getAgent('coverageAgent').generate(prompt, {
       maxSteps: COVERAGE_MAX_STEPS,
       structuredOutput: { schema: CoverageVerdictSchema },
-      requestContext: brokerageContext(inputData.brokerage.brokerCode),
+      requestContext: caseContext(inputData.brokerage.brokerCode, inputData.caseId),
     });
-    return {
-      claim: inputData,
-      coverage: CoverageVerdictSchema.parse(response.object),
-      rounds: [],
-    };
+    const coverage = CoverageVerdictSchema.parse(response.object);
+    for (const report of coverageReports(coverage, {
+      model: env.COVERAGE_MODEL,
+      durationMs: Date.now() - startedAt,
+    })) {
+      await core.step(inputData.caseId, report);
+    }
+    return { claim: inputData, coverage, rounds: [] };
   },
 });
 
@@ -102,6 +116,7 @@ const draft = createStep({
     const agent = mastra.getAgent('draftingAgent');
     const filing = buildClaimFiling(inputData.claim, inputData.coverage);
     const prompt = draftingPrompt(inputData);
+    const startedAt = Date.now();
 
     let result: Draft = DraftSchema.parse(
       (await agent.generate(prompt, { structuredOutput: { schema: DraftSchema } })).object,
@@ -120,7 +135,12 @@ const draft = createStep({
       const again = actionTypeProblem(result.actionType, filing);
       if (again) throw new Error(`draftingAgent proposed an invalid action: ${again}`);
     }
-    return { ...inputData, action: toProposedAction(result, inputData.rounds, filing) };
+    const action = toProposedAction(result, inputData.rounds, filing);
+    await core.step(
+      inputData.claim.caseId,
+      draftReport(action, { model: env.DRAFTING_MODEL, durationMs: Date.now() - startedAt }),
+    );
+    return { ...inputData, action };
   },
 });
 
@@ -132,11 +152,23 @@ const approval = createStep({
   outputSchema: ClaimLoopStateSchema,
   suspendSchema: ApprovalSuspendSchema,
   resumeSchema: ApprovalDecisionSchema,
-  execute: async ({ inputData, resumeData, suspendData, suspend }) => {
+  execute: async ({ inputData, resumeData, suspendData, suspend, runId }) => {
     const { action, ...state } = inputData;
     // A decision only counts for the proposal it was given on: in a new loop iteration, a new
     // revision always waits for its own decision.
     if (!resumeData || suspendData?.action.revision !== action.revision) {
+      const { claim, coverage } = state;
+      await core.proposedAction(claim.caseId, {
+        workflowRunId: runId,
+        action,
+        draftLanguage: detectLanguage(
+          `${claim.email.subject}\n${claim.email.body}`,
+          claim.brokerage.locale,
+        ),
+        noteLanguage: claim.brokerage.locale,
+        verdict: coverage.verdict,
+        alerts: coverage.alerts,
+      });
       return await suspend({ action });
     }
     return { ...state, rounds: [...state.rounds, { action, decision: resumeData }] };
@@ -154,6 +186,11 @@ const draftAndApprove = createWorkflow({
   .then(approval)
   .commit();
 
+async function reportExecution(caseId: string | null, result: ProcessEmailResult): Promise<void> {
+  const report = executeReport(result);
+  if (report) await core.step(caseId, report);
+}
+
 const execute = createStep({
   id: 'execute',
   description:
@@ -167,19 +204,27 @@ const execute = createStep({
 
     if (action.actionType !== 'file_claim') {
       // Sending the e-mail is out of scope of the demo.
-      return { outcome: 'ready_to_send', action, approvedBy: decision.brokerId };
+      const result: ProcessEmailResult = {
+        outcome: 'ready_to_send',
+        action,
+        approvedBy: decision.brokerId,
+      };
+      await reportExecution(inputData.claim.caseId, result);
+      return result;
     }
     if (!action.claimFiling) throw new Error('approved file_claim action without claimFiling');
     const tools = await extranetTools('write', inputData.claim.brokerage.brokerCode);
     const fileClaim = tools.file_claim;
     if (!fileClaim?.execute) throw new Error('the MCP write token does not expose file_claim');
     const filed = FileClaimResultSchema.parse(await fileClaim.execute(action.claimFiling, {}));
-    return {
+    const result: ProcessEmailResult = {
       outcome: 'claim_filed',
       claimNumber: filed.claimNumber,
       action,
       approvedBy: decision.brokerId,
     };
+    await reportExecution(inputData.claim.caseId, result);
+    return result;
   },
 });
 

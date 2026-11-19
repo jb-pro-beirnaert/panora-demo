@@ -1,14 +1,22 @@
 import type { InboundEmailInput, ProcessEmailInput } from '@demo/shared';
 import { generateEmails, generateWorld } from '@demo/world-generator';
-import express from 'express';
+import express, { type ErrorRequestHandler } from 'express';
+import { AutoValidator } from './auto-validation/auto-validator.js';
+import { controlRouter } from './control/routes.js';
 import { loadEnv } from './env.js';
-import { seedExtranet } from './seeding/seed-extranet.js';
+import { resetAll, seedAll, type SeedTargets } from './seeding/seeder.js';
+import { EmailStream } from './stream/email-stream.js';
 
 const env = loadEnv();
 
 // Same seed → same world and same e-mails on every start.
 const world = generateWorld({ seed: env.WORLD_SEED, locale: 'fr' });
 const emails = generateEmails(world, { seed: env.WORLD_SEED, count: env.SIMULATOR_EMAIL_COUNT });
+const targets: SeedTargets = {
+  coreUrl: env.CORE_API_URL,
+  extranetUrl: env.MCP_EXTRANET_URL,
+  adminToken: env.ADMIN_TOKEN,
+};
 let seeding: 'pending' | 'done' = 'pending';
 
 /** Input of the `process-email` workflow: the e-mail and the brokerage whose inbox received it. */
@@ -18,7 +26,48 @@ function workflowInput(email: InboundEmailInput): ProcessEmailInput {
   return { email, brokerage: { brokerCode: brokerage.brokerCode, locale: brokerage.locale } };
 }
 
+async function deliver(email: InboundEmailInput): Promise<void> {
+  const response = await fetch(new URL('/emails', env.CORE_API_URL), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(email),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) {
+    throw new Error(`POST /emails failed (${response.status}): ${await response.text()}`);
+  }
+}
+
+const stream = new EmailStream(
+  emails.map(({ email }) => email),
+  deliver,
+  { emailsPerMinute: env.SIMULATOR_EMAILS_PER_MINUTE },
+);
+const brokersByBrokerage = new Map<string, string[]>();
+for (const broker of world.brokers) {
+  brokersByBrokerage.set(broker.brokerageId, [
+    ...(brokersByBrokerage.get(broker.brokerageId) ?? []),
+    broker.id,
+  ]);
+}
+const autoValidator = new AutoValidator(env.CORE_API_URL, brokersByBrokerage);
+
 const app = express();
+app.use(express.json());
+// The demo panel (web UI) calls this API from the browser.
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  if (origin && env.WEB_ORIGIN.split(',').includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Access-Control-Allow-Headers', 'content-type');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  }
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'simulator', seed: env.WORLD_SEED, seeding });
@@ -50,12 +99,32 @@ app.get('/emails/:index', (req, res) => {
   res.json(workflowInput(generated.email));
 });
 
+app.use(
+  controlRouter({
+    stream,
+    autoValidator,
+    seeding: () => seeding,
+    reset: async () => {
+      seeding = 'pending';
+      await resetAll(world, targets);
+      seeding = 'done';
+    },
+  }),
+);
+
+const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  console.error(error);
+  if (!res.headersSent) res.status(500).json({ error: String(error) });
+};
+app.use(errorHandler);
+
 app.listen(env.SIMULATOR_PORT, '0.0.0.0', () => {
   console.log(
     `simulator listening on http://localhost:${env.SIMULATOR_PORT} (seed ${env.WORLD_SEED}, ${emails.length} e-mails)`,
   );
 });
 
-void seedExtranet(world, env.MCP_EXTRANET_URL, env.ADMIN_TOKEN).then(() => {
+autoValidator.listen();
+void seedAll(world, targets).then(() => {
   seeding = 'done';
 });

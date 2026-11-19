@@ -1,14 +1,25 @@
 import {
+  ClientLookupResultSchema,
   ProcessEmailInputSchema,
   ProcessEmailResultSchema,
   TriageResultSchema,
   type InboundEmailInput,
+  type ProcessEmailInput,
   type ProcessEmailResult,
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
+import { core } from '../core-callbacks/core-client.js';
+import { classifiedReport, triageReport } from '../core-callbacks/step-reports.js';
+import { env } from '../env.js';
+import { CLIENT_LOOKUP_KEY } from '../mcp/extranet-client.js';
+import { lookupClient } from '../tools/find-client.js';
+import { caseContext } from './context.js';
 import { handleClaimWorkflow } from './handle-claim.js';
 import { PreparedEmailSchema, TriagedEmailSchema } from './schemas.js';
+
+/** find_client + the structured answer. */
+const TRIAGE_MAX_STEPS = 4;
 
 function normalizeText(text: string): string {
   return text
@@ -37,26 +48,52 @@ const prepare = createStep({
   description: 'Normalizes the e-mail and the text of its attachments into one document.',
   inputSchema: ProcessEmailInputSchema,
   outputSchema: PreparedEmailSchema,
-  execute: async ({ inputData }) => ({
-    email: inputData.email,
-    brokerage: inputData.brokerage,
-    rendered: renderEmail(inputData.email),
-    receivedDate: inputData.email.receivedAt.slice(0, 10),
-  }),
+  execute: async ({ inputData }) => {
+    const caseId = inputData.caseId ?? null;
+    await core.step(caseId, {
+      agent: 'system',
+      stepType: 'prepare.completed',
+      params: { attachments: inputData.email.attachments.length },
+    });
+    return {
+      caseId,
+      email: inputData.email,
+      brokerage: inputData.brokerage,
+      rendered: renderEmail(inputData.email),
+      receivedDate: inputData.email.receivedAt.slice(0, 10),
+    };
+  },
 });
 
 const triage = createStep({
   id: 'triage',
-  description: 'triageAgent classifies the e-mail and extracts the claim facts.',
+  description:
+    'triageAgent looks the sender up (find_client), classifies the e-mail and extracts the claim facts.',
   inputSchema: PreparedEmailSchema,
   outputSchema: TriagedEmailSchema,
   execute: async ({ inputData, mastra }) => {
+    const requestContext = caseContext(inputData.brokerage.brokerCode, inputData.caseId);
+    const startedAt = Date.now();
     const response = await mastra
       .getAgent('triageAgent')
       .generate(`Extract the facts from this e-mail.\n\n${inputData.rendered}`, {
+        maxSteps: TRIAGE_MAX_STEPS,
         structuredOutput: { schema: TriageResultSchema },
+        requestContext,
       });
-    return { ...inputData, triage: TriageResultSchema.parse(response.object) };
+    const triageResult = TriageResultSchema.parse(response.object);
+    // The model is asked to call find_client; if it did not, look the sender up anyway.
+    if (!requestContext.has(CLIENT_LOOKUP_KEY)) {
+      await lookupClient(requestContext, inputData.email.from);
+    }
+    const client = ClientLookupResultSchema.nullable().parse(
+      requestContext.get(CLIENT_LOOKUP_KEY) ?? null,
+    );
+    await core.step(
+      inputData.caseId,
+      triageReport(triageResult, { model: env.TRIAGE_MODEL, durationMs: Date.now() - startedAt }),
+    );
+    return { ...inputData, triage: triageResult, client };
   },
 });
 
@@ -69,6 +106,7 @@ const classify = createStep({
   execute: async ({ inputData }): Promise<ProcessEmailResult> => {
     const { requestType } = inputData.triage;
     if (requestType === 'claim') throw new Error('classify only handles non-claim e-mails');
+    await core.step(inputData.caseId, classifiedReport(requestType));
     return { outcome: 'classified', requestType };
   },
 });
@@ -88,9 +126,14 @@ const collectResult = createStep({
   },
 });
 
+function caseIdOf(getInitData: () => unknown): string | undefined {
+  return (getInitData() as ProcessEmailInput | undefined)?.caseId;
+}
+
 /**
  * prepare → triage → not a claim: classify (end) | claim: handle-claim (coverage analysis,
- * draft/approval loop with human approval, execute).
+ * draft/approval loop with human approval, execute). The final result and failures are reported
+ * to Core from the workflow's lifecycle callbacks.
  */
 export const processEmailWorkflow = createWorkflow({
   id: 'process-email',
@@ -98,6 +141,24 @@ export const processEmailWorkflow = createWorkflow({
     'Processes one inbound e-mail: triage, then for a claim coverage analysis, a proposed action approved by a broker, and its execution.',
   inputSchema: ProcessEmailInputSchema,
   outputSchema: ProcessEmailResultSchema,
+  options: {
+    onFinish: async ({ status, result, runId, getInitData }) => {
+      if (status !== 'success') return;
+      const parsed = ProcessEmailResultSchema.safeParse(result);
+      if (parsed.success) {
+        await core.executedAction(caseIdOf(getInitData), {
+          workflowRunId: runId,
+          result: parsed.data,
+        });
+      }
+    },
+    onError: async ({ error, runId, getInitData }) => {
+      await core.failed(caseIdOf(getInitData), {
+        workflowRunId: runId,
+        error: error?.message ?? 'workflow failed',
+      });
+    },
+  },
 })
   .then(prepare)
   .then(triage)

@@ -22,6 +22,12 @@ const EnvSchema = z
     MASTRA_HOST: z.string().default('localhost'),
     AGENTS_DATABASE_URL: z.string().min(1, 'AGENTS_DATABASE_URL is required (see .env.example)'),
     MCP_EXTRANET_URL: z.url().default('http://localhost:3002'),
+    /** Core API: `/internal/*` callbacks and the `find_client` tool. */
+    CORE_API_URL: z.url().default('http://localhost:3001'),
+    /** Bearer token of the Mastra → Core callbacks. */
+    CORE_SERVICE_TOKEN: z
+      .string()
+      .min(16, 'CORE_SERVICE_TOKEN (16+ characters) is required (see .env.example)'),
     /** Signs the per-brokerage `read` / `write` tokens of the MCP extranet server. */
     MCP_TOKEN_SECRET: z
       .string()

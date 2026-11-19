@@ -1,6 +1,7 @@
 import {
   ApprovalDecisionSchema,
   BrokerageContextSchema,
+  ClientLookupResultSchema,
   CoverageVerdictSchema,
   InboundEmailInputSchema,
   ProposedActionSchema,
@@ -11,6 +12,8 @@ import { z } from 'zod';
 /** Schemas passed between the steps of `process-email` and `handle-claim` (internal to Mastra). */
 
 export const PreparedEmailSchema = z.object({
+  /** Core case to report to; null when the workflow is run by hand (Mastra Studio). */
+  caseId: z.string().nullable(),
   email: InboundEmailInputSchema,
   brokerage: BrokerageContextSchema,
   /** The e-mail and its attachments as one text, with named sections the agents cite as sources. */
@@ -19,7 +22,11 @@ export const PreparedEmailSchema = z.object({
 });
 export type PreparedEmail = z.infer<typeof PreparedEmailSchema>;
 
-export const TriagedEmailSchema = PreparedEmailSchema.extend({ triage: TriageResultSchema });
+export const TriagedEmailSchema = PreparedEmailSchema.extend({
+  triage: TriageResultSchema,
+  /** What the brokerage's software knows about the sender (`find_client`); null if unknown. */
+  client: ClientLookupResultSchema.nullable(),
+});
 export type TriagedEmail = z.infer<typeof TriagedEmailSchema>;
 
 /** One proposal and the broker's decision on it. */

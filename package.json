@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "dev": "npm run infra:reset && turbo run dev",
-    "infra:reset": "docker compose up -d --force-recreate --wait postgres",
+    "infra:reset": "docker compose up -d --force-recreate --wait postgres redis",
     "infra:down": "docker compose --profile apps down --remove-orphans",
     "start:docker": "docker compose --profile apps up -d --build --force-recreate --wait",
     "build": "turbo run build",
@@ -20,7 +20,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:integration": "turbo run test:integration"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

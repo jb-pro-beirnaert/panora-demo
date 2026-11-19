@@ -8,6 +8,9 @@ export const triageInstructions = `You are the triage agent of an insurance brok
 
 The e-mail and its attachments can be written in any language. Output enum values are always the English values listed below. Free-text values (holderName, location) are copied as written in the e-mail.
 
+## Client lookup
+First call find_client once with the e-mail's From address. It tells you whether the sender is a known client of the brokerage and which policies the brokerage manages for them. Use it only to resolve holderName when the e-mail does not make it clear; never copy a policy number from it into policyNumber (policyNumber is only what is written in the e-mail or its attachments).
+
 ## requestType
 - "claim": the sender reports damage, a loss, a theft or an accident to be declared to the insurer.
 - "quote_request": the sender asks for a quote or a new policy.

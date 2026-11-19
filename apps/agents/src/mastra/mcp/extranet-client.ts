@@ -6,6 +6,10 @@ import { env } from '../env.js';
 
 /** Request-context key carrying the brokerage of the case, set by the workflow steps. */
 export const BROKER_CODE_KEY = 'brokerCode';
+/** Request-context key carrying the Core case id (absent in Mastra Studio runs). */
+export const CASE_ID_KEY = 'caseId';
+/** Request-context key where `find_client` stores its result for the next steps. */
+export const CLIENT_LOOKUP_KEY = 'clientLookup';
 
 const clients = new Map<string, MCPClient>();
 

@@ -4,4 +4,5 @@ export type { GenerateWorldOptions } from './world.js';
 export { generateEmails, SCENARIO_ORDER, SCENARIO_WEIGHTS } from './emails.js';
 export type { GenerateEmailsOptions } from './emails.js';
 export { toExtranetSeed } from './extranet.js';
+export { toCoreSeed } from './core.js';
 export type * from './types.js';

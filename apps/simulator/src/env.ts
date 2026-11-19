@@ -3,9 +3,15 @@ import { z } from 'zod';
 const EnvSchema = z.object({
   SIMULATOR_PORT: z.coerce.number().int().positive().default(3003),
   MCP_EXTRANET_URL: z.url().default('http://localhost:3002'),
+  CORE_API_URL: z.url().default('http://localhost:3001'),
   ADMIN_TOKEN: z.string().min(16, 'ADMIN_TOKEN (16+ characters) is required (see .env.example)'),
   WORLD_SEED: z.coerce.number().int().default(42),
-  SIMULATOR_EMAIL_COUNT: z.coerce.number().int().positive().max(1_000).default(10),
+  /** Size of the generated e-mail pool the stream goes through (and cycles over). */
+  SIMULATOR_EMAIL_COUNT: z.coerce.number().int().positive().max(1_000).default(40),
+  /** Default pace of the stream. */
+  SIMULATOR_EMAILS_PER_MINUTE: z.coerce.number().positive().max(600).default(4),
+  /** Origin of the web UI allowed by CORS (demo panel). */
+  WEB_ORIGIN: z.string().default('http://localhost:3000'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

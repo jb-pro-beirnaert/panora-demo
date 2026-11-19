@@ -11,6 +11,7 @@ import {
   type ExtranetCoverage,
   type ExtranetPolicy,
   type NonClaimGroundTruth,
+  type UnknownClientGroundTruth,
   type Peril,
   type ScenarioId,
   type Verdict,
@@ -56,6 +57,7 @@ export const SCENARIO_ORDER: ScenarioId[] = [
   'unreadable_field',
   'late_declaration',
   'non_claim',
+  'unknown_client',
 ];
 
 /** About 35 % simple cases (covered, deductible), 50 % traps, 15 % e-mails that are not claims. */
@@ -68,7 +70,8 @@ export const SCENARIO_WEIGHTS: Record<ScenarioId, number> = {
   missing_document: 7,
   duplicate_claim: 7,
   unreadable_field: 7,
-  late_declaration: 8,
+  late_declaration: 5,
+  unknown_client: 3,
   non_claim: 15,
 };
 
@@ -776,6 +779,53 @@ class EmailFactory {
     };
   }
 
+  // --- Unknown client (scenario 10): a claim from a company the brokerage does not know ---
+
+  writeUnknownClient(index: number): GeneratedEmail {
+    const brokerage = pick(this.faker, this.world.brokerages);
+    const business = pick(this.faker, BUSINESSES);
+    const lastName = this.faker.person.lastName();
+    const tradeName = `${business.prefix} ${lastName}`;
+    const domain = `${tradeName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^a-z0-9]+/g, '-')}.fr`;
+    const contactName = `${this.faker.person.firstName()} ${lastName}`;
+    const amount = roundTo(int(this.faker, 600, 2_500), 10);
+    const received = this.receivedDate();
+    const body = [
+      'Bonjour,',
+      `Hier soir, une canalisation a cédé dans ${business.area} et l'eau a abîmé une partie du matériel. Le plombier est intervenu ce matin, sa facture s'élève à ${frAmount(amount)}. Pouvez-vous déclarer le sinistre auprès de notre assureur ?`,
+      `Cordialement,\n${contactName}\n${tradeName}`,
+    ].join('\n\n');
+    const groundTruth: UnknownClientGroundTruth = {
+      scenario: 'unknown_client',
+      requestType: 'claim',
+      brokerCode: brokerage.brokerCode,
+      holderName: tradeName,
+      policyNumber: null,
+      policyNumberInEmail: false,
+      nature: 'water_damage',
+      amount,
+      verdict: 'uncertain',
+      alerts: ['unknown_client'],
+      expectedAction: 'request_documents',
+    };
+    return {
+      email: {
+        messageId: `<demo-${this.seed}-${String(index + 1).padStart(4, '0')}@simulator.local>`,
+        receivedAt: isoDateTime(received, int(this.faker, 7, 18), int(this.faker, 0, 59)),
+        from: `contact@${domain}`,
+        to: brokerage.inboxEmail,
+        subject: `Dégât des eaux - ${tradeName}`,
+        body,
+        attachments: [],
+      },
+      groundTruth,
+    };
+  }
+
   private inboxOf(client: Client): string {
     return this.world.brokerages.find((brokerage) => brokerage.id === client.brokerageId)!
       .inboxEmail;
@@ -798,6 +848,7 @@ export function generateEmails(world: World, options: GenerateEmailsOptions): Ge
   const showcased = new Set<ScenarioId>();
   return scenarios.map((scenario, index) => {
     if (scenario === 'non_claim') return factory.writeNonClaim(index);
+    if (scenario === 'unknown_client') return factory.writeUnknownClient(index);
     if (!showcased.has(scenario)) {
       showcased.add(scenario);
       const showcase = factory.showcase(scenario, index);

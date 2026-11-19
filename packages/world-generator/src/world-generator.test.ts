@@ -2,6 +2,7 @@ import { GroundTruthSchema, InboundEmailInputSchema } from '@demo/shared';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { SCENARIO_ORDER, generateEmails } from './emails.js';
+import { toCoreSeed } from './core.js';
 import { toExtranetSeed } from './extranet.js';
 import { WORLD_SIZE, generateWorld } from './world.js';
 
@@ -39,6 +40,18 @@ describe('generateWorld', () => {
   });
 });
 
+describe('toCoreSeed', () => {
+  it('produces a valid Core seed whose references all resolve', () => {
+    const seed = toCoreSeed(world);
+    const brokerageIds = new Set(seed.brokerages.map((brokerage) => brokerage.id));
+    const clientIds = new Set(seed.clients.map((client) => client.id));
+    assert.ok(seed.brokers.every((broker) => brokerageIds.has(broker.brokerageId)));
+    assert.ok(seed.clients.every((client) => brokerageIds.has(client.brokerageId)));
+    assert.ok(seed.policies.every((policy) => clientIds.has(policy.clientId)));
+    assert.equal(seed.policies.length, world.brokeragePolicies.length);
+  });
+});
+
 describe('generateEmails', () => {
   it('is reproducible for a given seed', () => {
     assert.deepEqual(generateEmails(world, { seed: 42, count: 60 }), emails);
@@ -62,6 +75,12 @@ describe('generateEmails', () => {
         assert.equal(email.attachments.length, 0);
         assert.equal(groundTruth.policyNumber !== null, groundTruth.requestType === 'cancellation');
         if (groundTruth.policyNumber) assert.ok(email.body.includes(groundTruth.policyNumber));
+        continue;
+      }
+
+      if (groundTruth.scenario === 'unknown_client') {
+        assert.ok(!world.clients.some((client) => client.email === email.from));
+        assert.ok(!world.policies.some((policy) => policy.holderName === groundTruth.holderName));
         continue;
       }
 

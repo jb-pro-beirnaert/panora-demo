@@ -34,6 +34,59 @@ services:
       timeout: 3s
       retries: 30
 
+  redis:
+    image: redis:8-alpine
+    # No persistence: queues start empty on every recreate.
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  core-api:
+    <<: *app
+    build:
+      context: .
+      dockerfile: infra/docker/app.Dockerfile
+      args:
+        APP: core-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      CORE_API_PORT: 3001
+      CORE_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/core
+      REDIS_URL: redis://redis:6379
+      MASTRA_URL: http://agents:4111
+    ports:
+      - '${CORE_API_PORT:-3001}:3001'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    <<: *app
+    build:
+      context: .
+      dockerfile: infra/docker/app.Dockerfile
+      args:
+        APP: web
+    ports:
+      - '3000:3000'
+
   mcp-extranet:
     <<: *app
     build:
@@ -68,6 +121,7 @@ services:
     environment:
       SIMULATOR_PORT: 3003
       MCP_EXTRANET_URL: http://mcp-extranet:3002
+      CORE_API_URL: http://core-api:3001
     ports:
       - '${SIMULATOR_PORT:-3003}:3003'
     healthcheck:
@@ -92,6 +146,7 @@ services:
       MASTRA_HOST: 0.0.0.0
       AGENTS_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/agents
       MCP_EXTRANET_URL: http://mcp-extranet:3002
+      CORE_API_URL: http://core-api:3001
     ports:
       - '${MASTRA_PORT:-4111}:4111'
     healthcheck:

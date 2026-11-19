@@ -23,6 +23,8 @@ const triage: TriageResult = {
 };
 
 const claim: TriagedEmail = {
+  caseId: null,
+  client: null,
   email: {
     messageId: '<1@test>',
     from: 'contact@transports-lefevre.fr',
