@@ -1,9 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module, type DynamicModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthController } from './auth/auth.controller.js';
-import { AuthGuard } from './auth/auth.guard.js';
-import { SessionsService } from './auth/sessions.service.js';
 import { InboundTokenGuard } from './emails/inbound-token.guard.js';
 import { AdminModule } from './admin/admin.module.js';
 import { CasesController } from './cases/cases.controller.js';
@@ -50,7 +46,6 @@ export class AppModule {
       ],
       controllers: [
         HealthController,
-        AuthController,
         EmailsController,
         CasesController,
         InternalController,
@@ -62,8 +57,6 @@ export class AppModule {
         InternalService,
         ServiceTokenGuard,
         InboundTokenGuard,
-        SessionsService,
-        { provide: APP_GUARD, useClass: AuthGuard },
         WatchdogService,
         PurgeService,
         ...(workers ? [ProcessEmailProcessor, ResumeWorkflowProcessor, MaintenanceProcessor] : []),

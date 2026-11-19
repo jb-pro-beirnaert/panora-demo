@@ -3,6 +3,7 @@
 > Ce que contient le monde généré, les types d'e-mails qui arrivent pendant la démo, et le résultat attendu pour chacun.
 > Les noms de champs sont ceux du code (anglais) ; les valeurs textuelles sont en français jusqu'à V3, en français et en anglais à partir de V4.
 > Toutes les données sont fictives.
+> Depuis V12, le monde ne contient qu'un cabinet (Delorme Courtage) et un courtier (Sophie Marchal) : tous les e-mails, y compris ceux des clients anglophones, lui sont adressés.
 
 ## 1. Les types de données
 

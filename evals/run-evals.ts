@@ -347,7 +347,12 @@ async function main(): Promise<void> {
   writeFileSync(new URL(`${report.runId}.json`, reports), json);
   writeFileSync(new URL('latest.json', reports), json);
   const langfuseUrl = process.env.NEXT_PUBLIC_LANGFUSE_URL ?? langfuse?.baseUrl ?? '';
-  const markdown = toMarkdown(report, (traceId) => `${langfuseUrl}/trace/${traceId}`);
+  const projectId = process.env.NEXT_PUBLIC_LANGFUSE_PROJECT_ID;
+  const markdown = toMarkdown(report, (traceId) =>
+    projectId
+      ? `${langfuseUrl}/project/${projectId}/traces/${traceId}`
+      : `${langfuseUrl}/trace/${traceId}`,
+  );
   writeFileSync(new URL('latest.md', reports), markdown);
   if (values['save-baseline']) writeFileSync(new URL('baseline.json', reports), json);
   console.log(markdown);

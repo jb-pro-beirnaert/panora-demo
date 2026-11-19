@@ -40,7 +40,7 @@ export async function purge(
 }
 
 async function deleteLangfuseTrace(traceId: string): Promise<boolean> {
-  if (!env.LANGFUSE_PUBLIC_KEY || !env.LANGFUSE_SECRET_KEY) return false;
+  if (env.TRACING_DISABLED || !env.LANGFUSE_PUBLIC_KEY || !env.LANGFUSE_SECRET_KEY) return false;
   try {
     const response = await fetch(new URL(`/api/public/traces/${traceId}`, env.LANGFUSE_BASE_URL), {
       method: 'DELETE',

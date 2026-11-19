@@ -32,11 +32,16 @@ const EnvSchema = z
     MCP_TOKEN_SECRET: z
       .string()
       .min(32, 'MCP_TOKEN_SECRET (32+ characters) is required (see .env.example)'),
-    /** Langfuse (Cloud in V5, self-hosted in V6): tracing is off without the keys. */
+    /** Langfuse (self-hosted by default, or Cloud): tracing is off without the keys. */
     LANGFUSE_PUBLIC_KEY: z.string().optional(),
     LANGFUSE_SECRET_KEY: z.string().optional(),
-    LANGFUSE_BASE_URL: z.url().default('https://cloud.langfuse.com'),
+    LANGFUSE_BASE_URL: z.url().default('http://localhost:3100'),
     LANGFUSE_ENVIRONMENT: z.string().default('local'),
+    /** Set by `npm run dev:lite` (no Langfuse container): tracing off whatever the keys. */
+    TRACING_DISABLED: z
+      .enum(['true', 'false', ''])
+      .default('false')
+      .transform((value) => value === 'true'),
     /** V9 resilience: MCP request timeout and attempts per tool call. */
     MCP_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
     MCP_RETRY_ATTEMPTS: z.coerce.number().int().min(1).default(4),

@@ -141,9 +141,9 @@ export default async function EvalsPage({ params }: PageProps<'/[locale]/evals'>
                         result.scores.find((score) => score.agent === 'workflow')?.comment}
                     </TableCell>
                     <TableCell>
-                      {result.traceId && (
+                      {result.traceId && traceUrl(result.traceId) && (
                         <a
-                          href={traceUrl(result.traceId)}
+                          href={traceUrl(result.traceId)!}
                           target="_blank"
                           rel="noreferrer"
                           className="text-primary hover:underline"

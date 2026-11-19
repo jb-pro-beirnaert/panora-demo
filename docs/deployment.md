@@ -1,5 +1,8 @@
 # Deploying the demo on a VPS (Dokploy)
 
+> **Not maintained since V12**: the demo runs on `localhost` only and has no sign-in, so it must
+> not be exposed as is. Kept for reference.
+
 The whole stack runs from `compose.yaml` (profile `apps`): Postgres, Redis, the five apps, and
 optionally self-hosted Langfuse (profile `langfuse`). Images are built from the repository with
 `infra/docker/app.Dockerfile` (one image per app, `turbo prune --docker`).

@@ -16,3 +16,4 @@ comment, ce qui a été vérifié (tests, exécutions réelles) et les écarts a
 | V9      | `v9-scale-resilience`     | [Échelle et résilience](v09-scale-resilience.md)                               |
 | V10     | `v10-security-compliance` | [Sécurité et conformité](v10-security-compliance.md)                           |
 | V11     | `v11-finishing`           | [Finitions](v11-finishing.md)                                                  |
+| V12     | `v12-single-broker`       | [Un seul courtier, Langfuse local](v12-single-broker.md)                       |

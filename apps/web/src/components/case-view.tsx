@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from '@/i18n/navigation';
 import { ApiError, coreApi } from '@/lib/api';
-import { useBroker } from '@/lib/broker';
 import { useRealtime } from '@/lib/realtime';
 import { traceUrl } from '@/lib/config';
 import {
@@ -112,31 +111,27 @@ export function CaseView({ caseId }: { caseId: string }) {
 /** Failed case: the reason, and a button to relaunch it from the start (V9). */
 function FailedBanner({ kase, onRetried }: { kase: CaseDetail; onRetried: () => void }) {
   const t = useTranslations('case');
-  const { broker } = useBroker();
   const [sending, setSending] = useState(false);
-  const canRetry = broker?.brokerage.id === kase.brokerage.id;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900">
       <span className="mr-auto">{t('failed', { reason: kase.failureReason ?? '—' })}</span>
-      {canRetry && broker && (
-        <Button
-          size="sm"
-          variant="outline"
-          title={t('retryHint')}
-          disabled={sending}
-          onClick={async () => {
-            setSending(true);
-            try {
-              await coreApi.retry(kase.id);
-              onRetried();
-            } finally {
-              setSending(false);
-            }
-          }}
-        >
-          {t('retry')}
-        </Button>
-      )}
+      <Button
+        size="sm"
+        variant="outline"
+        title={t('retryHint')}
+        disabled={sending}
+        onClick={async () => {
+          setSending(true);
+          try {
+            await coreApi.retry(kase.id);
+            onRetried();
+          } finally {
+            setSending(false);
+          }
+        }}
+      >
+        {t('retry')}
+      </Button>
     </div>
   );
 }
@@ -355,13 +350,11 @@ function Proposal({
   const t = useTranslations();
   const format = useFormatter();
   const formatters = useFormatters();
-  const { broker } = useBroker();
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const decide = async (approved: boolean) => {
-    if (!broker) return;
     setSending(true);
     setError(null);
     try {
@@ -379,7 +372,13 @@ function Proposal({
   };
 
   const filing = action.claimFiling as { amount?: number; date?: string } | null;
-  const sameBrokerage = broker?.brokerage.id === kase.brokerage.id;
+  // Decided by the simulated broker (auto-validation): marked in the audit.
+  const auto = kase.auditLogs.some(
+    (log) =>
+      (log.action === 'action_approved' || log.action === 'action_rejected') &&
+      log.params.revision === action.revision &&
+      log.params.auto === true,
+  );
   return (
     <div
       className={cn(
@@ -425,36 +424,36 @@ function Proposal({
               timeStyle: 'short',
             }),
           })}
+          {auto && (
+            <Badge variant="outline" className="ml-1" title={t('case.autoHint')}>
+              {t('case.auto')}
+            </Badge>
+          )}
           {action.comment && <> — {t('case.comment', { comment: action.comment })}</>}
         </p>
       )}
-      {canDecide &&
-        (!broker ? (
-          <p className="text-sm text-muted-foreground">{t('case.chooseBroker')}</p>
-        ) : !sameBrokerage ? (
-          <p className="text-sm text-muted-foreground">{t('case.otherBrokerage')}</p>
-        ) : (
-          <div className="space-y-2">
-            <Textarea
-              value={comment}
-              placeholder={t('case.commentPlaceholder')}
-              onChange={(event) => setComment(event.target.value)}
-            />
-            <div className="flex gap-2">
-              <Button disabled={sending} onClick={() => decide(true)}>
-                {t('case.approve')}
-              </Button>
-              <Button variant="outline" disabled={sending} onClick={() => decide(false)}>
-                {t('case.reject')}
-              </Button>
-            </div>
-            {error && (
-              <p className="text-sm text-destructive">
-                {t('case.decisionError', { message: error })}
-              </p>
-            )}
+      {canDecide && (
+        <div className="space-y-2">
+          <Textarea
+            value={comment}
+            placeholder={t('case.commentPlaceholder')}
+            onChange={(event) => setComment(event.target.value)}
+          />
+          <div className="flex gap-2">
+            <Button disabled={sending} onClick={() => decide(true)}>
+              {t('case.approve')}
+            </Button>
+            <Button variant="outline" disabled={sending} onClick={() => decide(false)}>
+              {t('case.reject')}
+            </Button>
           </div>
-        ))}
+          {error && (
+            <p className="text-sm text-destructive">
+              {t('case.decisionError', { message: error })}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -467,9 +466,9 @@ function AuditCard({ kase }: { kase: CaseDetail }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{t('case.audit')}</CardTitle>
-        {kase.traceId && (
+        {kase.traceId && traceUrl(kase.traceId) && (
           <a
-            href={traceUrl(kase.traceId)}
+            href={traceUrl(kase.traceId)!}
             target="_blank"
             rel="noreferrer"
             className="text-sm text-primary underline-offset-4 hover:underline"
@@ -491,6 +490,11 @@ function AuditCard({ kase }: { kase: CaseDetail }) {
               </span>
               <span>
                 {renderAudit(log, t as Translate, formatters)}
+                {log.params.auto === true && (
+                  <Badge variant="outline" className="ml-1" title={t('case.autoHint')}>
+                    {t('case.auto')}
+                  </Badge>
+                )}
                 {log.source && (
                   <span className="ml-1 font-mono text-xs text-muted-foreground">
                     [{log.source}]

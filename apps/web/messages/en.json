@@ -6,8 +6,9 @@
   "header": {
     "inbox": "Inbox",
     "language": "Language",
-    "broker": "Signed in as",
-    "evals": "Evals"
+    "broker": "Broker",
+    "evals": "Evals",
+    "brokerName": "{name} — {brokerage}"
   },
   "locale": {
     "fr": "Français",
@@ -86,8 +87,6 @@
     "approve": "Approve",
     "reject": "Reject",
     "commentPlaceholder": "What should be changed? (sent back to the drafting agent)",
-    "chooseBroker": "Choose a broker in the header to decide.",
-    "otherBrokerage": "This case belongs to another brokerage.",
     "decided": "{status} by {name} on {date}",
     "comment": "Comment: {comment}",
     "audit": "Audit log",
@@ -102,7 +101,9 @@
     "viewTrace": "View the trace",
     "tokens": "{input} + {output} tokens",
     "retry": "Relaunch",
-    "retryHint": "The case failed; relaunch it from the start (the history is kept)."
+    "retryHint": "The case failed; relaunch it from the start (the history is kept).",
+    "auto": "auto",
+    "autoHint": "Decided by auto-validation (simulated broker)"
   },
   "status": {
     "received": "Received",
@@ -251,15 +252,5 @@
       "reason": "Reason"
     },
     "viewTrace": "Trace"
-  },
-  "auth": {
-    "title": "Sign in",
-    "email": "E-mail",
-    "password": "Password",
-    "submit": "Sign in",
-    "signOut": "Sign out",
-    "wrong": "Wrong e-mail or password.",
-    "demoAccounts": "Demo accounts (password: {password})",
-    "signedInAs": "{name} — {brokerage}"
   }
 }

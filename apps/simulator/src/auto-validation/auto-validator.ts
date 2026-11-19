@@ -69,9 +69,10 @@ export class AutoValidator {
 
   constructor(
     private readonly coreUrl: string,
-    /** Brokers per brokerage id: the decision is made by a broker of the case's brokerage. */
-    private readonly brokersByBrokerage: ReadonlyMap<string, readonly string[]>,
-    /** The simulated broker acts through the demo admin identity (V10), naming the broker. */
+    /**
+     * The simulated broker calls Core with the demo admin token: Core records the decision under
+     * the demo's broker and marks it as automatic (V12).
+     */
     private readonly adminToken: string,
     private readonly random: () => number = Math.random,
   ) {}
@@ -157,13 +158,10 @@ export class AutoValidator {
     const pending = kase.proposedActions.find((action) => action.status === 'pending');
     // Already decided by a human in the meantime.
     if (kase.status !== 'awaiting_approval' || pending?.revision !== revision) return;
-    const brokers = this.brokersByBrokerage.get(kase.brokerage.id) ?? [];
-    const brokerId = brokers[Math.floor(this.random() * brokers.length)];
-    if (!brokerId) return;
     const decision = chooseDecision(this.random, this.settings.rejectionRate, revision);
     const posted = await fetch(new URL(`/cases/${caseId}/decision`, this.coreUrl), {
       method: 'POST',
-      headers: this.headers({ 'content-type': 'application/json', 'x-broker-id': brokerId }),
+      headers: this.headers({ 'content-type': 'application/json' }),
       body: JSON.stringify(decision),
       signal: AbortSignal.timeout(5_000),
     });

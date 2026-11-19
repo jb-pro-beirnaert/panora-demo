@@ -4,12 +4,10 @@ import {
   type ReceiveEmailRequest,
 } from '@demo/shared';
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
-import { Public } from '../auth/principal.js';
 import { InboundTokenGuard } from './inbound-token.guard.js';
 import { EmailsService } from './emails.service.js';
 
 @Controller('emails')
-@Public()
 @UseGuards(InboundTokenGuard)
 export class EmailsController {
   constructor(private readonly emails: EmailsService) {}

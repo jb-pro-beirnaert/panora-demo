@@ -8,6 +8,10 @@ import { env } from './env.js';
  * it never fails a workflow.
  */
 export function buildObservability(): Observability | undefined {
+  if (env.TRACING_DISABLED) {
+    console.warn('TRACING_DISABLED=true (npm run dev:lite): tracing disabled.');
+    return undefined;
+  }
   if (!env.LANGFUSE_PUBLIC_KEY || !env.LANGFUSE_SECRET_KEY) {
     console.warn('LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY not set: tracing disabled.');
     return undefined;

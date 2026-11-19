@@ -13,6 +13,8 @@ import { createDb } from './db.js';
 /**
  * V10 isolation suite (real Postgres, `extranet_test`): an MCP token of one brokerage reads no
  * policy of another, a read token cannot file a claim, and /mcp refuses calls without a token.
+ * The demo has a single brokerage (V12), but the insurer's extranet serves many: the "other
+ * brokerage" is a code that owns no policy of the demo world.
  */
 const ADMIN_URL =
   process.env.EXTRANET_TEST_ADMIN_DATABASE_URL ??
@@ -25,7 +27,7 @@ const ADMIN_TOKEN = 'test-admin-token-0123456789';
 
 const world = generateWorld({ seed: 42, locale: 'fr' });
 const delormePolicy = world.policies.find((p) => p.brokerCode === 'DLM-075')!.number;
-const vasseurPolicy = world.policies.find((p) => p.brokerCode === 'VSR-069')!.number;
+const OTHER_BROKER_CODE = 'OTHER-000';
 
 let baseUrl: string;
 let close: () => Promise<void>;
@@ -96,20 +98,22 @@ describe('MCP isolation between brokerages', () => {
   });
 
   it('a token of one brokerage reads no policy of another', async () => {
-    const mcp = await client(issueMcpToken({ scope: 'read', brokerCode: 'DLM-075' }, SECRET));
+    const mcp = await client(
+      issueMcpToken({ scope: 'read', brokerCode: OTHER_BROKER_CODE }, SECRET),
+    );
     for (const [name, args] of [
-      ['get_policy', { number: vasseurPolicy }],
-      ['list_coverages', { policyNumber: vasseurPolicy }],
-      ['get_claim_history', { policyNumber: vasseurPolicy }],
+      ['get_policy', { number: delormePolicy }],
+      ['list_coverages', { policyNumber: delormePolicy }],
+      ['get_claim_history', { policyNumber: delormePolicy }],
     ] as const) {
       const result = await mcp.callTool({ name, arguments: args });
       assert.ok(result.isError, `${name} must fail`);
       assert.match(text(result), /access denied/i);
     }
     // Searching by holder name never returns another brokerage's policy.
-    const holder = world.policies.find((p) => p.number === vasseurPolicy)!.holderName;
+    const holder = world.policies.find((p) => p.number === delormePolicy)!.holderName;
     const search = await mcp.callTool({ name: 'search_policy', arguments: { holderName: holder } });
-    assert.doesNotMatch(text(search), new RegExp(vasseurPolicy));
+    assert.doesNotMatch(text(search), new RegExp(delormePolicy));
     await mcp.close();
   });
 

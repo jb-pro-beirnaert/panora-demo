@@ -1,12 +1,10 @@
 import { CoreSeedSchema, type CoreSeed } from '@demo/shared';
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
-import { Public } from '../auth/principal.js';
 import { AdminTokenGuard } from './admin-token.guard.js';
 import { AdminService } from './admin.service.js';
 
 /** Demo-only routes: registered only with DEMO_MODE=true (see AppModule). */
 @Controller('admin')
-@Public()
 @UseGuards(AdminTokenGuard)
 export class AdminController {
   constructor(private readonly admin: AdminService) {}

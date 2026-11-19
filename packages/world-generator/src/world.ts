@@ -75,30 +75,16 @@ export function businessOf(client: Pick<Client, 'language' | 'businessIndex'>): 
   return (client.language === 'en' ? BUSINESSES_EN : BUSINESSES)[client.businessIndex]!;
 }
 
-const BROKERAGES: Brokerage[] = [
-  {
-    id: 'brk-001',
-    name: 'Delorme Courtage',
-    brokerCode: SHOWCASE.brokerCode,
-    locale: 'fr',
-    inboxEmail: 'sinistres@delorme-courtage.fr',
-  },
-  {
-    id: 'brk-002',
-    name: 'Vasseur & Associés',
-    brokerCode: 'VSR-069',
-    locale: 'fr',
-    inboxEmail: 'sinistres@vasseur-associes.fr',
-  },
-];
-
-/** English-speaking brokerage, added with the English data (V4). */
-const ENGLISH_BROKERAGE: Brokerage = {
-  id: 'brk-003',
-  name: 'Hartley & Finch Brokers',
-  brokerCode: 'HTF-092',
-  locale: 'en',
-  inboxEmail: 'claims@hartley-finch.eu',
+/**
+ * The demo's only brokerage (V12): every e-mail of the stream is sent to it, and its only broker
+ * (Sophie Marchal) is the implicit user of the UI.
+ */
+const DELORME: Brokerage = {
+  id: 'brk-001',
+  name: 'Delorme Courtage',
+  brokerCode: SHOWCASE.brokerCode,
+  locale: 'fr',
+  inboxEmail: 'sinistres@delorme-courtage.fr',
 };
 
 function businessIndex(prefix: string): number {
@@ -112,7 +98,7 @@ class WorldBuilder {
   readonly brokeragePolicies: BrokeragePolicy[] = [];
   readonly claims: ExtranetClaim[] = [];
   readonly vehicles: Vehicle[] = [];
-  readonly brokerages: Brokerage[] = [...BROKERAGES];
+  readonly brokerages: Brokerage[] = [DELORME];
   private readonly usedNumbers = new Set<string>();
   private readonly usedNames = new Set<string>();
 
@@ -365,12 +351,9 @@ export function generateWorld(options: GenerateWorldOptions): World {
   const referenceDate = options.referenceDate ?? DEFAULT_REFERENCE_DATE;
   const faker = createRandom(options.seed);
   const builder = new WorldBuilder(faker, referenceDate);
-  const [delorme, vasseur] = BROKERAGES as [Brokerage, Brokerage];
+  const delorme = DELORME;
 
   builder.addBroker(delorme, 'Sophie Marchal');
-  builder.addBroker(delorme);
-  builder.addBroker(vasseur);
-  builder.addBroker(vasseur);
 
   // Showcase clients and policies (scenarios 1, 2 and 6 of the catalog).
   const bakery = builder.addClient({
@@ -424,7 +407,7 @@ export function generateWorld(options: GenerateWorldOptions): World {
   const filler: Client[] = [];
   while (builder.clients.length < WORLD_SIZE.clients) {
     const client = builder.addClient({
-      brokerage: pick(faker, BROKERAGES),
+      brokerage: delorme,
       businessIndex: int(faker, 0, BUSINESSES.length - 1),
     });
     filler.push(client);
@@ -550,9 +533,9 @@ export function generateWorld(options: GenerateWorldOptions): World {
 }
 
 /**
- * English data (V4): an English-speaking brokerage, the English-language insurer Northbridge, and
- * English-speaking clients, some of them at French brokerages or French insurers so that e-mails,
- * clauses and the brokerage's language can differ (scenarios 12 to 14).
+ * English data (V4): the English-language insurer Northbridge and English-speaking clients of the
+ * (French-speaking) brokerage, some of them at French insurers, so that e-mails, clauses and the
+ * brokerage's language can differ (scenarios 12 to 14).
  */
 function addEnglishPart(
   builder: WorldBuilder,
@@ -561,10 +544,7 @@ function addEnglishPart(
   referenceDate: string,
 ): void {
   const faker = createEnglishRandom(seed);
-  builder.brokerages.push(ENGLISH_BROKERAGE);
-  builder.addBroker(ENGLISH_BROKERAGE, 'Olivia Hartley', faker);
-  builder.addBroker(ENGLISH_BROKERAGE, undefined, faker);
-  const [delorme, vasseur] = BROKERAGES as [Brokerage, Brokerage];
+  const delorme = DELORME;
 
   // Scenario 13 showcase: English e-mail, French insurer, French brokerage.
   const brightwave = builder.addClient({
@@ -586,28 +566,26 @@ function addEnglishPart(
     coverageOverrides: { water_damage: { limit: 20_000, deductible: 300 } },
   });
 
-  // English-speaking clients: mostly Hartley & Finch's (at Northbridge, a few at French insurers),
-  // some foreign companies established in France at the French brokerages.
+  // English-speaking clients of the brokerage: mostly at Northbridge, a few at French insurers.
   const count = Math.max(4, Math.round(WORLD_SIZE.clients * share));
   const englishPolicies: ExtranetPolicy[] = [];
   for (let index = 1; index < count; index++) {
-    const atEnglishBrokerage = index % 3 !== 0;
+    const atNorthbridge = index % 3 !== 0 && index % 4 !== 0;
     const client = builder.addClient({
-      brokerage: atEnglishBrokerage ? ENGLISH_BROKERAGE : pick(faker, [delorme, vasseur]),
+      brokerage: delorme,
       businessIndex: int(faker, 0, BUSINESSES_EN.length - 1),
       english: { faker },
     });
-    const insurerId =
-      atEnglishBrokerage && index % 4 !== 0 ? NORTHBRIDGE.id : pick(faker, INSURERS).id;
+    const insurerId = atNorthbridge ? NORTHBRIDGE.id : pick(faker, INSURERS).id;
     englishPolicies.push(
       builder.addPolicy({ client, product: PRODUCTS.multirisk, insurerId, faker }),
     );
   }
 
   // French-speaking clients whose policy is at Northbridge: French e-mail, English clauses.
-  for (const brokerage of [delorme, vasseur]) {
+  for (let index = 0; index < 2; index++) {
     const client = builder.addClient({
-      brokerage,
+      brokerage: delorme,
       businessIndex: int(faker, 0, BUSINESSES.length - 1),
       lastName: faker.person.lastName(),
       legalForm: 'SAS',

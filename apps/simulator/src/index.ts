@@ -55,14 +55,7 @@ const burst = new Burst(
   emails.map(({ email }) => email),
   deliver,
 );
-const brokersByBrokerage = new Map<string, string[]>();
-for (const broker of world.brokers) {
-  brokersByBrokerage.set(broker.brokerageId, [
-    ...(brokersByBrokerage.get(broker.brokerageId) ?? []),
-    broker.id,
-  ]);
-}
-const autoValidator = new AutoValidator(env.CORE_API_URL, brokersByBrokerage, env.ADMIN_TOKEN);
+const autoValidator = new AutoValidator(env.CORE_API_URL, env.ADMIN_TOKEN);
 
 const app = express();
 app.use(express.json());

@@ -9,7 +9,7 @@ export function langfuseFromEnv(env: NodeJS.ProcessEnv = process.env): LangfuseC
   const { LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY } = env;
   if (!LANGFUSE_PUBLIC_KEY || !LANGFUSE_SECRET_KEY) return null;
   return {
-    baseUrl: env.LANGFUSE_BASE_URL ?? 'https://cloud.langfuse.com',
+    baseUrl: env.LANGFUSE_BASE_URL ?? 'http://localhost:3100',
     publicKey: LANGFUSE_PUBLIC_KEY,
     secretKey: LANGFUSE_SECRET_KEY,
   };

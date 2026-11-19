@@ -11,8 +11,8 @@ generated from a fixed seed.
 > du sinistre, refus motivé, demande de pièces) avant son exécution, tracée dans un journal d'audit.
 > Interface bilingue FR/EN, données FR/EN, tracing Langfuse, evals par agent et par langue avec
 > non-régression en CI, comparaison chiffrée des modèles (coût, latence), tests de charge (1 000
-> dossiers, extranet instable, instance tuée en cours de route) et cloisonnement entre cabinets testé
-> en CI. Les specs (en français) sont dans [`specs/`](specs/), le détail de chaque version dans
+> dossiers, extranet instable, instance tuée en cours de route) et moindre privilège des agents
+> (jetons MCP `read` / `write`) testé en CI. Les specs (en français) sont dans [`specs/`](specs/), le détail de chaque version dans
 > [`docs/versions/`](docs/versions/). Lancement : `npm install` puis `npm run dev`.
 
 ## The journey of a case
@@ -106,7 +106,7 @@ every `npm run dev` starts from empty databases that the simulator seeds again.
   prompt cache); triage on a smaller model halves it at equal score.
 - **Load**: 1,000 cases in a burst against a flaky extranet (5 % errors) with a Mastra instance
   killed mid-run: **1,000 closed, 0 failed, 0 processed twice**, 299 cases/min (the rate limit).
-- **Isolation**: brokerage isolation suites (Core API, MCP server) green in CI.
+- **Isolation**: MCP tokens are scoped to a brokerage and to `read` / `write`; suite green in CI.
 
 ## Run it locally
 
@@ -119,33 +119,37 @@ npm run dev
 
 On the first run `npm run dev` creates `.env` from `.env.example` with random secrets; set
 `OPENAI_API_KEY` in it (or `AGENTS_MODE=simulated` to try everything without an LLM). It then starts
-Postgres and Redis (empty), the five apps in watch mode, and seeds the fictional world.
+Postgres and Redis (empty), a self-hosted Langfuse, the five apps in watch mode, and seeds the
+fictional world.
 
-Open http://localhost:3000, sign in with a demo account (listed on the sign-in page), press
-**Start** in the demo panel: e-mails arrive, the timeline fills up live, approve or reject the
+Open http://localhost:3000 — no sign-in: the demo has one brokerage (Delorme Courtage) and one
+broker (Sophie Marchal), and every e-mail lands in her inbox. Press **Start** in the demo panel: e-mails arrive, the timeline fills up live, approve or reject the
 proposals; switch the UI between FR and EN at any time. Other entry points: Mastra Studio on
-http://localhost:4111, the Evals screen, `npm run evals`, `npm run load-test -w apps/simulator`.
+http://localhost:4111, Langfuse on http://localhost:3100 (`demo@panora-demo.local` /
+`demo-password`), the Evals screen, `npm run evals`, `npm run load-test -w apps/simulator`.
 
-| Command                                                                    | What it does                                          |
-| -------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `npm run dev` / `npm run dev:langfuse`                                     | the stack (+ self-hosted Langfuse on :3100)           |
-| `npm run build` / `lint` / `typecheck` / `test` / `test:integration`       | across all workspaces                                 |
-| `npm run gen:evals -- --seed 7 --count 60` · `npm run evals [-- --matrix]` | eval dataset, eval run, model matrix                  |
-| `npm run start:docker`                                                     | the full stack in containers (Compose profile `apps`) |
-| `npm run infra:down`                                                       | stop and remove the containers                        |
+| Command                                                                    | What it does                                           |
+| -------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `npm run dev` / `npm run dev:lite`                                         | the stack with self-hosted Langfuse on :3100 / without |
+| `npm run build` / `lint` / `typecheck` / `test` / `test:integration`       | across all workspaces                                  |
+| `npm run gen:evals -- --seed 7 --count 60` · `npm run evals [-- --matrix]` | eval dataset, eval run, model matrix                   |
+| `npm run start:docker`                                                     | the full stack in containers (Compose profile `apps`)  |
+| `npm run infra:down`                                                       | stop and remove the containers                         |
 
-## Tracing: Langfuse Cloud or self-hosted
+## Tracing: Langfuse, self-hosted by default
 
 The Mastra server exports its traces to Langfuse: one trace and one session per case (initial run
 and every resume), with the model, the prompt version and the e-mail language on the agents' spans,
 and tokens and cost on every LLM call. The UI's audit log links to the trace.
 
-- **Cloud**: set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_BASE_URL` in `.env`,
-  then `npm run dev`.
-- **Self-hosted**: `npm run dev:langfuse` starts the same stack plus Langfuse (web UI on
+- **Self-hosted (default)**: `npm run dev` starts Langfuse with the stack (web UI on
   http://localhost:3100, worker, ClickHouse, MinIO, Redis; Compose profile `langfuse`, no volume).
-  The project and its keys are created on startup: point `.env` to it (see `.env.example`) — same
-  code, only the URL and the keys change. Going back to Cloud only means editing `.env` again.
+  The project, its keys and a login are created on startup and `.env.example` already points to
+  them, so "View the trace" opens the local trace. `npm run dev:lite` skips Langfuse (tracing off,
+  no trace links) for a smaller machine.
+- **Cloud**: set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` and
+  `NEXT_PUBLIC_LANGFUSE_URL` / `NEXT_PUBLIC_LANGFUSE_PROJECT_ID` in `.env` — same code, only the
+  URL and the keys change.
 
 ### Why self-host in a regulated sector — and what it costs
 
@@ -255,15 +259,15 @@ How it holds:
 
 ## Security and personal data
 
-**Access.** Brokers sign in (accounts of the seed in the demo); Core keeps the session (httpOnly
-cookie, only a hash of the token is stored). Every Core query is filtered by the broker's
-brokerage — another brokerage's case answers 404 — and the realtime stream only carries the
-brokerage's events. The brokerage's `brokerCode` travels with the case to Mastra and into the MCP
-token, so an agent cannot read another brokerage's policies whatever its prompt says. Each hop has
+**Access.** The demo runs locally for a single broker, so the UI has no sign-in (V12; V10 had
+sessions and per-brokerage filtering, removed to keep the demo about the agents). Every decision
+is recorded under that broker, and decisions of the simulated broker are marked "auto". The
+brokerage's `brokerCode` travels with the case to Mastra and into the MCP token, so an agent
+cannot read another brokerage's policies at the insurer whatever its prompt says. Each hop has
 its own credential: inbound e-mail gateway → Core, Core → Mastra, Mastra → Core, Mastra → MCP
 (`read` for the agents, `write` only in the code step after approval), simulator → `/admin/*`
-(which only exists with `DEMO_MODE=true`). These rules are covered by an isolation test suite that
-runs in CI (Core API and MCP server, real Postgres).
+(which only exists with `DEMO_MODE=true`). These rules are covered by test suites that run in CI
+(Core API and MCP server, real Postgres).
 
 **Data processed.** Claim e-mails and their attachments (names, addresses, company identifiers,
 amounts, circumstances of incidents), policy data from the insurer, drafts and internal notes, the

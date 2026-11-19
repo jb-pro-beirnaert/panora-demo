@@ -12,7 +12,8 @@
     "evals"
   ],
   "scripts": {
-    "dev": "npm run setup:env && npm run infra:reset && turbo run dev",
+    "dev": "npm run setup:env && npm run infra:reset:langfuse && turbo run dev",
+    "dev:lite": "npm run setup:env && npm run infra:reset && TRACING_DISABLED=true NEXT_PUBLIC_LANGFUSE_URL= turbo run dev",
     "infra:reset": "docker compose up -d --force-recreate --wait postgres redis",
     "infra:down": "docker compose --profile apps --profile langfuse down --remove-orphans",
     "start:docker": "npm run setup:env && docker compose --profile apps up -d --build --force-recreate --wait",
@@ -24,7 +25,6 @@
     "format:check": "prettier --check .",
     "test:integration": "turbo run test:integration",
     "infra:reset:langfuse": "docker compose --profile langfuse up -d --force-recreate --wait postgres redis langfuse-web langfuse-worker",
-    "dev:langfuse": "npm run setup:env && npm run infra:reset:langfuse && turbo run dev",
     "gen:evals": "npm run gen -w evals --",
     "evals": "npm run run -w evals --",
     "setup:env": "node scripts/ensure-env.mjs"

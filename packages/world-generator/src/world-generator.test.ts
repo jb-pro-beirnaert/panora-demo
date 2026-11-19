@@ -16,7 +16,8 @@ describe('generateWorld', () => {
   });
 
   it('has the expected size', () => {
-    assert.equal(world.brokerages.length, 2);
+    assert.equal(world.brokerages.length, 1);
+    assert.equal(world.brokers.length, 1);
     assert.equal(world.insurers.length, 3);
     assert.equal(world.clients.length, WORLD_SIZE.clients);
     assert.equal(world.policies.length, WORLD_SIZE.policies);
@@ -134,7 +135,11 @@ describe('multilingual world (V4)', () => {
     const french = generateWorld({ seed: 42, locale: 'fr' });
     assert.deepEqual(multi.clients.slice(0, french.clients.length), french.clients);
     assert.deepEqual(multi.policies.slice(0, french.policies.length), french.policies);
-    assert.ok(multi.brokerages.some((brokerage) => brokerage.locale === 'en'));
+    assert.deepEqual(
+      multi.brokerages.map((brokerage) => brokerage.locale),
+      ['fr'],
+    );
+    assert.equal(multi.brokers.length, 1);
     assert.ok(multi.insurers.some((insurer) => insurer.locale === 'en'));
     assert.ok(multi.clients.some((client) => client.language === 'en'));
   });

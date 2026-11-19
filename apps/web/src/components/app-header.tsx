@@ -3,7 +3,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { routing, type AppLocale } from '@/i18n/routing';
-import { Button } from '@/components/ui/button';
 import { useBroker } from '@/lib/broker';
 
 const selectClass =
@@ -14,7 +13,7 @@ export function AppHeader() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const { broker, signOut } = useBroker();
+  const { broker } = useBroker();
 
   return (
     <header className="border-b bg-background">
@@ -35,11 +34,8 @@ export function AppHeader() {
           <span className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">{t('header.broker')}</span>
             <span>
-              {t('auth.signedInAs', { name: broker.name, brokerage: broker.brokerage.name })}
+              {t('header.brokerName', { name: broker.name, brokerage: broker.brokerage.name })}
             </span>
-            <Button size="sm" variant="ghost" onClick={signOut}>
-              {t('auth.signOut')}
-            </Button>
           </span>
         )}
         <label className="flex items-center gap-2 text-sm">

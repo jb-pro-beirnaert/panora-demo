@@ -6,8 +6,9 @@
   "header": {
     "inbox": "Boîte de réception",
     "language": "Langue",
-    "broker": "Connecté en tant que",
-    "evals": "Evals"
+    "broker": "Courtier",
+    "evals": "Evals",
+    "brokerName": "{name} — {brokerage}"
   },
   "locale": {
     "fr": "Français",
@@ -86,8 +87,6 @@
     "approve": "Valider",
     "reject": "Refuser",
     "commentPlaceholder": "Que faut-il changer ? (renvoyé à l'agent de rédaction)",
-    "chooseBroker": "Choisissez un courtier dans l'en-tête pour décider.",
-    "otherBrokerage": "Ce dossier appartient à un autre cabinet.",
     "decided": "{status} par {name} le {date}",
     "comment": "Commentaire : {comment}",
     "audit": "Journal d'audit",
@@ -102,7 +101,9 @@
     "viewTrace": "Voir la trace",
     "tokens": "{input} + {output} jetons",
     "retry": "Relancer",
-    "retryHint": "Le dossier a échoué ; relancez-le depuis le début (l'historique est conservé)."
+    "retryHint": "Le dossier a échoué ; relancez-le depuis le début (l'historique est conservé).",
+    "auto": "auto",
+    "autoHint": "Décision prise par la validation automatique (courtier simulé)"
   },
   "status": {
     "received": "Reçu",
@@ -251,15 +252,5 @@
       "reason": "Raison"
     },
     "viewTrace": "Trace"
-  },
-  "auth": {
-    "title": "Connexion",
-    "email": "E-mail",
-    "password": "Mot de passe",
-    "submit": "Se connecter",
-    "signOut": "Se déconnecter",
-    "wrong": "E-mail ou mot de passe incorrect.",
-    "demoAccounts": "Comptes de démo (mot de passe : {password})",
-    "signedInAs": "{name} — {brokerage}"
   }
 }

@@ -1,44 +1,45 @@
 'use client';
 
+import type { BrokerView } from '@demo/shared';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { usePathname, useRouter } from '@/i18n/navigation';
-import { ApiError, coreApi, type SignedInBroker } from './api';
+import { coreApi } from './api';
+import { useRealtime } from './realtime';
 
 interface BrokerContextValue {
-  /** The signed-in broker (V10), null while loading or signed out. */
-  broker: SignedInBroker | null;
-  signOut: () => Promise<void>;
+  /** The demo's only broker (V12, no sign-in); null until the simulator has seeded the data. */
+  broker: BrokerView | null;
 }
 
 const BrokerContext = createContext<BrokerContextValue | null>(null);
 
-/** The broker's session: everything the UI shows is limited to their brokerage (by Core). */
 export function BrokerProvider({ children }: { children: ReactNode }) {
-  const [broker, setBroker] = useState<SignedInBroker | null>(null);
-  const router = useRouter();
-  const pathname = usePathname();
+  const [broker, setBroker] = useState<BrokerView | null>(null);
 
   const load = useCallback(() => {
     coreApi
-      .me()
-      .then((me) => setBroker(me.kind === 'broker' ? me : null))
-      .catch((error) => {
-        setBroker(null);
-        if (error instanceof ApiError && error.status === 401 && pathname !== '/login') {
-          router.replace('/login');
-        }
+      .broker()
+      .then(setBroker)
+      .catch(() => setBroker(null));
+  }, []);
+
+  useEffect(() => {
+    load();
+    // The databases are empty for a few seconds after startup: retry until the seed is there.
+    const timer = setInterval(() => {
+      setBroker((current) => {
+        if (!current) load();
+        return current;
       });
-  }, [pathname, router]);
+    }, 2_000);
+    return () => clearInterval(timer);
+  }, [load]);
 
-  useEffect(load, [load]);
+  // The seed is replayed after a reset.
+  useRealtime((event) => {
+    if (event.type === 'demo.reset') setTimeout(load, 1_500);
+  });
 
-  const signOut = async () => {
-    await coreApi.logout().catch(() => undefined);
-    setBroker(null);
-    router.replace('/login');
-  };
-
-  return <BrokerContext.Provider value={{ broker, signOut }}>{children}</BrokerContext.Provider>;
+  return <BrokerContext.Provider value={{ broker }}>{children}</BrokerContext.Provider>;
 }
 
 export function useBroker(): BrokerContextValue {

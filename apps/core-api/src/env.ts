@@ -50,10 +50,6 @@ const EnvSchema = z
       .string()
       .min(16, 'INBOUND_EMAIL_TOKEN (16+ characters) is required (see .env.example)'),
     /** Broker sessions (V10). */
-    SESSION_TTL_HOURS: z.coerce.number().positive().default(12),
-    COOKIE_SECURE: booleanString,
-    /** Password of every seeded broker account (demo mode only). */
-    DEMO_BROKER_PASSWORD: z.string().min(8).default('demo-password'),
     /** V10 retention: closed cases' workflow snapshots and traces are purged after this delay. */
     RETENTION_DAYS: z.coerce.number().positive().default(30),
     PURGE_EVERY_MS: z.coerce

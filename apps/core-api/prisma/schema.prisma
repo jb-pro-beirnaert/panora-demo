@@ -71,23 +71,6 @@ model Broker {
   name            String
   email           String    @unique
   preferredLocale Locale
-  /**
-   * scrypt hash (`salt:hash`, hex) of the demo password, set at seed.
-   */
-  passwordHash    String?
-  sessions        Session[]
-}
-
-/**
- * A signed-in broker (V10). Only a hash of the token is stored.
- */
-model Session {
-  id        String   @id @default(uuid())
-  tokenHash String   @unique
-  brokerId  String
-  broker    Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
 }
 
 model Client {

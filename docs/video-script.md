@@ -1,7 +1,7 @@
 # Vidéo de 2 minutes — script
 
-Préparation : `npm run dev:langfuse` (ou la démo en ligne), interface en français, connecté comme
-Sophie Marchal (Delorme Courtage), validation automatique désactivée, cadence 4 e-mails/min.
+Préparation : `npm run dev` (Langfuse local inclus), interface en français (pas de connexion :
+la démo est celle de Sophie Marchal, Delorme Courtage), validation automatique désactivée, cadence 4 e-mails/min.
 
 | Temps     | À l'écran                                                                                                                                                          | Voix off                                                                                                                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Specifications are in `specs/` (written in French). Implementation proceeds version by version (V1 → V11), one git branch per version created from the previous one; what each version did and how is written in `docs/versions/vNN-*.md`. Each version spec lists the services it touches, its scope, its acceptance criteria, and what is explicitly out of scope. Before implementing anything, read `specs/00-overview.md`, `specs/00-demo-data-and-scenarios.md` and the spec for the version being built. Do not build features from a later version early.
+Specifications are in `specs/` (written in French). Implementation proceeds version by version (V1 → V13), one git branch per version created from the previous one; what each version did and how is written in `docs/versions/vNN-*.md`. Each version spec lists the services it touches, its scope, its acceptance criteria, and what is explicitly out of scope. Before implementing anything, read `specs/00-overview.md`, `specs/00-demo-data-and-scenarios.md` and the spec for the version being built. Do not build features from a later version early.
 
 The project is a demo built for a job application to Panora (an insurance-brokerage AI startup): a claim e-mail reaches a brokerage, three AI agents analyze it, check coverage at the insurer through an MCP connector, and a broker approves the proposed action before it is executed and audited.
 
@@ -19,6 +19,7 @@ The project is a demo built for a job application to Panora (an insurance-broker
 - **Agent prompts: one prompt per agent, in English** (`apps/agents/src/mastra/prompts/`), never duplicated per language. Structured outputs use language-neutral English values (`covered`, `not_covered`, `uncertain`, `request_documents`…). Language rules: client e-mail draft in the inbound e-mail's language; internal note in `Brokerage.locale`; clause citations copied in their original language. Expected languages are passed explicitly in the agent input.
 - **UI text is never hard-coded**: next-intl with `apps/web/messages/fr.json` / `en.json` (English keys like `inbox.title`). `AgentStep`, `AuditLog` and agent events are stored as `type` + `params` and rendered via translation keys, so the timeline follows the UI language. Free text from agents (drafts, notes, clause excerpts) is shown as-is with a language badge. A test checks that `fr.json` and `en.json` have identical keys.
 - **Environment variables live in a single root `.env` file** (gitignored), never hard-coded and never in per-app env files. Claude cannot read or edit `.env`: it only maintains `.env.example` (every variable, grouped by service, with a short comment and a safe placeholder/default). Whenever a change adds, renames, removes or changes the default of a variable, update `.env.example` and **explicitly tell the user which lines to add or change in their `.env`** in the final message.
+- **Single broker, no sign-in (V12)**: the demo runs on localhost with one brokerage (Delorme Courtage) and one broker (Sophie Marchal), the implicit author of every decision. Service tokens and MCP `read`/`write` tokens stay.
 - `AuditLog` is append-only: no update or delete route.
 - `/admin/*` routes (seed, reset) exist only with `DEMO_MODE=true` and require an admin token.
 
@@ -58,8 +59,8 @@ The scenario catalog (expected verdicts, alerts, actions, ground truth) is in `s
 ## Commands
 
 - `npm install` — single install at the root (one lockfile, shared `node_modules`).
-- `npm run dev` — create `.env` from `.env.example` if missing, recreate empty Postgres + Redis and start all apps in watch mode.
-- `npm run dev:langfuse` — same, with self-hosted Langfuse (Compose profile `langfuse`, V6).
+- `npm run dev` — create `.env` from `.env.example` if missing, recreate empty Postgres + Redis, start self-hosted Langfuse (Compose profile `langfuse`, http://localhost:3100) and all apps in watch mode.
+- `npm run dev:lite` — same without Langfuse (`TRACING_DISABLED=true`, no trace links).
 - `npm run infra:down` — stop and remove containers.
 - `npm run build` / `lint` / `typecheck` / `test` / `test:integration` — across all workspaces via Turborepo (integration tests need `docker compose up -d postgres redis`).
 - `npm run dev -w apps/core-api` — run a script in a single workspace.

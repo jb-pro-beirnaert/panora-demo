@@ -1,9 +1,7 @@
 import type { CoreSeed } from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { Queue } from 'bullmq';
-import { hashPassword } from '../auth/password.js';
-import { ENV, type Env } from '../env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   PROCESS_EMAIL_QUEUE,
@@ -23,7 +21,6 @@ const TABLES = [
   'InboundEmail',
   'Policy',
   'Client',
-  'Session',
   'Broker',
   'Brokerage',
 ];
@@ -33,7 +30,6 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeService,
-    @Inject(ENV) private readonly env: Env,
     @InjectQueue(PROCESS_EMAIL_QUEUE) private readonly processEmailQueue: Queue<ProcessEmailJob>,
     @InjectQueue(RESUME_WORKFLOW_QUEUE) private readonly resumeQueue: Queue<ResumeWorkflowJob>,
   ) {}
@@ -51,16 +47,10 @@ export class AdminService {
 
   async seed(world: CoreSeed): Promise<Record<string, number>> {
     await this.reset();
-    const passwordHash = await hashPassword(this.env.DEMO_BROKER_PASSWORD);
     await this.prisma.$transaction([
       this.prisma.brokerage.createMany({ data: world.brokerages }),
-      // Demo accounts: every seeded broker signs in with DEMO_BROKER_PASSWORD.
       this.prisma.broker.createMany({
-        data: world.brokers.map((broker) => ({
-          ...broker,
-          email: broker.email.toLowerCase(),
-          passwordHash,
-        })),
+        data: world.brokers.map((broker) => ({ ...broker, email: broker.email.toLowerCase() })),
       }),
       this.prisma.client.createMany({ data: world.clients }),
       this.prisma.policy.createMany({

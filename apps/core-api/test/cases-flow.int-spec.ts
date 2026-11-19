@@ -20,7 +20,6 @@ const emails = generateEmails(world, { seed: 42, count: 10 });
 const terminated = emails.find((e) => e.groundTruth.scenario === 'policy_terminated')!.email;
 const delorme = world.brokerages.find((b) => b.brokerCode === 'DLM-075')!;
 const delormeBroker = world.brokers.find((b) => b.brokerageId === delorme.id)!;
-const otherBroker = world.brokers.find((b) => b.brokerageId !== delorme.id)!;
 
 const admin = { authorization: `Bearer ${TEST_ADMIN_TOKEN}` };
 const service = { authorization: `Bearer ${TEST_SERVICE_TOKEN}` };
@@ -44,13 +43,13 @@ const proposal = (revision: number, actionType = 'notify_denial') => ({
 describe('case lifecycle (Postgres + Redis)', () => {
   let app: INestApplication;
   let mastra: FakeMastraClient;
-  // The demo admin (as the simulator and the evals): sees every brokerage.
+  // The UI (V12): no sign-in, no cookie.
   let http: ReturnType<typeof request.agent>;
   const events: RealtimeEvent[] = [];
 
   beforeAll(async () => {
     ({ app, mastra } = await createTestApp());
-    http = request.agent(app.getHttpServer()).set(admin);
+    http = request.agent(app.getHttpServer());
     app
       .get(RealtimeService)
       .stream()
@@ -149,10 +148,10 @@ describe('case lifecycle (Postgres + Redis)', () => {
       .set(service)
       .expect(404);
     expect(missing.body.message).toMatch(/search_policy/);
-    // Another brokerage does not see this client.
+    // The lookup is still scoped by brokerage code.
     await http
       .get('/internal/clients')
-      .query({ email: terminated.from, brokerCode: 'VSR-069' })
+      .query({ email: terminated.from, brokerCode: 'OTHER-000' })
       .set(service)
       .expect(404);
   });
@@ -230,27 +229,22 @@ describe('case lifecycle (Postgres + Redis)', () => {
     expect((await http.get('/cases/stats').expect(200)).body.awaitingApproval).toBe(1);
   });
 
-  it('checks who decides', async () => {
-    // The admin must name the broker it acts for.
-    await http.post(`/cases/${caseId}/decision`).send({ approved: true }).expect(400);
-    await http
-      .post(`/cases/${caseId}/decision`)
-      .set('x-broker-id', otherBroker.id)
-      .send({ approved: true })
-      .expect(403);
+  it("serves the demo's single broker without any sign-in", async () => {
+    const broker = (await http.get('/broker').expect(200)).body;
+    expect(broker).toMatchObject({
+      id: delormeBroker.id,
+      name: 'Sophie Marchal',
+      brokerage: { brokerCode: 'DLM-075' },
+    });
+    expect((await http.get('/cases').expect(200)).body).toHaveLength(1);
   });
 
   it('a rejection with a comment queues the resume with the comment', async () => {
     await http
       .post(`/cases/${caseId}/decision`)
-      .set('x-broker-id', delormeBroker.id)
       .send({ approved: false, comment: 'Ajoute le numéro de contrat.' })
       .expect(202);
-    await http
-      .post(`/cases/${caseId}/decision`)
-      .set('x-broker-id', delormeBroker.id)
-      .send({ approved: true })
-      .expect(409);
+    await http.post(`/cases/${caseId}/decision`).send({ approved: true }).expect(409);
     const job = await app.get<Queue>(getQueueToken(RESUME_WORKFLOW_QUEUE)).getJob(`${caseId}-r1`);
     expect(job?.data).toEqual({
       caseId,
@@ -272,6 +266,8 @@ describe('case lifecycle (Postgres + Redis)', () => {
       actorName: delormeBroker.name,
       action: 'action_rejected',
     });
+    // A human decision: no "auto" marker.
+    expect(view.auditLogs.at(-1)?.params).not.toHaveProperty('auto');
   });
 
   it('the approved second proposal is executed and closes the case', async () => {
@@ -280,11 +276,14 @@ describe('case lifecycle (Postgres + Redis)', () => {
       .set(service)
       .send(proposal(2))
       .expect(200);
-    await http
-      .post(`/cases/${caseId}/decision`)
-      .set('x-broker-id', delormeBroker.id)
-      .send({ approved: true })
-      .expect(202);
+    // The simulated broker (auto-validation) decides with the demo admin token.
+    await http.post(`/cases/${caseId}/decision`).set(admin).send({ approved: true }).expect(202);
+    const decided = await detail(caseId);
+    expect(decided.auditLogs.at(-1)).toMatchObject({
+      action: 'action_approved',
+      actorName: delormeBroker.name,
+      params: { auto: true },
+    });
     await http
       .post(`/internal/cases/${caseId}/executed-action`)
       .set(service)
@@ -325,10 +324,9 @@ describe('case lifecycle (Postgres + Redis)', () => {
     expect(view.status).toBe('failed');
     expect(view.failureReason).toBe('LLM unavailable');
 
-    // A broker of the case's brokerage relaunches it: a new run is queued, the history is kept.
-    const owner = world.brokers.find((b) => b.brokerageId === view.brokerage.id)!;
-    await http.post(`/cases/${body.caseId}/retry`).set('x-broker-id', owner.id).expect(202);
-    await http.post(`/cases/${body.caseId}/retry`).set('x-broker-id', owner.id).expect(409);
+    // The broker relaunches it: a new run is queued, the history is kept.
+    await http.post(`/cases/${body.caseId}/retry`).expect(202);
+    await http.post(`/cases/${body.caseId}/retry`).expect(409);
     const relaunched = await detail(body.caseId);
     expect(relaunched).toMatchObject({
       status: 'received',

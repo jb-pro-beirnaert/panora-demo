@@ -7,28 +7,37 @@ import {
   type CaseSummary,
   type DecisionRequest,
 } from '@demo/shared';
-import { Body, Controller, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
-import { ACT_AS_BROKER_HEADER, CurrentPrincipal, type Principal } from '../auth/principal.js';
+import { Body, Controller, Get, HttpCode, Inject, Param, Post, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { hasBearer } from '../auth/bearer-token.guard.js';
+import { ENV, type Env } from '../env.js';
 import { CasesService } from './cases.service.js';
 
-/** Public API of the broker UI: every route is limited to the caller's brokerage (V10). */
+/**
+ * Public API of the broker UI (V12): no sign-in. The demo has a single brokerage and a single
+ * broker, who is the implicit author of every decision.
+ */
 @Controller()
 export class CasesController {
-  constructor(private readonly cases: CasesService) {}
+  constructor(
+    private readonly cases: CasesService,
+    @Inject(ENV) private readonly env: Env,
+  ) {}
 
-  @Get('brokers')
-  brokers(@CurrentPrincipal() principal: Principal): Promise<BrokerView[]> {
-    return this.cases.listBrokers(principal);
+  /** The demo's broker, shown in the UI header. */
+  @Get('broker')
+  broker(): Promise<BrokerView> {
+    return this.cases.currentBroker();
   }
 
   @Get('cases')
-  list(@CurrentPrincipal() principal: Principal): Promise<CaseSummary[]> {
-    return this.cases.list(principal);
+  list(): Promise<CaseSummary[]> {
+    return this.cases.list();
   }
 
   @Get('cases/stats')
-  stats(@CurrentPrincipal() principal: Principal): Promise<CaseStats> {
-    return this.cases.stats(principal);
+  stats(): Promise<CaseStats> {
+    return this.cases.stats();
   }
 
   /** Platform-wide load metrics (demo panel, load tests). */
@@ -38,18 +47,14 @@ export class CasesController {
   }
 
   @Get('cases/:id')
-  detail(@Param('id') id: string, @CurrentPrincipal() principal: Principal): Promise<CaseDetail> {
-    return this.cases.detail(id, principal);
+  detail(@Param('id') id: string): Promise<CaseDetail> {
+    return this.cases.detail(id);
   }
 
   @Post('cases/:id/retry')
   @HttpCode(202)
-  async retry(
-    @Param('id') id: string,
-    @CurrentPrincipal() principal: Principal,
-    @Headers(ACT_AS_BROKER_HEADER) actAs: string | undefined,
-  ): Promise<{ status: 'accepted' }> {
-    await this.cases.retry(id, this.cases.actor(principal, actAs));
+  async retry(@Param('id') id: string): Promise<{ status: 'accepted' }> {
+    await this.cases.retry(id);
     return { status: 'accepted' };
   }
 
@@ -57,11 +62,17 @@ export class CasesController {
   @HttpCode(202)
   async decide(
     @Param('id') id: string,
-    @CurrentPrincipal() principal: Principal,
-    @Headers(ACT_AS_BROKER_HEADER) actAs: string | undefined,
+    @Req() http: Request,
     @Body({ schema: DecisionRequestSchema }) request: DecisionRequest,
   ): Promise<{ status: 'accepted' }> {
-    await this.cases.decide(id, this.cases.actor(principal, actAs), request);
+    await this.cases.decide(id, request, { auto: this.isSimulator(http) });
     return { status: 'accepted' };
+  }
+
+  /** The simulated broker (auto-validation) calls with the demo admin token. */
+  private isSimulator(http: Request): boolean {
+    return Boolean(
+      this.env.DEMO_MODE && this.env.ADMIN_TOKEN && hasBearer(http, this.env.ADMIN_TOKEN),
+    );
   }
 }
