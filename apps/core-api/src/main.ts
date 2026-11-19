@@ -8,6 +8,8 @@ async function bootstrap() {
   const env = loadEnv();
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule.register({ demoMode: env.DEMO_MODE }),
+    // Open SSE streams (browsers, simulator) must not keep a stopping server alive (watch reloads).
+    { forceCloseConnections: true },
   );
   app.useBodyParser('json', { limit: '10mb' });
   app.useGlobalPipes(new StandardSchemaValidationPipe());

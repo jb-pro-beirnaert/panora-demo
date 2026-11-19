@@ -123,8 +123,13 @@ Postgres and Redis (empty), a self-hosted Langfuse, the five apps in watch mode,
 fictional world.
 
 Open http://localhost:3000 — no sign-in: the demo has one brokerage (Delorme Courtage) and one
-broker (Sophie Marchal), and every e-mail lands in her inbox. Press **Start** in the demo panel: e-mails arrive, the timeline fills up live, approve or reject the
-proposals; switch the UI between FR and EN at any time. Other entry points: Mastra Studio on
+broker (Sophie Marchal), and every e-mail lands in her inbox. Press **Start** (or **Flagship
+scenario** for the terminated-policy case) in the demo panel: each e-mail pops in with a toast,
+its row shows a live pipeline (Triage → Coverage → Drafting → Approval → Execution) with the agent
+at work and the MCP tool it is calling, the "Live agents" panel shows what each Mastra agent is
+doing, and a list/board toggle shows cases moving between columns. Approve or reject the
+proposals; each case links to its run in Mastra Studio and its trace in Langfuse. Switch the UI
+between FR and EN at any time. Other entry points: Mastra Studio on
 http://localhost:4111, Langfuse on http://localhost:3100 (`demo@panora-demo.local` /
 `demo-password`), the Evals screen, `npm run evals`, `npm run load-test -w apps/simulator`.
 

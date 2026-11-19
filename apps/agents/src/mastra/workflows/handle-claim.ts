@@ -9,7 +9,7 @@ import {
   type ProcessEmailResult,
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
-import { reportToolCalls } from '../core-callbacks/agent-events.js';
+import { reportStepStarted, reportToolCalls } from '../core-callbacks/agent-events.js';
 import { core } from '../core-callbacks/core-client.js';
 import {
   addUsage,
@@ -58,6 +58,7 @@ const analyzeCoverage = createStep({
       inputData.options,
     );
     const model = modelSpecOf('coverage', requestContext);
+    await reportStepStarted(inputData.caseId, 'coverage', { model });
     if (inputData.precomputed) {
       // Single-agent architecture: the verdict was produced at triage.
       for (const report of coverageReports(inputData.precomputed.coverage, {
@@ -166,6 +167,10 @@ const draft = createStep({
       emailLanguage: claim.triage.emailLanguage,
       revision: inputData.rounds.length + 1,
     });
+    await reportStepStarted(claim.caseId, 'drafting', {
+      model,
+      revision: String(inputData.rounds.length + 1),
+    });
     const agent = mastra.getAgent('draftingAgent');
     const filing = buildClaimFiling(claim, inputData.coverage);
     const prompt = draftingPrompt(inputData);
@@ -271,6 +276,7 @@ const execute = createStep({
     const approved = inputData.rounds.at(-1);
     if (!approved?.decision.approved) throw new Error('execute reached without an approved action');
     const { action, decision } = approved;
+    await reportStepStarted(inputData.claim.caseId, 'execute', { actionType: action.actionType });
 
     if (action.actionType !== 'file_claim') {
       // Sending the e-mail is out of scope of the demo.

@@ -161,6 +161,12 @@ model Case {
   alerts          String[]
   claimNumber     String?
   failureReason   String?
+  /**
+   * V13 live stage: the workflow step running now (`triage`, `coverage`, `drafting`, `execute`)
+   * and the tool its agent called last, from the agent events.
+   */
+  currentStep     String?
+  currentTool     String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   steps           AgentStep[]

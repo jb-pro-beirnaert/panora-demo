@@ -2,8 +2,10 @@
 
 import type { AgentEventView, AgentStepView, CaseDetail, ProposedActionView } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
+import { Bot, Cpu, ExternalLink, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertBadges, LanguageBadge, StatusBadge, VerdictBadge } from '@/components/case-badges';
+import { PipelineStepper } from '@/components/pipeline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Link } from '@/i18n/navigation';
 import { ApiError, coreApi } from '@/lib/api';
 import { useRealtime } from '@/lib/realtime';
-import { traceUrl } from '@/lib/config';
+import { studioRunUrl, traceUrl } from '@/lib/config';
+import { isRunning, type PipelineStep } from '@/lib/stage';
 import {
   renderAgentEvent,
   renderAudit,
@@ -79,6 +82,7 @@ export function CaseView({ caseId }: { caseId: string }) {
     <div className="space-y-4">
       <BackLink />
       <CaseHeader kase={kase} />
+      <CaseStepper kase={kase} />
       {mismatch && (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">
           {t('case.policyMismatch', {
@@ -97,10 +101,11 @@ export function CaseView({ caseId }: { caseId: string }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <EmailCard kase={kase} />
-          <TimelineCard steps={kase.steps} events={kase.agentEvents} />
+          <TimelineCard kase={kase} />
         </div>
         <div className="space-y-4">
           <ProposalCard kase={kase} onDecided={load} />
+          <UnderTheHoodCard kase={kase} />
           <AuditCard kase={kase} />
         </div>
       </div>
@@ -221,7 +226,8 @@ type TimelineItem =
   | { kind: 'step'; at: string; step: AgentStepView }
   | { kind: 'event'; at: string; event: AgentEventView };
 
-function TimelineCard({ steps, events }: { steps: AgentStepView[]; events: AgentEventView[] }) {
+function TimelineCard({ kase }: { kase: CaseDetail }) {
+  const { steps, agentEvents: events } = kase;
   const t = useTranslations();
   const format = useFormatter();
   return (
@@ -261,6 +267,7 @@ function TimelineCard({ steps, events }: { steps: AgentStepView[]; events: Agent
               )}
           </ol>
         )}
+        {isRunning(kase.stage) && <RunningLine kase={kase} />}
       </CardContent>
     </Card>
   );
@@ -318,7 +325,13 @@ function ProposalCard({ kase, onDecided }: { kase: CaseDetail; onDecided: () => 
       <CardHeader>
         <CardTitle>{t('case.proposal')}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent
+        className={cn(
+          'gap-4',
+          // After a rejection, the new proposal and the previous one side by side.
+          proposals.length > 1 ? 'grid xl:grid-cols-2' : 'space-y-4',
+        )}
+      >
         {proposals.length === 0 && (
           <p className="text-sm text-muted-foreground">{t('case.noProposal')}</p>
         )}
@@ -504,6 +517,130 @@ function AuditCard({ kase }: { kase: CaseDetail }) {
             </li>
           ))}
         </ol>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Elapsed time between two instants: "42 s", "3 min 05 s". */
+function useDuration() {
+  const format = useFormatter();
+  return (from: string | null | undefined, to: string | null | undefined): string | undefined => {
+    if (!from || !to) return undefined;
+    const seconds = Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / 1000));
+    if (seconds < 60) return `${format.number(seconds)} s`;
+    return `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, '0')} s`;
+  };
+}
+
+/** The pipeline in large, with how long each finished step took (from the step events). */
+function CaseStepper({ kase }: { kase: CaseDetail }) {
+  const duration = useDuration();
+  const started = (step: string, which: 'first' | 'last' = 'first') => {
+    const events = kase.agentEvents.filter(
+      (event) => event.eventType === 'step_started' && event.params.step === step,
+    );
+    return (which === 'first' ? events[0] : events.at(-1))?.createdAt;
+  };
+  const proposals = kase.proposedActions;
+  const lastProposal = proposals.at(-1);
+  const closed = kase.stage === 'done';
+  const durations: Partial<Record<PipelineStep, string>> = {
+    triage: duration(
+      started('triage'),
+      started('coverage') ?? (closed ? kase.updatedAt : undefined),
+    ),
+    coverage: duration(started('coverage'), started('drafting')),
+    drafting: duration(
+      started('drafting'),
+      kase.stage === 'drafting' ? undefined : lastProposal?.createdAt,
+    ),
+    approval: duration(lastProposal?.createdAt, lastProposal?.decidedAt),
+    execute: duration(started('execute'), closed ? kase.updatedAt : undefined),
+  };
+  return (
+    <Card>
+      <CardContent>
+        <PipelineStepper stage={kase.stage} status={kase.status} durations={durations} />
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Last line of the timeline while an agent works: who, and the tool it called last. */
+function RunningLine({ kase }: { kase: CaseDetail }) {
+  const t = useTranslations();
+  const agent = kase.stage === 'execute' ? 'system' : kase.stage;
+  return (
+    <div className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-blue-300 bg-blue-50/60 p-2 text-sm text-blue-800">
+      <Loader2 className="size-4 animate-spin" />
+      <span>{t('case.running', { agent: t(`agent.${agent}`) })}</span>
+      {kase.currentTool && (
+        <span className="truncate font-mono text-xs text-blue-700/80">
+          {t('case.lastTool', { tool: kase.currentTool })}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Mastra and Langfuse one click away, with the case's tokens, LLM time and models. */
+function UnderTheHoodCard({ kase }: { kase: CaseDetail }) {
+  const t = useTranslations('case');
+  const format = useFormatter();
+  const studio = kase.workflowRunId ? studioRunUrl(kase.workflowRunId) : null;
+  const trace = kase.traceId ? traceUrl(kase.traceId) : null;
+  const sum = (pick: (step: AgentStepView) => number | null) =>
+    kase.steps.reduce((total, step) => total + (pick(step) ?? 0), 0);
+  const input = sum((step) => step.inputTokens);
+  const output = sum((step) => step.outputTokens);
+  const llmMs = sum((step) => step.durationMs);
+  const models = [
+    ...new Set(kase.steps.flatMap((step) => (step.model ? [step.model.split('/').at(-1)!] : []))),
+  ];
+  const linkClass =
+    'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted/60 transition-colors';
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Cpu className="size-4" />
+          {t('underTheHood')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {studio && (
+            <a href={studio} target="_blank" rel="noreferrer" className={linkClass}>
+              <Bot className="size-4 text-violet-600" />
+              <span className="flex-1">{t('openStudio')}</span>
+              <ExternalLink className="size-3.5 text-muted-foreground" />
+            </a>
+          )}
+          {trace && (
+            <a href={trace} target="_blank" rel="noreferrer" className={linkClass}>
+              <span className="size-4 rounded bg-gradient-to-br from-orange-400 to-pink-500" />
+              <span className="flex-1">{t('viewTrace')}</span>
+              <ExternalLink className="size-3.5 text-muted-foreground" />
+            </a>
+          )}
+        </div>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+          <dt className="text-muted-foreground">{t('tokensLabel')}</dt>
+          <dd className="tabular-nums">
+            {input + output > 0
+              ? t('tokens', { input: format.number(input), output: format.number(output) })
+              : '—'}
+          </dd>
+          <dt className="text-muted-foreground">{t('llmTime')}</dt>
+          <dd className="tabular-nums">
+            {llmMs > 0 ? `${format.number(llmMs / 1000, { maximumFractionDigits: 1 })} s` : '—'}
+          </dd>
+          <dt className="text-muted-foreground">{t('models')}</dt>
+          <dd className="font-mono text-xs">{models.length ? models.join(', ') : '—'}</dd>
+          <dt className="text-muted-foreground">{t('runId')}</dt>
+          <dd className="truncate font-mono text-xs">{kase.workflowRunId ?? '—'}</dd>
+        </dl>
       </CardContent>
     </Card>
   );

@@ -129,8 +129,13 @@ export class EmailStream {
   /** One e-mail drawn at random from the pool, outside the stream's sequence. */
   async sendOne(): Promise<InboundEmailInput> {
     const index = Math.floor(this.random() * this.pool.length);
+    return this.sendCopy(this.pool[index]!);
+  }
+
+  /** A given e-mail (e.g. the showcase one), as a new message each time. */
+  async sendCopy(original: InboundEmailInput): Promise<InboundEmailInput> {
     this.manual += 1;
-    const email = withMessageIdSuffix(this.pool[index]!, `m${this.manual}`);
+    const email = withMessageIdSuffix(original, `m${this.manual}`);
     await this.send(email);
     return email;
   }

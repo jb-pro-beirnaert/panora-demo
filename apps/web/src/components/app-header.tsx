@@ -3,7 +3,9 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { routing, type AppLocale } from '@/i18n/routing';
+import { Volume2, VolumeX } from 'lucide-react';
 import { useBroker } from '@/lib/broker';
+import { useNotifications } from '@/lib/notifications';
 
 const selectClass =
   'h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50';
@@ -14,6 +16,7 @@ export function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { broker } = useBroker();
+  const { soundEnabled, setSoundEnabled } = useNotifications();
 
   return (
     <header className="border-b bg-background">
@@ -38,6 +41,16 @@ export function AppHeader() {
             </span>
           </span>
         )}
+        <button
+          type="button"
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          aria-pressed={soundEnabled}
+          title={t('header.soundHint')}
+          className="flex items-center gap-1.5 rounded-lg border px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          {soundEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+          {t(soundEnabled ? 'header.soundOn' : 'header.soundOff')}
+        </button>
         <label className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">{t('header.language')}</span>
           <select

@@ -283,6 +283,46 @@ export const CaseMetricsSchema = z.object({
 });
 export type CaseMetrics = z.infer<typeof CaseMetricsSchema>;
 
+/** Workflow steps announced by a `step_started` agent event (V13). */
+export const WorkStepSchema = z.enum(['triage', 'coverage', 'drafting', 'execute']);
+export type WorkStep = z.infer<typeof WorkStepSchema>;
+
+/**
+ * Where a case stands, for the UI (V13): waiting in the queue, one of the agents (or the execution)
+ * running, waiting for the broker, closed or failed.
+ */
+export const CaseStageSchema = z.enum([
+  'queued',
+  'triage',
+  'coverage',
+  'drafting',
+  'awaiting_approval',
+  'execute',
+  'done',
+  'failed',
+]);
+export type CaseStage = z.infer<typeof CaseStageSchema>;
+
+/** `GET /agents/activity` (V13): what each agent is working on, for the live agents panel. */
+export const AgentsActivitySchema = z.object({
+  queued: z.number().int(),
+  awaitingApproval: z.number().int(),
+  executing: z.number().int(),
+  agents: z.array(
+    z.object({
+      agent: z.enum(['triage', 'coverage', 'drafting']),
+      running: z.number().int(),
+      /** Model of the agent's latest step (`provider/model`). */
+      model: z.string().nullable(),
+      /** The case it touched most recently, and the tool it called last. */
+      current: z
+        .object({ caseId: z.string(), reference: z.string(), tool: z.string().nullable() })
+        .nullable(),
+    }),
+  ),
+});
+export type AgentsActivity = z.infer<typeof AgentsActivitySchema>;
+
 /** Counters of the demo panel (`GET /cases/stats`). */
 export const CaseStatsSchema = z.object({
   total: z.number().int(),
@@ -295,8 +335,11 @@ export type CaseStats = z.infer<typeof CaseStatsSchema>;
 
 // --- Live agent events (V5) ---
 
-/** What an agent is doing right now (one tool call), rendered by the UI (`events.<eventType>`). */
-export const AgentEventTypeSchema = z.enum(['tool_call']);
+/**
+ * What an agent is doing right now, rendered by the UI (`events.<eventType>`): a tool call, or the
+ * start of a workflow step (V13, `params.step` is a `WorkStep`).
+ */
+export const AgentEventTypeSchema = z.enum(['tool_call', 'step_started']);
 export type AgentEventType = z.infer<typeof AgentEventTypeSchema>;
 
 /** `POST /internal/cases/:id/agent-events` (Mastra → Core), sent from the agents' loop. */
@@ -339,6 +382,10 @@ export const CaseSummarySchema = z.object({
   alerts: z.array(AlertTypeSchema),
   receivedAt: z.string(),
   updatedAt: z.string(),
+  /** V13: live stage, the tool the running agent called last, number of proposals so far. */
+  stage: CaseStageSchema,
+  currentTool: z.string().nullable(),
+  revision: z.number().int(),
 });
 export type CaseSummary = z.infer<typeof CaseSummarySchema>;
 

@@ -8,7 +8,10 @@
     "language": "Langue",
     "broker": "Courtier",
     "evals": "Evals",
-    "brokerName": "{name} — {brokerage}"
+    "brokerName": "{name} — {brokerage}",
+    "soundOn": "Son activé",
+    "soundOff": "Son coupé",
+    "soundHint": "Un son quand un dossier attend votre validation"
   },
   "locale": {
     "fr": "Français",
@@ -44,7 +47,10 @@
     "counter": "{label} : <strong>{value}</strong>",
     "languageMix": "E-mails en anglais",
     "burst": "Rafale (1 000)",
-    "burstProgress": "Rafale : {sent}/{requested}"
+    "burstProgress": "Rafale : {sent}/{requested}",
+    "showcase": "Scénario phare",
+    "showcaseHint": "Envoie l'e-mail du scénario 2 : contrat résilié que le cabinet croit actif",
+    "throughputChart": "Dossiers traités par minute"
   },
   "inbox": {
     "title": "Boîte de réception",
@@ -58,12 +64,34 @@
       "subject": "Objet",
       "client": "Client",
       "status": "Statut",
-      "verdict": "Verdict"
+      "verdict": "Verdict",
+      "progress": "Avancement"
     },
     "unknownClient": "Expéditeur inconnu",
     "languageFilter": {
       "label": "Langue",
       "all": "Toutes"
+    },
+    "emptyTab": "Aucun dossier dans cet onglet.",
+    "unread": "Non lu",
+    "more": "+ {count} autres",
+    "tabs": {
+      "all": "Tous",
+      "inProgress": "En cours",
+      "toApprove": "À valider",
+      "done": "Traités",
+      "failed": "En erreur"
+    },
+    "view": {
+      "table": "Liste",
+      "board": "Colonnes"
+    },
+    "board": {
+      "queued": "File",
+      "agents": "Agents",
+      "toApprove": "À valider",
+      "done": "Traités",
+      "failed": "En erreur"
     }
   },
   "case": {
@@ -103,7 +131,15 @@
     "retry": "Relancer",
     "retryHint": "Le dossier a échoué ; relancez-le depuis le début (l'historique est conservé).",
     "auto": "auto",
-    "autoHint": "Décision prise par la validation automatique (courtier simulé)"
+    "autoHint": "Décision prise par la validation automatique (courtier simulé)",
+    "running": "{agent} en cours…",
+    "lastTool": "dernier outil : {tool}",
+    "underTheHood": "Sous le capot",
+    "openStudio": "Voir le run dans Mastra Studio",
+    "tokensLabel": "Jetons",
+    "llmTime": "Temps LLM",
+    "models": "Modèles",
+    "runId": "Run Mastra"
   },
   "status": {
     "received": "Reçu",
@@ -220,6 +256,12 @@
       "get_claim_history": "{agent} consulte l'historique des sinistres du contrat {policyNumber}",
       "find_client": "{agent} cherche l'expéditeur {email} dans les fichiers du cabinet",
       "other": "{agent} appelle {tool}"
+    },
+    "step_started": {
+      "triage": "{agent} démarre (modèle {model})",
+      "coverage": "{agent} démarre (modèle {model})",
+      "drafting": "{agent} rédige la proposition {revision} (modèle {model})",
+      "execute": "Exécution de l'action validée : {actionType}"
     }
   },
   "evals": {
@@ -252,5 +294,45 @@
       "reason": "Raison"
     },
     "viewTrace": "Trace"
+  },
+  "pipeline": {
+    "triage": "Tri",
+    "coverage": "Garanties",
+    "drafting": "Rédaction",
+    "approval": "Validation",
+    "execute": "Exécution",
+    "state": {
+      "pending": "à venir",
+      "running": "en cours",
+      "done": "fait",
+      "waiting": "attend le courtier",
+      "failed": "échec",
+      "skipped": "sans objet"
+    }
+  },
+  "stage": {
+    "queued": "En file d'attente",
+    "triage": "Tri en cours",
+    "coverage": "Analyse de couverture",
+    "drafting": "Rédaction en cours",
+    "awaiting_approval": "À valider",
+    "execute": "Déclaration chez l'assureur",
+    "done": "Terminé",
+    "failed": "En erreur",
+    "revision": "proposition {revision}"
+  },
+  "agents": {
+    "running": "{count} en cours",
+    "idle": "Au repos",
+    "thinking": "réfléchit…",
+    "calling": "appelle {tool}",
+    "queued": "En file : {count}",
+    "awaiting": "En attente du courtier : {count}",
+    "awaitingHint": "Workflows suspendus (snapshot en base) : ils ne consomment aucun jeton.",
+    "executing": "Exécution : {count}"
+  },
+  "notify": {
+    "newEmail": "Nouvel e-mail de {from}",
+    "close": "Fermer"
   }
 }

@@ -17,3 +17,4 @@ comment, ce qui a été vérifié (tests, exécutions réelles) et les écarts a
 | V10     | `v10-security-compliance` | [Sécurité et conformité](v10-security-compliance.md)                           |
 | V11     | `v11-finishing`           | [Finitions](v11-finishing.md)                                                  |
 | V12     | `v12-single-broker`       | [Un seul courtier, Langfuse local](v12-single-broker.md)                       |
+| V13     | `v13-live-inbox`          | [Boîte de réception vivante](v13-live-inbox.md)                                |

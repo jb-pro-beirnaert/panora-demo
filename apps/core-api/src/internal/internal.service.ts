@@ -19,6 +19,13 @@ export type CallbackOutcome = { status: 'recorded' } | { status: 'ignored'; reas
 const IGNORED: CallbackOutcome = { status: 'ignored', reason: 'unknown case (reset?)' };
 
 /** Mastra → Core callbacks. A callback for a case that no longer exists (after a reset) is ignored. */
+/** `read_clause CG-HZ-12.1`: the tool and its most telling argument. */
+function toolLabel(params: Record<string, string>): string {
+  const { tool, ...args } = params;
+  const argument = Object.values(args)[0];
+  return argument ? `${tool} ${argument}` : String(tool);
+}
+
 @Injectable()
 export class InternalService {
   constructor(
@@ -111,6 +118,18 @@ export class InternalService {
     const row = await this.prisma.agentEvent.create({
       data: { caseId, agent: event.agent, eventType: event.eventType, params: event.params },
     });
+    // V13 live stage: the step running now and the tool its agent called last.
+    if (event.eventType === 'step_started' && event.params.step) {
+      await this.prisma.case.updateMany({
+        where: { id: caseId },
+        data: { currentStep: event.params.step, currentTool: null },
+      });
+    } else if (event.eventType === 'tool_call' && event.params.tool) {
+      await this.prisma.case.updateMany({
+        where: { id: caseId },
+        data: { currentTool: toolLabel(event.params) },
+      });
+    }
     this.realtime.publish(
       'case.agent_event',
       caseId,

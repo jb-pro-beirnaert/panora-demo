@@ -1,5 +1,5 @@
 import { CaseSummarySchema } from '@demo/shared';
-import { caseReference, toCaseSummary } from './case-views.js';
+import { caseReference, caseStage, toCaseSummary } from './case-views.js';
 
 describe('caseReference', () => {
   it('pads the case number', () => {
@@ -28,6 +28,8 @@ describe('toCaseSummary', () => {
       alerts: ['policy_terminated'],
       claimNumber: null,
       failureReason: null,
+      currentStep: 'drafting',
+      currentTool: null,
       createdAt: now,
       updatedAt: now,
       brokerage: {
@@ -48,9 +50,26 @@ describe('toCaseSummary', () => {
         receivedAt: now,
         language: 'fr',
       },
+      _count: { proposedActions: 1 },
     });
     expect(CaseSummarySchema.parse(summary)).toEqual(summary);
     expect(summary.reference).toBe('CASE-0003');
     expect(summary.clientName).toBeNull();
+    expect(summary).toMatchObject({ stage: 'awaiting_approval', revision: 1 });
+  });
+});
+
+describe('caseStage', () => {
+  it('follows the running step while the workflow is processing', () => {
+    expect(caseStage({ status: 'received', currentStep: null })).toBe('queued');
+    expect(caseStage({ status: 'processing', currentStep: null })).toBe('queued');
+    expect(caseStage({ status: 'processing', currentStep: 'coverage' })).toBe('coverage');
+    expect(caseStage({ status: 'processing', currentStep: 'execute' })).toBe('execute');
+    expect(caseStage({ status: 'awaiting_approval', currentStep: 'drafting' })).toBe(
+      'awaiting_approval',
+    );
+    expect(caseStage({ status: 'claim_filed', currentStep: 'execute' })).toBe('done');
+    expect(caseStage({ status: 'classified', currentStep: 'triage' })).toBe('done');
+    expect(caseStage({ status: 'failed', currentStep: 'coverage' })).toBe('failed');
   });
 });

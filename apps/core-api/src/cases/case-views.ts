@@ -3,6 +3,7 @@ import type {
   AgentStepView,
   AuditLogView,
   CaseDetail,
+  CaseStage,
   CaseSummary,
   ProposedActionView,
 } from '@demo/shared';
@@ -16,6 +17,7 @@ export const caseSummaryInclude = {
   brokerage: true,
   client: true,
   email: true,
+  _count: { select: { proposedActions: true } },
 } satisfies Prisma.CaseInclude;
 
 export const caseDetailInclude = {
@@ -26,10 +28,31 @@ export const caseDetailInclude = {
   agentEvents: { orderBy: { createdAt: 'asc' } },
   proposedActions: { orderBy: { revision: 'asc' } },
   auditLogs: { orderBy: { createdAt: 'asc' } },
+  _count: { select: { proposedActions: true } },
 } satisfies Prisma.CaseInclude;
 
 type CaseWithSummary = Prisma.CaseGetPayload<{ include: typeof caseSummaryInclude }>;
 type CaseWithDetail = Prisma.CaseGetPayload<{ include: typeof caseDetailInclude }>;
+
+const WORK_STEPS = new Set<string>(['triage', 'coverage', 'drafting', 'execute']);
+
+/** V13 live stage, from the status and the step announced by the last `step_started` event. */
+export function caseStage(kase: { status: string; currentStep: string | null }): CaseStage {
+  switch (kase.status) {
+    case 'received':
+      return 'queued';
+    case 'processing':
+      return kase.currentStep && WORK_STEPS.has(kase.currentStep)
+        ? (kase.currentStep as CaseStage)
+        : 'queued';
+    case 'awaiting_approval':
+      return 'awaiting_approval';
+    case 'failed':
+      return 'failed';
+    default:
+      return 'done';
+  }
+}
 
 export function toCaseSummary(kase: CaseWithSummary): CaseSummary {
   return {
@@ -46,6 +69,9 @@ export function toCaseSummary(kase: CaseWithSummary): CaseSummary {
     alerts: kase.alerts as CaseSummary['alerts'],
     receivedAt: kase.email.receivedAt.toISOString(),
     updatedAt: kase.updatedAt.toISOString(),
+    stage: caseStage(kase),
+    currentTool: kase.status === 'processing' ? kase.currentTool : null,
+    revision: kase._count.proposedActions,
   };
 }
 

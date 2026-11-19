@@ -92,6 +92,15 @@ export function renderAgentEvent(
   event: Pick<AgentEventView, 'agent' | 'eventType' | 'params'>,
   t: Translate,
 ): string {
+  if (event.eventType === 'step_started') {
+    const step = event.params.step ?? 'triage';
+    return t(`events.step_started.${step}`, {
+      agent: t(`agent.${event.agent}`),
+      model: (event.params.model ?? '—').split('/').at(-1) ?? '—',
+      revision: event.params.revision ?? '1',
+      actionType: event.params.actionType ? t(`actionType.${event.params.actionType}`) : '—',
+    });
+  }
   const { tool = 'unknown', ...args } = event.params;
   const values: Record<string, string> = {
     agent: t(`agent.${event.agent}`),

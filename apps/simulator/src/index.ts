@@ -1,5 +1,5 @@
 import type { InboundEmailInput, ProcessEmailInput } from '@demo/shared';
-import { generateEmails, generateWorld } from '@demo/world-generator';
+import { generateEmails, generateWorld, SHOWCASE } from '@demo/world-generator';
 import express, { type ErrorRequestHandler } from 'express';
 import { AutoValidator } from './auto-validation/auto-validator.js';
 import { controlRouter } from './control/routes.js';
@@ -17,6 +17,13 @@ const world = generateWorld({
   mix: { en: env.SIMULATOR_ENGLISH_SHARE },
 });
 const emails = generateEmails(world, { seed: env.WORLD_SEED, count: env.SIMULATOR_EMAIL_COUNT });
+// Scenario 2, the flagship case: the "Scénario phare" button of the demo panel sends it.
+const showcase = emails.find(
+  ({ groundTruth }) =>
+    groundTruth.scenario === 'policy_terminated' &&
+    groundTruth.policyNumber === SHOWCASE.terminatedPolicy,
+)?.email;
+if (!showcase) throw new Error('The generated e-mails lack the scenario 2 showcase.');
 const targets: SeedTargets = {
   coreUrl: env.CORE_API_URL,
   extranetUrl: env.MCP_EXTRANET_URL,
@@ -110,6 +117,7 @@ app.use(
     stream,
     burst,
     autoValidator,
+    showcase,
     seeding: () => seeding,
     reset: async () => {
       seeding = 'pending';

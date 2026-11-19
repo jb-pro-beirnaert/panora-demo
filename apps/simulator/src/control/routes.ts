@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
+import type { InboundEmailInput } from '@demo/shared';
 import type { AutoValidator } from '../auto-validation/auto-validator.js';
 import type { Burst } from '../stream/burst.js';
 import type { EmailStream } from '../stream/email-stream.js';
@@ -11,6 +12,8 @@ export interface ControlDeps {
   /** Wipes Core and the extranet, then seeds them again. */
   reset: () => Promise<void>;
   seeding: () => 'pending' | 'done';
+  /** The flagship e-mail (scenario 2: a policy the brokerage believes active was terminated). */
+  showcase: InboundEmailInput;
 }
 
 const SpeedSchema = z.object({ emailsPerMinute: z.number().positive().max(600) });
@@ -80,6 +83,10 @@ export function controlRouter(deps: ControlDeps): Router {
   });
   router.post('/send-one', async (_req, res) => {
     const email = await deps.stream.sendOne();
+    res.json({ ...state(), lastSent: { messageId: email.messageId, subject: email.subject } });
+  });
+  router.post('/send-showcase', async (_req, res) => {
+    const email = await deps.stream.sendCopy(deps.showcase);
     res.json({ ...state(), lastSent: { messageId: email.messageId, subject: email.subject } });
   });
   router.post('/auto-validation', (req, res) => {

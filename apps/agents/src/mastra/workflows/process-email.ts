@@ -12,7 +12,7 @@ import {
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
-import { reportToolCalls } from '../core-callbacks/agent-events.js';
+import { reportStepStarted, reportToolCalls } from '../core-callbacks/agent-events.js';
 import { core } from '../core-callbacks/core-client.js';
 import { classifiedReport, triageReport } from '../core-callbacks/step-reports.js';
 import { env } from '../env.js';
@@ -112,6 +112,7 @@ const triage = createStep({
     const single = inputData.options?.architecture === 'single_agent';
     const model = modelSpecOf(single ? 'coverage' : 'triage', requestContext);
     annotateSpan(tracingContext, single ? 'single' : 'triage', model);
+    await reportStepStarted(inputData.caseId, 'triage', { model });
     const startedAt = Date.now();
     let triageResult;
     let precomputed;

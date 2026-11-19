@@ -2,7 +2,7 @@
 
 import type { CaseMetrics, CaseStats } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { coreApi, simulatorApi, type SimulatorState } from '@/lib/api';
@@ -10,6 +10,7 @@ import { useRealtime } from '@/lib/realtime';
 
 const SPEEDS = [1, 2, 4, 6, 10, 20, 30];
 const ENGLISH_SHARES = [0, 0.1, 0.3, 0.5, 0.7, 1];
+const SPARK_POINTS = 40;
 
 /** Top bar that drives the simulator (demo tool, not part of the product). */
 export function DemoPanel() {
@@ -20,6 +21,9 @@ export function DemoPanel() {
   const [metrics, setMetrics] = useState<CaseMetrics | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** Throughput samples (cases closed during the last minute), one per refresh. */
+  const [throughput, setThroughput] = useState<number[]>([]);
+  const lastSample = useRef(0);
 
   const refresh = useCallback(() => {
     simulatorApi
@@ -35,7 +39,14 @@ export function DemoPanel() {
       .catch(() => setStats(null));
     coreApi
       .metrics()
-      .then(setMetrics)
+      .then((next) => {
+        setMetrics(next);
+        const now = Date.now();
+        if (now - lastSample.current >= 2_500) {
+          lastSample.current = now;
+          setThroughput((current) => [...current, next.closedLastMinute].slice(-SPARK_POINTS));
+        }
+      })
       .catch(() => setMetrics(null));
   }, []);
 
@@ -123,6 +134,15 @@ export function DemoPanel() {
             >
               {t('sendOne')}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              title={t('showcaseHint')}
+              disabled={busy || state?.seeding !== 'done'}
+              onClick={() => run(simulatorApi.sendShowcase)}
+            >
+              ★ {t('showcase')}
+            </Button>
             <label className="flex items-center gap-1">
               <span>{t('speed')}</span>
               <select
@@ -196,7 +216,8 @@ export function DemoPanel() {
             </Button>
           </>
         )}
-        <div className="ml-auto flex flex-wrap gap-3">
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <Sparkline values={throughput} title={t('throughputChart')} />
           {counters.map(([key, value]) => (
             <span key={key} className="tabular-nums">
               {t.rich('counter', {
@@ -209,5 +230,26 @@ export function DemoPanel() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Throughput over the last refreshes (cases closed per minute), as a tiny line. */
+function Sparkline({ values, title }: { values: number[]; title: string }) {
+  if (values.length < 2) return null;
+  const width = 80;
+  const height = 20;
+  const max = Math.max(1, ...values);
+  const points = values
+    .map((value, index) => {
+      const x = (index / (SPARK_POINTS - 1)) * width;
+      const y = height - (value / max) * (height - 2) - 1;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={title}>
+      <title>{title}</title>
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
   );
 }

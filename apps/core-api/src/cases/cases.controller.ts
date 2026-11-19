@@ -1,5 +1,6 @@
 import {
   DecisionRequestSchema,
+  type AgentsActivity,
   type BrokerView,
   type CaseDetail,
   type CaseMetrics,
@@ -28,6 +29,12 @@ export class CasesController {
   @Get('broker')
   broker(): Promise<BrokerView> {
     return this.cases.currentBroker();
+  }
+
+  /** What each agent is working on (V13 live agents panel). */
+  @Get('agents/activity')
+  agentsActivity(): Promise<AgentsActivity> {
+    return this.cases.agentsActivity();
   }
 
   @Get('cases')

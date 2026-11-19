@@ -209,6 +209,32 @@ describe('case lifecycle (Postgres + Redis)', () => {
     expect(view.auditLogs.at(-1)?.action).toBe('agent_step');
   });
 
+  it('follows the running step and the last tool call live (V13)', async () => {
+    const event = (body: object) =>
+      http.post(`/internal/cases/${caseId}/agent-events`).set(service).send(body).expect(200);
+    await event({ agent: 'coverage', eventType: 'step_started', params: { step: 'coverage' } });
+    await event({
+      agent: 'coverage',
+      eventType: 'tool_call',
+      params: { tool: 'read_clause', ref: 'CG-HZ-12.1' },
+    });
+    const [summary] = (await http.get('/cases').expect(200)).body;
+    expect(summary).toMatchObject({
+      stage: 'coverage',
+      currentTool: 'read_clause CG-HZ-12.1',
+      revision: 0,
+    });
+    const activity = (await http.get('/agents/activity').expect(200)).body;
+    expect(activity.agents).toContainEqual(
+      expect.objectContaining({
+        agent: 'coverage',
+        running: 1,
+        current: { caseId, reference: 'CASE-0001', tool: 'read_clause CG-HZ-12.1' },
+      }),
+    );
+    expect(activity.queued).toBe(0);
+  });
+
   it('a proposed action puts the case on hold for the broker', async () => {
     await http
       .post(`/internal/cases/${caseId}/proposed-action`)
@@ -223,6 +249,7 @@ describe('case lifecycle (Postgres + Redis)', () => {
       .expect(200);
     const view = await detail(caseId);
     expect(view.status).toBe('awaiting_approval');
+    expect(view).toMatchObject({ stage: 'awaiting_approval', currentTool: null, revision: 1 });
     expect(view.verdict).toBe('not_covered');
     expect(view.proposedActions).toHaveLength(1);
     expect(events.map((event) => event.type)).toContain('case.action_proposed');

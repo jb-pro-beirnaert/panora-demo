@@ -1,4 +1,5 @@
 import type {
+  AgentsActivity,
   BrokerView,
   CaseDetail,
   CaseMetrics,
@@ -24,6 +25,7 @@ import {
 } from '../queues/queue-names.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import {
+  caseReference,
   caseDetailInclude,
   caseSummaryInclude,
   toCaseDetail,
@@ -96,7 +98,13 @@ export class CasesService {
     }
     await this.prisma.case.update({
       where: { id: caseId },
-      data: { status: 'received', workflowRunId: null, failureReason: null },
+      data: {
+        status: 'received',
+        workflowRunId: null,
+        failureReason: null,
+        currentStep: null,
+        currentTool: null,
+      },
     });
     await this.audit.record({
       caseId,
@@ -135,6 +143,64 @@ export class CasesService {
         name: broker.brokerage.name,
         brokerCode: broker.brokerage.brokerCode,
       },
+    };
+  }
+
+  /** V13 live agents panel: cases per running step, the latest one, each agent's model. */
+  async agentsActivity(): Promise<AgentsActivity> {
+    const [received, processing, awaitingApproval] = await Promise.all([
+      this.prisma.case.count({ where: { status: 'received' } }),
+      this.prisma.case.groupBy({
+        by: ['currentStep'],
+        where: { status: 'processing' },
+        _count: { _all: true },
+      }),
+      this.prisma.case.count({ where: { status: 'awaiting_approval' } }),
+    ]);
+    const running = (step: string | null) =>
+      processing.find((group) => group.currentStep === step)?._count._all ?? 0;
+    const agents = await Promise.all(
+      (['triage', 'coverage', 'drafting'] as const).map(async (agent) => {
+        const [latest, lastStart, lastStep] = await Promise.all([
+          this.prisma.case.findFirst({
+            where: { status: 'processing', currentStep: agent },
+            orderBy: { updatedAt: 'desc' },
+            select: { id: true, number: true, currentTool: true },
+          }),
+          // The model announced when the agent started, else the one of its last finished step.
+          this.prisma.agentEvent.findFirst({
+            where: { agent, eventType: 'step_started' },
+            orderBy: { createdAt: 'desc' },
+            select: { params: true },
+          }),
+          this.prisma.agentStep.findFirst({
+            where: { agent, model: { not: null } },
+            orderBy: { createdAt: 'desc' },
+            select: { model: true },
+          }),
+        ]);
+        return {
+          agent,
+          running: running(agent),
+          model:
+            (lastStart?.params as Record<string, string> | undefined)?.model ??
+            lastStep?.model ??
+            null,
+          current: latest
+            ? {
+                caseId: latest.id,
+                reference: caseReference(latest.number),
+                tool: latest.currentTool,
+              }
+            : null,
+        };
+      }),
+    );
+    return {
+      queued: received + running(null),
+      awaitingApproval,
+      executing: running('execute'),
+      agents,
     };
   }
 
@@ -218,7 +284,10 @@ export class CasesService {
         },
       });
       if (updated.count === 0) return false;
-      await tx.case.update({ where: { id: caseId }, data: { status: 'processing' } });
+      await tx.case.update({
+        where: { id: caseId },
+        data: { status: 'processing', currentStep: null, currentTool: null },
+      });
       await this.audit.record(
         {
           caseId,

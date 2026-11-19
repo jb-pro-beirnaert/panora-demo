@@ -8,7 +8,10 @@
     "language": "Language",
     "broker": "Broker",
     "evals": "Evals",
-    "brokerName": "{name} — {brokerage}"
+    "brokerName": "{name} — {brokerage}",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "soundHint": "A sound when a case waits for your approval"
   },
   "locale": {
     "fr": "Français",
@@ -44,7 +47,10 @@
     "counter": "{label}: <strong>{value}</strong>",
     "languageMix": "English e-mails",
     "burst": "Burst (1,000)",
-    "burstProgress": "Burst: {sent}/{requested}"
+    "burstProgress": "Burst: {sent}/{requested}",
+    "showcase": "Flagship scenario",
+    "showcaseHint": "Sends the scenario 2 e-mail: a terminated policy the brokerage believes active",
+    "throughputChart": "Cases closed per minute"
   },
   "inbox": {
     "title": "Inbox",
@@ -58,12 +64,34 @@
       "subject": "Subject",
       "client": "Client",
       "status": "Status",
-      "verdict": "Verdict"
+      "verdict": "Verdict",
+      "progress": "Progress"
     },
     "unknownClient": "Unknown sender",
     "languageFilter": {
       "label": "Language",
       "all": "All"
+    },
+    "emptyTab": "No case in this tab.",
+    "unread": "Unread",
+    "more": "+ {count} more",
+    "tabs": {
+      "all": "All",
+      "inProgress": "In progress",
+      "toApprove": "To approve",
+      "done": "Done",
+      "failed": "Failed"
+    },
+    "view": {
+      "table": "List",
+      "board": "Board"
+    },
+    "board": {
+      "queued": "Queue",
+      "agents": "Agents",
+      "toApprove": "To approve",
+      "done": "Done",
+      "failed": "Failed"
     }
   },
   "case": {
@@ -103,7 +131,15 @@
     "retry": "Relaunch",
     "retryHint": "The case failed; relaunch it from the start (the history is kept).",
     "auto": "auto",
-    "autoHint": "Decided by auto-validation (simulated broker)"
+    "autoHint": "Decided by auto-validation (simulated broker)",
+    "running": "{agent} running…",
+    "lastTool": "last tool: {tool}",
+    "underTheHood": "Under the hood",
+    "openStudio": "View the run in Mastra Studio",
+    "tokensLabel": "Tokens",
+    "llmTime": "LLM time",
+    "models": "Models",
+    "runId": "Mastra run"
   },
   "status": {
     "received": "Received",
@@ -220,6 +256,12 @@
       "get_claim_history": "{agent} checks the claim history of policy {policyNumber}",
       "find_client": "{agent} looks up the sender {email} in the brokerage's records",
       "other": "{agent} calls {tool}"
+    },
+    "step_started": {
+      "triage": "{agent} starts (model {model})",
+      "coverage": "{agent} starts (model {model})",
+      "drafting": "{agent} drafts proposal {revision} (model {model})",
+      "execute": "Running the approved action: {actionType}"
     }
   },
   "evals": {
@@ -252,5 +294,45 @@
       "reason": "Reason"
     },
     "viewTrace": "Trace"
+  },
+  "pipeline": {
+    "triage": "Triage",
+    "coverage": "Coverage",
+    "drafting": "Drafting",
+    "approval": "Approval",
+    "execute": "Execution",
+    "state": {
+      "pending": "pending",
+      "running": "running",
+      "done": "done",
+      "waiting": "waiting for the broker",
+      "failed": "failed",
+      "skipped": "not applicable"
+    }
+  },
+  "stage": {
+    "queued": "Queued",
+    "triage": "Triage running",
+    "coverage": "Coverage analysis",
+    "drafting": "Drafting",
+    "awaiting_approval": "To approve",
+    "execute": "Filing at the insurer",
+    "done": "Done",
+    "failed": "Failed",
+    "revision": "proposal {revision}"
+  },
+  "agents": {
+    "running": "{count} running",
+    "idle": "Idle",
+    "thinking": "thinking…",
+    "calling": "calling {tool}",
+    "queued": "Queued: {count}",
+    "awaiting": "Waiting for the broker: {count}",
+    "awaitingHint": "Suspended workflows (snapshot in the database): they consume no tokens.",
+    "executing": "Executing: {count}"
+  },
+  "notify": {
+    "newEmail": "New e-mail from {from}",
+    "close": "Close"
   }
 }

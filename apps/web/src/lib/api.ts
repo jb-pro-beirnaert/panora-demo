@@ -1,4 +1,5 @@
 import type {
+  AgentsActivity,
   BrokerView,
   CaseDetail,
   CaseMetrics,
@@ -38,6 +39,7 @@ async function request<T>(base: string, path: string, init: RequestInit = {}): P
 
 export const coreApi = {
   broker: () => request<BrokerView>(CORE_API_URL, '/broker'),
+  agentsActivity: () => request<AgentsActivity>(CORE_API_URL, '/agents/activity'),
   cases: () => request<CaseSummary[]>(CORE_API_URL, '/cases'),
   stats: () => request<CaseStats>(CORE_API_URL, '/cases/stats'),
   metrics: () => request<CaseMetrics>(CORE_API_URL, '/cases/metrics'),
@@ -76,6 +78,7 @@ export const simulatorApi = {
   resume: () => post('/resume'),
   reset: () => post('/reset'),
   sendOne: () => post('/send-one'),
+  sendShowcase: () => post('/send-showcase'),
   speed: (emailsPerMinute: number) => post('/speed', { emailsPerMinute }),
   languageMix: (en: number) => post('/language-mix', { en }),
   burst: (count: number) => post('/burst', { count }),
