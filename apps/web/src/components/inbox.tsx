@@ -1,6 +1,6 @@
 'use client';
 
-import type { CaseSummary } from '@demo/shared';
+import type { CaseSummary, Locale } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { AlertBadges, LanguageBadge, StatusBadge, VerdictBadge } from '@/components/case-badges';
@@ -22,6 +22,9 @@ export function Inbox() {
   const format = useFormatter();
   const router = useRouter();
   const [cases, setCases] = useState<CaseSummary[]>([]);
+  const [language, setLanguage] = useState<Locale | 'all'>('all');
+  const tLocale = useTranslations('locale');
+  const visible = language === 'all' ? cases : cases.filter((kase) => kase.language === language);
 
   const load = useCallback(() => {
     coreApi
@@ -40,6 +43,18 @@ export function Inbox() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{t('title')}</CardTitle>
+        <label className="ml-auto mr-4 flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t('languageFilter.label')}</span>
+          <select
+            className="h-8 rounded-lg border border-input bg-background px-2"
+            value={language}
+            onChange={(event) => setLanguage(event.target.value as Locale | 'all')}
+          >
+            <option value="all">{t('languageFilter.all')}</option>
+            <option value="fr">{tLocale('fr')}</option>
+            <option value="en">{tLocale('en')}</option>
+          </select>
+        </label>
         <span className="flex items-center gap-2 text-xs text-muted-foreground">
           <span
             className={`size-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500'}`}
@@ -48,7 +63,7 @@ export function Inbox() {
         </span>
       </CardHeader>
       <CardContent>
-        {cases.length === 0 ? (
+        {visible.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">{t('empty')}</p>
         ) : (
           <Table>
@@ -63,7 +78,7 @@ export function Inbox() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {cases.map((kase) => (
+              {visible.map((kase) => (
                 <TableRow
                   key={kase.id}
                   className="cursor-pointer"

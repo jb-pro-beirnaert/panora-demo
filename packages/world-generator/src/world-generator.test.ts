@@ -1,4 +1,4 @@
-import { GroundTruthSchema, InboundEmailInputSchema } from '@demo/shared';
+import { detectLanguage, GroundTruthSchema, InboundEmailInputSchema } from '@demo/shared';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { SCENARIO_ORDER, generateEmails } from './emails.js';
@@ -123,5 +123,78 @@ describe('generateEmails', () => {
           assert.equal(groundTruth.documentsMissing.length, 0);
       }
     }
+  });
+});
+
+describe('multilingual world (V4)', () => {
+  const multi = generateWorld({ seed: 42, locales: ['fr', 'en'], mix: { en: 0.3 } });
+  const multiEmails = generateEmails(multi, { seed: 42, count: 80 });
+
+  it('keeps the French world identical and appends the English part', () => {
+    const french = generateWorld({ seed: 42, locale: 'fr' });
+    assert.deepEqual(multi.clients.slice(0, french.clients.length), french.clients);
+    assert.deepEqual(multi.policies.slice(0, french.policies.length), french.policies);
+    assert.ok(multi.brokerages.some((brokerage) => brokerage.locale === 'en'));
+    assert.ok(multi.insurers.some((insurer) => insurer.locale === 'en'));
+    assert.ok(multi.clients.some((client) => client.language === 'en'));
+  });
+
+  it("writes the English insurer's clauses in English", () => {
+    const clause = multi.clauses.find((candidate) => candidate.ref === 'CG-NB-12.1');
+    assert.match(clause?.text ?? '', /No cover is provided/);
+    const policy = multi.policies.find((candidate) => candidate.insurerId === 'ins-northbridge');
+    assert.equal(policy?.product, 'Commercial multi-risk');
+  });
+
+  it('contains the scenario 13 showcase: English e-mail, French clauses, French brokerage', () => {
+    const showcase = multiEmails.find(
+      (email) => email.email.from === 'facilities@brightwave-solutions.com',
+    );
+    assert.ok(showcase);
+    assert.equal(showcase.email.subject, 'Water damage in our Lyon office');
+    assert.equal(showcase.groundTruth.emailLanguage, 'en');
+    assert.equal(showcase.groundTruth.expectedDraftLanguage, 'en');
+    assert.equal(showcase.groundTruth.expectedNoteLanguage, 'fr');
+    if (showcase.groundTruth.scenario !== 'covered') assert.fail('expected a covered claim');
+    assert.equal(showcase.groundTruth.deductible, 300);
+    assert.deepEqual(showcase.groundTruth.documentsMissing, []);
+  });
+
+  it('mixes French and English e-mails whose text matches their declared language', () => {
+    const english = multiEmails.filter((email) => email.groundTruth.emailLanguage === 'en');
+    assert.ok(english.length >= 10, `${english.length} English e-mails`);
+    assert.ok(english.length < multiEmails.length / 2);
+    for (const { email, groundTruth } of multiEmails) {
+      GroundTruthSchema.parse(groundTruth);
+      // A covered claim always comes with every required document.
+      if (groundTruth.scenario === 'covered') assert.deepEqual(groundTruth.documentsMissing, []);
+      assert.equal(
+        detectLanguage(`${email.subject}\n${email.body}`),
+        groundTruth.emailLanguage,
+        email.subject,
+      );
+    }
+  });
+
+  it('has mixed cases: English e-mails on French clauses and French e-mails on English clauses', () => {
+    const insurerLocale = (policyNumber: string | null) => {
+      const policy = multi.policies.find((candidate) => candidate.number === policyNumber);
+      return multi.insurers.find((insurer) => insurer.id === policy?.insurerId)?.locale;
+    };
+    const claims = multiEmails.filter((email) => email.groundTruth.scenario !== 'non_claim');
+    assert.ok(
+      claims.some(
+        (e) =>
+          e.groundTruth.emailLanguage === 'en' &&
+          insurerLocale(e.groundTruth.policyNumber) === 'fr',
+      ),
+    );
+    assert.ok(
+      claims.some(
+        (e) =>
+          e.groundTruth.emailLanguage === 'en' &&
+          insurerLocale(e.groundTruth.policyNumber) === 'en',
+      ),
+    );
   });
 });

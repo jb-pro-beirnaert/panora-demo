@@ -38,7 +38,8 @@
       "closed": "Traités",
       "failed": "En erreur"
     },
-    "counter": "{label} : <strong>{value}</strong>"
+    "counter": "{label} : <strong>{value}</strong>",
+    "languageMix": "E-mails en anglais"
   },
   "inbox": {
     "title": "Boîte de réception",
@@ -54,7 +55,11 @@
       "status": "Statut",
       "verdict": "Verdict"
     },
-    "unknownClient": "Expéditeur inconnu"
+    "unknownClient": "Expéditeur inconnu",
+    "languageFilter": {
+      "label": "Langue",
+      "all": "Toutes"
+    }
   },
   "case": {
     "back": "Retour à la boîte de réception",

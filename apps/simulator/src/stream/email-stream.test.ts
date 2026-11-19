@@ -113,7 +113,40 @@ describe('EmailStream', () => {
       sent: 0,
       errors: 0,
       poolSize: 1,
+      englishShare: 0,
     });
+  });
+});
+
+describe('EmailStream language mix', () => {
+  const pool = [
+    { email: email(1), language: 'fr' as const },
+    { email: email(2), language: 'en' as const },
+    { email: email(3), language: 'fr' as const },
+  ];
+
+  it('draws the language with the English share and keeps each language in pool order', () => {
+    const draws = [0.9, 0.1, 0.9, 0.9];
+    const stream = new EmailStream(pool, async () => {}, {
+      emailsPerMinute: 1,
+      englishShare: 0.3,
+      random: () => draws.shift() ?? 0.9,
+    });
+    assert.deepEqual(
+      [1, 2, 3, 4].map(() => stream.nextEmail().subject),
+      ['s1', 's2', 's3', 's1'],
+    );
+  });
+
+  it('sends only French e-mails at 0 % and only English ones at 100 %', () => {
+    const stream = new EmailStream(pool, async () => {}, { emailsPerMinute: 1, englishShare: 0 });
+    assert.deepEqual(
+      [1, 2].map(() => stream.nextEmail().subject),
+      ['s1', 's3'],
+    );
+    stream.setEnglishShare(1);
+    assert.equal(stream.nextEmail().subject, 's2');
+    assert.equal(stream.state().englishShare, 1);
   });
 });
 

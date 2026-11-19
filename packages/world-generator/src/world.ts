@@ -8,15 +8,41 @@ import type {
   PolicyStatus,
 } from '@demo/shared';
 import type { Faker } from '@faker-js/faker';
-import { BUSINESSES, LEGAL_FORMS, VEHICLE_MODELS } from './catalog/businesses.js';
-import { INSURERS, coverageClauseRef, insurerById, insurerClauses } from './catalog/insurers.js';
+import {
+  BUSINESSES,
+  LEGAL_FORMS,
+  VEHICLE_MODELS,
+  type BusinessDefinition,
+} from './catalog/businesses.js';
+import { BUSINESSES_EN, PERILS_EN, PRODUCT_LABELS_EN } from './catalog/english.js';
+import {
+  ALL_INSURERS,
+  INSURERS,
+  NORTHBRIDGE,
+  coverageClauseRef,
+  insurerById,
+  insurerClauses,
+} from './catalog/insurers.js';
 import { PERILS, PRODUCTS, type ProductDefinition } from './catalog/perils.js';
-import { addDays, createRandom, int, pick, roundTo, siren, slugify } from './random.js';
+import {
+  addDays,
+  createEnglishRandom,
+  createRandom,
+  int,
+  pick,
+  roundTo,
+  siren,
+  slugify,
+} from './random.js';
 import type { Broker, Brokerage, BrokeragePolicy, Client, Vehicle, World } from './types.js';
 
 export interface GenerateWorldOptions {
   seed: number;
-  locale: Locale;
+  /** Languages of the generated data. Defaults to `['fr']`. `locale` is the V1–V3 spelling. */
+  locales?: Locale[];
+  locale?: Locale;
+  /** Share of English-speaking clients when `locales` includes `en`. Defaults to 0.3. */
+  mix?: { en: number };
   /** "Today" of the world. Defaults to `DEFAULT_REFERENCE_DATE` so output never depends on the clock. */
   referenceDate?: string;
 }
@@ -39,7 +65,15 @@ export const SHOWCASE = {
   bakeryClientId: 'cli-001',
   transportClientId: 'cli-002',
   garageClientId: 'cli-003',
+  /** Scenario 13: English-speaking client of a French brokerage, policy at a French insurer. */
+  crossLanguagePolicy: 'C-51877',
+  crossLanguageClientEmail: 'facilities@brightwave-solutions.com',
 } as const;
+
+/** The client's business, in the client's language. */
+export function businessOf(client: Pick<Client, 'language' | 'businessIndex'>): BusinessDefinition {
+  return (client.language === 'en' ? BUSINESSES_EN : BUSINESSES)[client.businessIndex]!;
+}
 
 const BROKERAGES: Brokerage[] = [
   {
@@ -58,6 +92,15 @@ const BROKERAGES: Brokerage[] = [
   },
 ];
 
+/** English-speaking brokerage, added with the English data (V4). */
+const ENGLISH_BROKERAGE: Brokerage = {
+  id: 'brk-003',
+  name: 'Hartley & Finch Brokers',
+  brokerCode: 'HTF-092',
+  locale: 'en',
+  inboxEmail: 'claims@hartley-finch.eu',
+};
+
 function businessIndex(prefix: string): number {
   return BUSINESSES.findIndex((business) => business.prefix === prefix);
 }
@@ -69,6 +112,7 @@ class WorldBuilder {
   readonly brokeragePolicies: BrokeragePolicy[] = [];
   readonly claims: ExtranetClaim[] = [];
   readonly vehicles: Vehicle[] = [];
+  readonly brokerages: Brokerage[] = [...BROKERAGES];
   private readonly usedNumbers = new Set<string>();
   private readonly usedNames = new Set<string>();
 
@@ -79,8 +123,8 @@ class WorldBuilder {
 
   // --- Brokers ---
 
-  addBroker(brokerage: Brokerage, name?: string): void {
-    const fullName = name ?? `${this.faker.person.firstName()} ${this.faker.person.lastName()}`;
+  addBroker(brokerage: Brokerage, name?: string, faker: Faker = this.faker): void {
+    const fullName = name ?? `${faker.person.firstName()} ${faker.person.lastName()}`;
     const [first = '', ...rest] = fullName.split(' ');
     const domain = brokerage.inboxEmail.split('@')[1];
     this.brokers.push({
@@ -101,7 +145,10 @@ class WorldBuilder {
     legalForm?: string;
     siren?: string;
     emailLocal?: string;
+    /** English-speaking client (V4): English names, `BUSINESSES_EN`, `.com` address. */
+    english?: { faker: Faker; companyName?: string; email?: string; city?: string };
   }): Client {
+    if (input.english) return this.addEnglishClient({ ...input, english: input.english });
     const business = BUSINESSES[input.businessIndex]!;
     let lastName = input.lastName;
     while (!lastName || this.usedNames.has(`${business.prefix} ${lastName}`)) {
@@ -126,6 +173,44 @@ class WorldBuilder {
         postalCode: this.faker.location.zipCode(),
         city: this.faker.location.city(),
       },
+      language: 'fr',
+      businessIndex: input.businessIndex,
+    };
+    this.clients.push(client);
+    return client;
+  }
+
+  private addEnglishClient(input: {
+    brokerage: Brokerage;
+    businessIndex: number;
+    english: { faker: Faker; companyName?: string; email?: string; city?: string };
+  }): Client {
+    const { faker } = input.english;
+    const business = BUSINESSES_EN[input.businessIndex]!;
+    let tradeName = input.english.companyName;
+    while (!tradeName || this.usedNames.has(tradeName)) {
+      tradeName = `${faker.person.lastName()} ${business.prefix}`;
+    }
+    this.usedNames.add(tradeName);
+    const contactLastName = faker.person.lastName();
+    const client: Client = {
+      id: `cli-${String(this.clients.length + 1).padStart(3, '0')}`,
+      brokerageId: input.brokerage.id,
+      companyName: input.english.companyName ?? `${tradeName} SAS`,
+      tradeName,
+      // Companies established in France: they still have a SIREN.
+      siren: siren(faker),
+      email:
+        input.english.email ??
+        `${pick(faker, ['contact', 'office', 'facilities', 'admin'])}@${slugify(tradeName)}.com`,
+      contactName: `${faker.person.firstName()} ${contactLastName}`,
+      phone: `+33 ${int(faker, 1, 5)} ${faker.string.numeric(2)} ${faker.string.numeric(2)} ${faker.string.numeric(2)} ${faker.string.numeric(2)}`,
+      address: {
+        street: `${int(faker, 1, 120)} ${pick(faker, ['rue de la République', 'avenue Jean Jaurès', 'quai Perrache', 'rue Garibaldi', 'boulevard Haussmann'])}`,
+        postalCode: pick(faker, ['69002', '69007', '75008', '75011', '33000']),
+        city: input.english.city ?? pick(faker, ['Lyon', 'Paris', 'Bordeaux']),
+      },
+      language: 'en',
       businessIndex: input.businessIndex,
     };
     this.clients.push(client);
@@ -134,10 +219,10 @@ class WorldBuilder {
 
   // --- Policies ---
 
-  private policyNumber(product: ProductDefinition): string {
+  private policyNumber(product: ProductDefinition, faker: Faker = this.faker): string {
     let number: string;
     do {
-      number = `${product.numberPrefix}-${int(this.faker, 10_000, 99_999)}`;
+      number = `${product.numberPrefix}-${int(faker, 10_000, 99_999)}`;
     } while (this.usedNumbers.has(number));
     this.usedNumbers.add(number);
     return number;
@@ -152,25 +237,34 @@ class WorldBuilder {
     endReason?: PolicyEndReason | null;
     endDate?: string | null;
     knownStatus?: PolicyStatus;
+    /** Faker used for the random parts (the English part uses its own). */
+    faker?: Faker;
     coverageOverrides?: Partial<Record<Peril, { limit: number; deductible: number }>>;
     vehicles?: Omit<Vehicle, 'policyNumber'>[];
   }): ExtranetPolicy {
-    const number = input.number ?? this.policyNumber(input.product);
+    const faker = input.faker ?? this.faker;
+    const number = input.number ?? this.policyNumber(input.product, faker);
     this.usedNumbers.add(number);
-    const insurer = insurerById(input.insurerId ?? pick(this.faker, INSURERS).id);
-    const brokerage = BROKERAGES.find((candidate) => candidate.id === input.client.brokerageId)!;
+    const insurer = insurerById(input.insurerId ?? pick(faker, INSURERS).id);
+    const brokerage = this.brokerages.find(
+      (candidate) => candidate.id === input.client.brokerageId,
+    )!;
+    // The insurer writes its contracts in its own language.
+    const english = insurer.locale === 'en';
     const coverages: ExtranetCoverage[] = input.product.perils.map((peril) => {
       const definition = PERILS[peril];
+      const wording = english ? PERILS_EN[peril] : definition;
       const override = input.coverageOverrides?.[peril];
       return {
         peril,
-        label: definition.label,
-        limit: override?.limit ?? pick(this.faker, definition.limits),
-        deductible: override?.deductible ?? pick(this.faker, definition.deductibles),
-        exclusions: definition.exclusions.map((exclusion) => exclusion.label),
+        label: wording.label,
+        limit: override?.limit ?? pick(faker, definition.limits),
+        deductible: override?.deductible ?? pick(faker, definition.deductibles),
+        exclusions: wording.exclusions.map((exclusion) => exclusion.label),
         clauseRef: coverageClauseRef(insurer, peril),
       };
     });
+    const productLabel = english ? PRODUCT_LABELS_EN[input.product.id] : input.product.label;
     const status = input.status ?? 'active';
     const policy: ExtranetPolicy = {
       number,
@@ -178,9 +272,9 @@ class WorldBuilder {
       holderName: input.client.companyName,
       holderSiren: input.client.siren,
       brokerCode: brokerage.brokerCode,
-      product: input.product.label,
+      product: productLabel,
       status,
-      startDate: addDays(this.referenceDate, -int(this.faker, 200, 2_000)),
+      startDate: addDays(this.referenceDate, -int(faker, 200, 2_000)),
       endDate: input.endDate ?? null,
       endReason: input.endReason ?? null,
       coverages,
@@ -190,9 +284,9 @@ class WorldBuilder {
       number,
       clientId: input.client.id,
       insurerName: insurer.name,
-      product: input.product.label,
+      product: productLabel,
       knownStatus: input.knownStatus ?? status,
-      renewalDate: addDays(this.referenceDate, int(this.faker, 10, 360)),
+      renewalDate: addDays(this.referenceDate, int(faker, 10, 360)),
     });
     if (input.product.id === 'fleet') this.addVehicles(number, input.vehicles);
     return policy;
@@ -213,15 +307,35 @@ class WorldBuilder {
 
   // --- Claims ---
 
-  addClaim(input: Omit<ExtranetClaim, 'number'> & { number?: string }): ExtranetClaim {
+  addClaim(
+    input: Omit<ExtranetClaim, 'number'> & { number?: string },
+    faker: Faker = this.faker,
+  ): ExtranetClaim {
     let number = input.number;
     while (!number || this.usedNumbers.has(number)) {
-      number = `S-${input.date.slice(0, 4)}-${this.faker.string.numeric(4)}`;
+      number = `S-${input.date.slice(0, 4)}-${faker.string.numeric(4)}`;
     }
     this.usedNumbers.add(number);
     const claim: ExtranetClaim = { ...input, number };
     this.claims.push(claim);
     return claim;
+  }
+}
+
+/** Short description of a past claim, as an English-language insurer recorded it. */
+function claimDescriptionEn(peril: Peril, client: Client): string {
+  const area = client.language === 'en' ? businessOf(client).area : 'the premises';
+  switch (peril) {
+    case 'water_damage':
+      return `Water leak in ${area}`;
+    case 'fire':
+      return `Fire in ${area}`;
+    case 'theft':
+      return 'Burglary: equipment stolen';
+    case 'glass_breakage':
+      return 'Replacement of a broken window';
+    case 'vehicle_damage':
+      return 'Vehicle damaged in a collision';
   }
 }
 
@@ -245,6 +359,9 @@ function claimDescription(peril: Peril, client: Client, vehicle?: Vehicle): stri
 }
 
 export function generateWorld(options: GenerateWorldOptions): World {
+  const locales = options.locales ?? [options.locale ?? 'fr'];
+  const english = locales.includes('en');
+  const mix = { en: english ? (options.mix?.en ?? 0.3) : 0 };
   const referenceDate = options.referenceDate ?? DEFAULT_REFERENCE_DATE;
   const faker = createRandom(options.seed);
   const builder = new WorldBuilder(faker, referenceDate);
@@ -410,18 +527,142 @@ export function generateWorld(options: GenerateWorldOptions): World {
     });
   }
 
+  // The English part is appended after the French one, with its own Faker: the French world is
+  // the same with or without it.
+  if (english) addEnglishPart(builder, options.seed, mix.en, referenceDate);
+  const insurers = english ? ALL_INSURERS : INSURERS;
+
   return {
     seed: options.seed,
-    locale: options.locale,
+    locales,
+    mix,
     referenceDate,
-    brokerages: BROKERAGES,
+    brokerages: builder.brokerages,
     brokers: builder.brokers,
     clients: builder.clients,
     brokeragePolicies: builder.brokeragePolicies,
-    insurers: INSURERS.map(({ id, name, locale }) => ({ id, name, locale })),
-    clauses: INSURERS.flatMap(insurerClauses),
+    insurers: insurers.map(({ id, name, locale }) => ({ id, name, locale })),
+    clauses: insurers.flatMap(insurerClauses),
     policies: builder.policies,
     claims: builder.claims,
     vehicles: builder.vehicles,
   };
+}
+
+/**
+ * English data (V4): an English-speaking brokerage, the English-language insurer Northbridge, and
+ * English-speaking clients, some of them at French brokerages or French insurers so that e-mails,
+ * clauses and the brokerage's language can differ (scenarios 12 to 14).
+ */
+function addEnglishPart(
+  builder: WorldBuilder,
+  seed: number,
+  share: number,
+  referenceDate: string,
+): void {
+  const faker = createEnglishRandom(seed);
+  builder.brokerages.push(ENGLISH_BROKERAGE);
+  builder.addBroker(ENGLISH_BROKERAGE, 'Olivia Hartley', faker);
+  builder.addBroker(ENGLISH_BROKERAGE, undefined, faker);
+  const [delorme, vasseur] = BROKERAGES as [Brokerage, Brokerage];
+
+  // Scenario 13 showcase: English e-mail, French insurer, French brokerage.
+  const brightwave = builder.addClient({
+    brokerage: delorme,
+    businessIndex: 0,
+    english: {
+      faker,
+      companyName: 'Brightwave Solutions',
+      email: SHOWCASE.crossLanguageClientEmail,
+      city: 'Lyon',
+    },
+  });
+  builder.addPolicy({
+    client: brightwave,
+    product: PRODUCTS.multirisk,
+    number: SHOWCASE.crossLanguagePolicy,
+    insurerId: 'ins-horizon',
+    faker,
+    coverageOverrides: { water_damage: { limit: 20_000, deductible: 300 } },
+  });
+
+  // English-speaking clients: mostly Hartley & Finch's (at Northbridge, a few at French insurers),
+  // some foreign companies established in France at the French brokerages.
+  const count = Math.max(4, Math.round(WORLD_SIZE.clients * share));
+  const englishPolicies: ExtranetPolicy[] = [];
+  for (let index = 1; index < count; index++) {
+    const atEnglishBrokerage = index % 3 !== 0;
+    const client = builder.addClient({
+      brokerage: atEnglishBrokerage ? ENGLISH_BROKERAGE : pick(faker, [delorme, vasseur]),
+      businessIndex: int(faker, 0, BUSINESSES_EN.length - 1),
+      english: { faker },
+    });
+    const insurerId =
+      atEnglishBrokerage && index % 4 !== 0 ? NORTHBRIDGE.id : pick(faker, INSURERS).id;
+    englishPolicies.push(
+      builder.addPolicy({ client, product: PRODUCTS.multirisk, insurerId, faker }),
+    );
+  }
+
+  // French-speaking clients whose policy is at Northbridge: French e-mail, English clauses.
+  for (const brokerage of [delorme, vasseur]) {
+    const client = builder.addClient({
+      brokerage,
+      businessIndex: int(faker, 0, BUSINESSES.length - 1),
+      lastName: faker.person.lastName(),
+      legalForm: 'SAS',
+      siren: siren(faker),
+    });
+    englishPolicies.push(
+      builder.addPolicy({ client, product: PRODUCTS.multirisk, insurerId: NORTHBRIDGE.id, faker }),
+    );
+  }
+
+  // Traps on English data: a policy Northbridge terminated that the brokerage believes active,
+  // past claims, and a recent open claim the duplicate scenario can re-declare.
+  const atNorthbridge = englishPolicies.filter((policy) => policy.insurerId === NORTHBRIDGE.id);
+  const terminated = atNorthbridge[0];
+  if (terminated) {
+    terminated.status = 'terminated';
+    terminated.endReason = 'non_payment';
+    terminated.endDate = addDays(referenceDate, -int(faker, 30, 90));
+    builder.brokeragePolicies.find((known) => known.number === terminated.number)!.knownStatus =
+      'active';
+  }
+  const clientOf = (policy: ExtranetPolicy) =>
+    builder.clients.find((client) => client.companyName === policy.holderName)!;
+  const describe = (policy: ExtranetPolicy, peril: Peril) =>
+    insurerById(policy.insurerId).locale === 'en'
+      ? claimDescriptionEn(peril, clientOf(policy))
+      : claimDescription(peril, clientOf(policy));
+  for (const policy of englishPolicies.slice(1, 4)) {
+    const coverage = pick(faker, policy.coverages);
+    const [min, max] = PERILS[coverage.peril].amountRange;
+    builder.addClaim(
+      {
+        policyNumber: policy.number,
+        date: addDays(referenceDate, -int(faker, 60, 400)),
+        nature: coverage.peril,
+        amount: roundTo(int(faker, min, max), 10),
+        status: 'settled',
+        description: describe(policy, coverage.peril),
+      },
+      faker,
+    );
+  }
+  const openTarget = atNorthbridge.find((policy) => policy.status === 'active');
+  if (openTarget) {
+    const [min, max] = PERILS.water_damage.amountRange;
+    builder.addClaim(
+      {
+        policyNumber: openTarget.number,
+        date: addDays(referenceDate, -int(faker, 3, 5)),
+        nature: 'water_damage',
+        amount: roundTo(int(faker, min, max), 10),
+        status: 'open',
+        description: describe(openTarget, 'water_damage'),
+      },
+      faker,
+    );
+  }
 }

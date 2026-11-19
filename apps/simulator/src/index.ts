@@ -10,7 +10,11 @@ import { EmailStream } from './stream/email-stream.js';
 const env = loadEnv();
 
 // Same seed → same world and same e-mails on every start.
-const world = generateWorld({ seed: env.WORLD_SEED, locale: 'fr' });
+const world = generateWorld({
+  seed: env.WORLD_SEED,
+  locales: ['fr', 'en'],
+  mix: { en: env.SIMULATOR_ENGLISH_SHARE },
+});
 const emails = generateEmails(world, { seed: env.WORLD_SEED, count: env.SIMULATOR_EMAIL_COUNT });
 const targets: SeedTargets = {
   coreUrl: env.CORE_API_URL,
@@ -39,9 +43,9 @@ async function deliver(email: InboundEmailInput): Promise<void> {
 }
 
 const stream = new EmailStream(
-  emails.map(({ email }) => email),
+  emails.map(({ email, groundTruth }) => ({ email, language: groundTruth.emailLanguage })),
   deliver,
-  { emailsPerMinute: env.SIMULATOR_EMAILS_PER_MINUTE },
+  { emailsPerMinute: env.SIMULATOR_EMAILS_PER_MINUTE, englishShare: env.SIMULATOR_ENGLISH_SHARE },
 );
 const brokersByBrokerage = new Map<string, string[]>();
 for (const broker of world.brokers) {
@@ -79,6 +83,7 @@ app.get('/emails', (_req, res) => {
     emails.map(({ email, groundTruth }, index) => ({
       index: index + 1,
       scenario: groundTruth.scenario,
+      language: groundTruth.emailLanguage,
       subject: email.subject,
       from: email.from,
       input: workflowInput(email),

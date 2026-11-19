@@ -12,18 +12,28 @@ import {
   type ExtranetPolicy,
   type NonClaimGroundTruth,
   type UnknownClientGroundTruth,
+  type Locale,
   type Peril,
   type ScenarioId,
   type Verdict,
 } from '@demo/shared';
 import type { Faker } from '@faker-js/faker';
+import { buildAttachmentEn } from './attachments-en.js';
 import { buildAttachment, DOCUMENT_NOUNS, type AttachmentContext } from './attachments.js';
 import { BUSINESSES, ROADS, type BusinessDefinition } from './catalog/businesses.js';
+import {
+  BUSINESSES_EN as BUSINESSES_EN_LIST,
+  DOCUMENT_NOUNS_EN,
+  PERILS_EN,
+} from './catalog/english.js';
 import { clauseRef, GENERAL_CLAUSES, insurerById } from './catalog/insurers.js';
 import { PERILS, type ExclusionDefinition } from './catalog/perils.js';
 import {
   addDays,
   createRandom,
+  enAmount,
+  enDate,
+  enShortDate,
   frAmount,
   frDate,
   frShortDate,
@@ -33,13 +43,18 @@ import {
   roundTo,
 } from './random.js';
 import type { Client, GeneratedEmail, Vehicle, World } from './types.js';
-import { SHOWCASE } from './world.js';
+import { businessOf, SHOWCASE } from './world.js';
 
 export interface GenerateEmailsOptions {
   seed: number;
   count: number;
   /** Restrict the draw to these scenarios. Defaults to every available scenario. */
   scenarios?: ScenarioId[];
+  /**
+   * Share of e-mails written by English-speaking clients. Defaults to the world's mix (0 for a
+   * French-only world). The first e-mails (one per scenario) are always French.
+   */
+  mix?: { en: number };
 }
 
 /**
@@ -116,6 +131,8 @@ interface ClaimDraft {
 
 class EmailFactory {
   private readonly usage = new Map<string, number>();
+  /** Language of the client the next e-mail is written by; null accepts any client. */
+  private language: Locale | null = null;
   private readonly recentOpenClaims: ExtranetClaim[];
 
   constructor(
@@ -143,7 +160,7 @@ class EmailFactory {
       policy,
       coverage,
       client,
-      business: BUSINESSES[client.businessIndex]!,
+      business: businessOf(client),
       vehicle:
         PERILS[peril].vehicle || policy.product === 'Flotte automobile'
           ? pick(this.faker, vehicles)
@@ -156,13 +173,20 @@ class EmailFactory {
     accept: (policy: ExtranetPolicy, coverage: ExtranetCoverage) => boolean,
     policyFilter: (policy: ExtranetPolicy) => boolean,
   ): Target {
-    const pairs = this.world.policies
-      .filter(policyFilter)
-      .flatMap((policy) =>
-        policy.coverages
-          .filter((coverage) => accept(policy, coverage))
-          .map((coverage) => ({ policy, coverage })),
-      );
+    const clientLanguage = (policy: ExtranetPolicy) =>
+      this.world.clients.find((client) => client.companyName === policy.holderName)?.language;
+    const inLanguage = this.world.policies.filter(
+      (policy) => policyFilter(policy) && clientLanguage(policy) === this.language,
+    );
+    const candidates =
+      this.language !== null && inLanguage.length > 0
+        ? inLanguage
+        : this.world.policies.filter(policyFilter);
+    const pairs = candidates.flatMap((policy) =>
+      policy.coverages
+        .filter((coverage) => accept(policy, coverage))
+        .map((coverage) => ({ policy, coverage })),
+    );
     if (pairs.length === 0) throw new Error('No policy in the world fits this scenario');
     const minUsage = Math.min(...pairs.map(({ policy }) => this.usage.get(policy.number) ?? 0));
     const least = pairs.filter(({ policy }) => (this.usage.get(policy.number) ?? 0) === minUsage);
@@ -202,7 +226,8 @@ class EmailFactory {
 
   // --- Scenarios ---
 
-  draft(scenario: ClaimScenarioId): ClaimDraft {
+  draft(scenario: ClaimScenarioId, language: Locale | null = null): ClaimDraft {
+    this.language = language;
     const received = this.receivedDate();
     const base = {
       scenario,
@@ -323,7 +348,16 @@ class EmailFactory {
         };
       }
       case 'duplicate_claim': {
-        const claim = pick(this.faker, this.recentOpenClaims);
+        const inLanguage = this.recentOpenClaims.filter(
+          (open) =>
+            this.world.clients.find(
+              (client) =>
+                client.companyName ===
+                this.world.policies.find((policy) => policy.number === open.policyNumber)
+                  ?.holderName,
+            )?.language === this.language,
+        );
+        const claim = pick(this.faker, inLanguage.length > 0 ? inLanguage : this.recentOpenClaims);
         const policy = this.world.policies.find(
           (candidate) => candidate.number === claim.policyNumber,
         )!;
@@ -469,6 +503,7 @@ class EmailFactory {
   }
 
   write(draft: ClaimDraft, index: number): GeneratedEmail {
+    if (draft.target.client.language === 'en') return this.writeEn(draft, index);
     const { target } = draft;
     const received = draft.receivedAt.slice(0, 10);
     const brokerage = this.world.brokerages.find(
@@ -568,6 +603,7 @@ class EmailFactory {
       scenario: draft.scenario,
       requestType: 'claim',
       brokerCode: target.policy.brokerCode,
+      ...this.languages(target.client.language, target.policy.brokerCode),
       holderName: target.policy.holderName,
       policyNumber: target.policy.number,
       policyNumberInEmail: draft.policyNumberInEmail,
@@ -728,46 +764,73 @@ class EmailFactory {
 
   // --- Not a claim (scenario 8): a quote request or a cancellation ---
 
-  writeNonClaim(index: number): GeneratedEmail {
-    const client = pick(this.faker, this.world.clients);
+  writeNonClaim(index: number, language: Locale | null = null): GeneratedEmail {
+    const speakers = this.world.clients.filter((client) => client.language === language);
+    const client = pick(
+      this.faker,
+      language && speakers.length > 0 ? speakers : this.world.clients,
+    );
     const brokerage = this.world.brokerages.find(
       (candidate) => candidate.id === client.brokerageId,
     )!;
-    const business = BUSINESSES[client.businessIndex]!;
+    const business = businessOf(client);
     const policies = this.world.brokeragePolicies.filter(
       (policy) => policy.clientId === client.id && policy.knownStatus === 'active',
     );
     const cancellation = policies.length > 0 && this.faker.datatype.boolean(0.5);
     const policy = cancellation ? pick(this.faker, policies) : undefined;
     const received = this.receivedDate();
+    const english = client.language === 'en';
 
-    const subject = policy
-      ? pick(this.faker, [
-          `Résiliation du contrat ${policy.number}`,
-          'Demande de résiliation',
-          `Résiliation - ${client.tradeName}`,
-        ])
-      : pick(this.faker, [
-          "Demande de devis pour l'ouverture d'un second local",
-          'Demande de devis assurance',
-          `Devis - ${client.tradeName}`,
-        ]);
-    const request = policy
-      ? `Nous souhaitons résilier notre contrat ${policy.number} (${policy.product}) à sa prochaine échéance, le ${frDate(policy.renewalDate)}. ${pick(this.faker, ['Nous avons trouvé une offre plus adaptée à notre activité.', 'Nous cessons cette activité à la fin de l’année.', 'Merci de nous confirmer la démarche à suivre.'])}`
-      : `${pick(this.faker, ['Nous ouvrons un second établissement', 'Nous allons agrandir nos locaux', 'Nous reprenons un fonds de commerce'])} ${pick(this.faker, ['le mois prochain', 'au début de l’année prochaine', 'dans quelques semaines'])}. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant ${business.area} et le matériel ?`;
-    const body = [this.greeting(brokerage.id), request, this.signature(client)].join('\n\n');
+    let subject: string;
+    let request: string;
+    if (english) {
+      subject = policy
+        ? pick(this.faker, [
+            `Cancellation of policy ${policy.number}`,
+            'Policy cancellation request',
+            `Cancellation - ${client.tradeName}`,
+          ])
+        : pick(this.faker, [
+            'Quote request for a second office',
+            'Insurance quote request',
+            `Quote - ${client.tradeName}`,
+          ]);
+      request = policy
+        ? `We would like to cancel our policy ${policy.number} (${policy.product}) at its next renewal date, ${enDate(policy.renewalDate)}. ${pick(this.faker, ['We have found an offer that better suits our business.', 'We are closing this activity at the end of the year.', 'Could you confirm the next steps?'])}`
+        : `${pick(this.faker, ['We are opening a second site', 'We are moving to larger premises', 'We are taking over another business'])} ${pick(this.faker, ['next month', 'early next year', 'in a few weeks'])}. Could you send us a quote for a commercial multi-risk policy covering ${business.area} and the equipment?`;
+    } else {
+      subject = policy
+        ? pick(this.faker, [
+            `Résiliation du contrat ${policy.number}`,
+            'Demande de résiliation',
+            `Résiliation - ${client.tradeName}`,
+          ])
+        : pick(this.faker, [
+            "Demande de devis pour l'ouverture d'un second local",
+            'Demande de devis assurance',
+            `Devis - ${client.tradeName}`,
+          ]);
+      request = policy
+        ? `Nous souhaitons résilier notre contrat ${policy.number} (${policy.product}) à sa prochaine échéance, le ${frDate(policy.renewalDate)}. ${pick(this.faker, ['Nous avons trouvé une offre plus adaptée à notre activité.', 'Nous cessons cette activité à la fin de l’année.', 'Merci de nous confirmer la démarche à suivre.'])}`
+        : `${pick(this.faker, ['Nous ouvrons un second établissement', 'Nous allons agrandir nos locaux', 'Nous reprenons un fonds de commerce'])} ${pick(this.faker, ['le mois prochain', 'au début de l’année prochaine', 'dans quelques semaines'])}. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant ${business.area} et le matériel ?`;
+    }
+    const body = english
+      ? [this.greetingEn(brokerage.id), request, this.signatureEn(client)].join('\n\n')
+      : [this.greeting(brokerage.id), request, this.signature(client)].join('\n\n');
 
     const groundTruth: NonClaimGroundTruth = {
       scenario: 'non_claim',
       requestType: policy ? 'cancellation' : 'quote_request',
       brokerCode: brokerage.brokerCode,
+      ...this.languages(client.language, brokerage.brokerCode),
       holderName: client.companyName,
       policyNumber: policy?.number ?? null,
       policyNumberInEmail: policy !== undefined,
     };
     return {
       email: {
-        messageId: `<demo-${this.seed}-${String(index + 1).padStart(4, '0')}@simulator.local>`,
+        messageId: this.messageId(index),
         receivedAt: this.receivedAt(received),
         from: client.email,
         to: brokerage.inboxEmail,
@@ -781,28 +844,36 @@ class EmailFactory {
 
   // --- Unknown client (scenario 10): a claim from a company the brokerage does not know ---
 
-  writeUnknownClient(index: number): GeneratedEmail {
+  writeUnknownClient(index: number, language: Locale | null = null): GeneratedEmail {
+    const english = language === 'en';
     const brokerage = pick(this.faker, this.world.brokerages);
-    const business = pick(this.faker, BUSINESSES);
+    const business = english ? pick(this.faker, BUSINESSES_EN_LIST) : pick(this.faker, BUSINESSES);
     const lastName = this.faker.person.lastName();
-    const tradeName = `${business.prefix} ${lastName}`;
+    const tradeName = english ? `${lastName} ${business.prefix}` : `${business.prefix} ${lastName}`;
     const domain = `${tradeName
       .toLowerCase()
       .normalize('NFD')
       .replace(/\p{M}/gu, '')
-      .replace(/[^a-z0-9]+/g, '-')}.fr`;
+      .replace(/[^a-z0-9]+/g, '-')}.${english ? 'com' : 'fr'}`;
     const contactName = `${this.faker.person.firstName()} ${lastName}`;
     const amount = roundTo(int(this.faker, 600, 2_500), 10);
     const received = this.receivedDate();
-    const body = [
-      'Bonjour,',
-      `Hier soir, une canalisation a cédé dans ${business.area} et l'eau a abîmé une partie du matériel. Le plombier est intervenu ce matin, sa facture s'élève à ${frAmount(amount)}. Pouvez-vous déclarer le sinistre auprès de notre assureur ?`,
-      `Cordialement,\n${contactName}\n${tradeName}`,
-    ].join('\n\n');
+    const body = english
+      ? [
+          'Hello,',
+          `Last night a pipe burst in ${business.area} and the water damaged some of our equipment. The plumber came this morning, his invoice is ${enAmount(amount)}. Could you declare the claim to our insurer?`,
+          `Kind regards,\n${contactName}\n${tradeName}`,
+        ].join('\n\n')
+      : [
+          'Bonjour,',
+          `Hier soir, une canalisation a cédé dans ${business.area} et l'eau a abîmé une partie du matériel. Le plombier est intervenu ce matin, sa facture s'élève à ${frAmount(amount)}. Pouvez-vous déclarer le sinistre auprès de notre assureur ?`,
+          `Cordialement,\n${contactName}\n${tradeName}`,
+        ].join('\n\n');
     const groundTruth: UnknownClientGroundTruth = {
       scenario: 'unknown_client',
       requestType: 'claim',
       brokerCode: brokerage.brokerCode,
+      ...this.languages(english ? 'en' : 'fr', brokerage.brokerCode),
       holderName: tradeName,
       policyNumber: null,
       policyNumberInEmail: false,
@@ -814,16 +885,226 @@ class EmailFactory {
     };
     return {
       email: {
-        messageId: `<demo-${this.seed}-${String(index + 1).padStart(4, '0')}@simulator.local>`,
+        messageId: this.messageId(index),
         receivedAt: isoDateTime(received, int(this.faker, 7, 18), int(this.faker, 0, 59)),
         from: `contact@${domain}`,
         to: brokerage.inboxEmail,
-        subject: `Dégât des eaux - ${tradeName}`,
+        subject: english ? `Water damage - ${tradeName}` : `Dégât des eaux - ${tradeName}`,
         body,
         attachments: [],
       },
       groundTruth,
     };
+  }
+
+  // --- English e-mails (V4) ---
+
+  private whenExpressionEn(draft: ClaimDraft): string {
+    const received = draft.receivedAt.slice(0, 10);
+    if (!draft.dateReadable) return 'Last week (Tuesday or Wednesday, I am not sure exactly)';
+    if (draft.scenario === 'late_declaration') return `On ${enDate(draft.incidentDate)}`;
+    if (this.faker.datatype.boolean(0.5)) return `On ${enShortDate(draft.incidentDate)}`;
+    if (draft.incidentDate === addDays(received, -1))
+      return pick(this.faker, ['Yesterday', 'Last night']);
+    if (draft.incidentDate === addDays(received, -2)) return 'The day before yesterday';
+    return `On ${enShortDate(draft.incidentDate)}`;
+  }
+
+  private describeEn(draft: ClaimDraft): string {
+    const { business, vehicle } = draft.target;
+    const excluded = draft.exclusion !== undefined;
+    switch (draft.target.coverage.peril) {
+      case 'water_damage':
+        return pick(this.faker, [
+          `a leak in the ceiling flooded ${business.area}.`,
+          `a pipe burst and water spread across ${business.area}.`,
+          `the water heater failed and flooded ${business.area}.`,
+        ]);
+      case 'fire':
+        return pick(this.faker, [
+          `a fire broke out in ${business.area}.`,
+          `a short circuit on an appliance started a fire in ${business.area}.`,
+        ]);
+      case 'theft':
+        return `${business.stolenItems} were stolen.${excluded ? '' : ' The back door was forced open.'}`;
+      case 'glass_breakage':
+        return vehicle
+          ? `the windscreen of our ${vehicle.model} (${vehicle.plate}) was damaged on the road.${excluded ? '' : ' A stone cracked it across its whole width.'}`
+          : `we found damage to ${business.glass}.${excluded ? '' : ' It was broken by an object thrown from the street.'}`;
+      case 'vehicle_damage':
+        return `our ${vehicle?.model ?? 'vehicle'} (${vehicle?.plate ?? ''}) hit a post while manoeuvring in the car park.`;
+    }
+  }
+
+  private subjectEn(draft: ClaimDraft): string {
+    const { client, vehicle } = draft.target;
+    const label = PERILS_EN[draft.target.coverage.peril].label;
+    return vehicle
+      ? `${label} ${vehicle.plate}`
+      : pick(this.faker, [
+          `${label} at our premises`,
+          `${label} claim - ${client.tradeName}`,
+          label,
+        ]);
+  }
+
+  private greetingEn(brokerageId: string): string {
+    const brokers = this.world.brokers.filter((broker) => broker.brokerageId === brokerageId);
+    const firstName = pick(this.faker, brokers).name.split(' ')[0];
+    return pick(this.faker, ['Hello,', 'Dear Sir or Madam,', `Hello ${firstName},`]);
+  }
+
+  private signatureEn(client: Client): string {
+    return `${pick(this.faker, ['Kind regards,', 'Best regards,', 'Thanks in advance,'])}\n${client.contactName}\n${client.companyName}\n${client.phone}`;
+  }
+
+  /** The English counterpart of `write`, for English-speaking clients. */
+  writeEn(draft: ClaimDraft, index: number): GeneratedEmail {
+    const { target } = draft;
+    const received = draft.receivedAt.slice(0, 10);
+    const brokerage = this.world.brokerages.find(
+      (candidate) => candidate.id === target.client.brokerageId,
+    )!;
+    const what = this.describeEn(draft);
+    const description = `${this.whenExpressionEn(draft)}, ${what}`;
+    const numberInBody =
+      draft.policyNumberInEmail &&
+      (draft.documents.length === 0 || this.faker.datatype.boolean(0.6));
+    const context: AttachmentContext = {
+      faker: this.faker,
+      client: target.client,
+      peril: target.coverage.peril,
+      incidentDate: draft.incidentDate,
+      receivedDate: received,
+      policyNumber: draft.policyNumberInEmail && !numberInBody ? target.policy.number : null,
+      amount: draft.amountReadable ? draft.amount : null,
+      dateUnreadable: !draft.dateReadable,
+      location: this.location(target),
+      circumstances: what.charAt(0).toUpperCase() + what.slice(1),
+      vehicle: target.vehicle,
+    };
+    if (context.policyNumber && !draft.documents.includes('incident_report')) {
+      draft.documents.unshift('incident_report');
+    }
+    const attachments = draft.documents.map((type) => buildAttachmentEn(type, context));
+
+    const paragraphs: string[] = [];
+    paragraphs.push(
+      draft.scenario === 'late_declaration'
+        ? `I am getting back to you about a claim we had not declared yet, as we have been very busy these last weeks. ${description}`
+        : description,
+    );
+    if (draft.exclusion) {
+      const index = PERILS[target.coverage.peril].exclusions.indexOf(draft.exclusion);
+      paragraphs.push(PERILS_EN[target.coverage.peril].exclusions[index]!.emailCause);
+    }
+    if (attachments.length > 0) {
+      const nouns = draft.documents.map((type) => DOCUMENT_NOUNS_EN[type]);
+      const list =
+        nouns.length > 1 ? `${nouns.slice(0, -1).join(', ')} and ${nouns.at(-1)}` : nouns[0];
+      const amountNote =
+        draft.amountReadable && this.faker.datatype.boolean(0.5)
+          ? ` (${enAmount(draft.amount)})`
+          : '';
+      paragraphs.push(`Please find attached ${list}${amountNote}.`);
+    } else {
+      paragraphs.push(
+        pick(this.faker, [
+          'What should we do?',
+          'Could you tell us how to proceed with the insurer?',
+        ]),
+      );
+    }
+    if (!draft.amountReadable && attachments.length > 0) {
+      paragraphs.push('Sorry, the scan of the invoice is not very clear.');
+    }
+    if (numberInBody) paragraphs.push(`Our policy number: ${target.policy.number}.`);
+    if (attachments.length > 0) {
+      paragraphs.push(
+        pick(this.faker, [
+          'Could you please take care of it with the insurer?',
+          'Can you declare the claim?',
+          'Please keep us posted.',
+        ]),
+      );
+    }
+    const body = [
+      this.greetingEn(brokerage.id),
+      paragraphs.join(' '),
+      this.signatureEn(target.client),
+    ].join('\n\n');
+    return this.finish(index, draft, {
+      from: target.client.email,
+      to: brokerage.inboxEmail,
+      subject: this.subjectEn(draft),
+      body,
+      attachments,
+    });
+  }
+
+  /**
+   * Scenario 13 (`specs/00-demo-data-and-scenarios.md` §3): an English e-mail about a policy at a
+   * French insurer (French clauses), sent to a French-speaking brokerage.
+   */
+  showcaseCrossLanguage(index: number): GeneratedEmail | undefined {
+    const policy = this.world.policies.find(
+      (candidate) => candidate.number === SHOWCASE.crossLanguagePolicy,
+    );
+    if (!policy) return undefined;
+    const target = this.target(policy, 'water_damage');
+    const received = addDays(this.world.referenceDate, -1);
+    const amount = 2_300;
+    const draft: ClaimDraft = {
+      scenario: 'covered',
+      target,
+      incidentDate: addDays(received, -1),
+      receivedAt: isoDateTime(received, 8, 40),
+      amount,
+      amountReadable: true,
+      dateReadable: true,
+      policyNumberInEmail: true,
+      documents: ['incident_report', 'quote'],
+      exclusion: undefined,
+      verdict: 'covered',
+      alerts: [],
+      clauseRef: target.coverage.clauseRef,
+    };
+    const context: AttachmentContext = {
+      faker: this.faker,
+      client: target.client,
+      peril: 'water_damage',
+      incidentDate: draft.incidentDate,
+      receivedDate: received,
+      policyNumber: null,
+      amount,
+      dateUnreadable: false,
+      location: `${target.client.address.street}, ${target.client.address.postalCode} Lyon`,
+      circumstances: 'A pipe burst and damaged two workstations',
+      vehicle: undefined,
+    };
+    const report = buildAttachmentEn('incident_report', context);
+    const quote = buildAttachmentEn('quote', context);
+    return this.finish(index, draft, {
+      from: target.client.email,
+      to: this.inboxOf(target.client),
+      subject: 'Water damage in our Lyon office',
+      body: `Hello,\n\nA pipe burst in our Lyon office last night and damaged two workstations. Incident report and repair quote attached (2,300 EUR). Policy ${SHOWCASE.crossLanguagePolicy}.\n\n${this.signatureEn(target.client)}`,
+      attachments: [report, { ...quote, fileName: 'repair_quote.pdf' }],
+    });
+  }
+
+  /** Expected languages: the draft follows the e-mail, the note follows the brokerage. */
+  private languages(emailLanguage: Locale, brokerCode: string) {
+    const brokerage = this.world.brokerages.find((b) => b.brokerCode === brokerCode)!;
+    return {
+      emailLanguage,
+      expectedDraftLanguage: emailLanguage,
+      expectedNoteLanguage: brokerage.locale,
+    };
+  }
+
+  private messageId(index: number): string {
+    return `<demo-${this.seed}-${String(index + 1).padStart(4, '0')}@simulator.local>`;
   }
 
   private inboxOf(client: Client): string {
@@ -845,15 +1126,27 @@ export function generateEmails(world: World, options: GenerateEmailsOptions): Ge
   const faker = createRandom(options.seed);
   const factory = new EmailFactory(world, faker, options.seed);
   const scenarios = drawScenarios(faker, options.scenarios ?? SCENARIO_ORDER, options.count);
+  const english = world.locales.includes('en') ? (options.mix ?? world.mix).en : 0;
+  const ordered = Math.min(SCENARIO_ORDER.length, scenarios.length);
   const showcased = new Set<ScenarioId>();
+  let crossLanguageShown = false;
   return scenarios.map((scenario, index) => {
-    if (scenario === 'non_claim') return factory.writeNonClaim(index);
-    if (scenario === 'unknown_client') return factory.writeUnknownClient(index);
+    // The first e-mails go through the catalog in French; then each e-mail draws its language.
+    const language: Locale | null =
+      english === 0 ? null : index < ordered ? 'fr' : faker.datatype.boolean(english) ? 'en' : 'fr';
+    // Scenario 13 comes right after the catalog, so a small pool already has an English e-mail.
+    if (english > 0 && index === ordered && !crossLanguageShown) {
+      crossLanguageShown = true;
+      const showcase = factory.showcaseCrossLanguage(index);
+      if (showcase) return showcase;
+    }
+    if (scenario === 'non_claim') return factory.writeNonClaim(index, language);
+    if (scenario === 'unknown_client') return factory.writeUnknownClient(index, language);
     if (!showcased.has(scenario)) {
       showcased.add(scenario);
       const showcase = factory.showcase(scenario, index);
       if (showcase) return showcase;
     }
-    return factory.write(factory.draft(scenario), index);
+    return factory.write(factory.draft(scenario, language), index);
   });
 }

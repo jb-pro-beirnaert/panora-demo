@@ -48,6 +48,7 @@ export interface SimulatorState {
   sent: number;
   errors: number;
   poolSize: number;
+  englishShare: number;
   seeding: 'pending' | 'done';
   autoValidation: { enabled: boolean; delayMs: number; rejectionRate: number };
 }
@@ -66,6 +67,7 @@ export const simulatorApi = {
   reset: () => post('/reset'),
   sendOne: () => post('/send-one'),
   speed: (emailsPerMinute: number) => post('/speed', { emailsPerMinute }),
+  languageMix: (en: number) => post('/language-mix', { en }),
   autoValidation: (settings: Partial<SimulatorState['autoValidation']>) =>
     post('/auto-validation', settings),
 };

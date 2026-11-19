@@ -11,6 +11,7 @@ const field = <T>(value: T | null, document = 'email_body', page: number | null 
 
 const triage: TriageResult = {
   requestType: 'claim',
+  emailLanguage: 'fr',
   holderName: field('Boulangerie Martin SARL'),
   policyNumber: field<string>(null),
   incidentDate: field('2026-11-17', 'constat.pdf', 1),

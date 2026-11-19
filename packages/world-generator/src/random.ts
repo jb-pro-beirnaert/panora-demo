@@ -1,9 +1,16 @@
-import { Faker, base, fr } from '@faker-js/faker';
+import { Faker, base, en, fr } from '@faker-js/faker';
 
 /** A seeded Faker instance. Every random choice of the generator goes through one of these. */
 export function createRandom(seed: number): Faker {
   const faker = new Faker({ locale: [fr, base] });
   faker.seed(seed);
+  return faker;
+}
+
+/** A seeded English Faker, independent from the French one (adding English data never shifts the French world). */
+export function createEnglishRandom(seed: number): Faker {
+  const faker = new Faker({ locale: [en, base] });
+  faker.seed(seed + 1_000_003);
   return faker;
 }
 
@@ -60,6 +67,42 @@ export function frAmount(value: number): string {
 export function frMoney(value: number): string {
   const [units = '0', cents = '00'] = value.toFixed(2).split('.');
   return `${groupThousands(Number(units))},${cents} €`;
+}
+
+/** `2300` → `EUR 2,300`. */
+export function enAmount(value: number): string {
+  return `EUR ${value.toLocaleString('en-US')}`;
+}
+
+/** `1208.33` → `EUR 1,208.33`. */
+export function enMoney(value: number): string {
+  return `EUR ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+const EN_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** `2026-11-15` → `15 November 2026`. */
+export function enDate(date: string): string {
+  const [year, month, day] = date.split('-');
+  return `${Number(day)} ${EN_MONTHS[Number(month) - 1]} ${year}`;
+}
+
+/** `2026-11-15` → `15 November`. */
+export function enShortDate(date: string): string {
+  return enDate(date).replace(/ \d{4}$/, '');
 }
 
 // --- Identifiers ---

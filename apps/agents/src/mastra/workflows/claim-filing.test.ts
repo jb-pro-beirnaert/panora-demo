@@ -12,6 +12,7 @@ const field = <T>(value: T | null) => ({
 
 const triage: TriageResult = {
   requestType: 'claim',
+  emailLanguage: 'fr',
   holderName: field('Transports Lefèvre'),
   policyNumber: field('F-77102'),
   incidentDate: field('2026-11-15'),

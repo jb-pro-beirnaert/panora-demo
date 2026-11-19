@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  LocaleSchema,
   ActionTypeSchema,
   AlertTypeSchema,
   PerilSchema,
@@ -35,6 +36,13 @@ export const ClaimGroundTruthSchema = z.object({
   scenario: ClaimScenarioIdSchema,
   requestType: z.literal('claim'),
   brokerCode: z.string(),
+  /** Language of the e-mail (and of its attachments). */
+  emailLanguage: LocaleSchema,
+  /** Expected language of `clientEmailDraft`: the e-mail's language. */
+  expectedDraftLanguage: LocaleSchema,
+  /** Expected language of `internalNote`: the brokerage's locale. */
+  expectedNoteLanguage: LocaleSchema,
+
   holderName: z.string(),
   policyNumber: z.string(),
   /** Whether the policy number is written in the e-mail or its attachments. */
@@ -65,6 +73,13 @@ export const NonClaimGroundTruthSchema = z.object({
   scenario: z.literal('non_claim'),
   requestType: RequestTypeSchema.exclude(['claim']),
   brokerCode: z.string(),
+  /** Language of the e-mail (and of its attachments). */
+  emailLanguage: LocaleSchema,
+  /** Expected language of `clientEmailDraft`: the e-mail's language. */
+  expectedDraftLanguage: LocaleSchema,
+  /** Expected language of `internalNote`: the brokerage's locale. */
+  expectedNoteLanguage: LocaleSchema,
+
   holderName: z.string(),
   /** Policy the e-mail is about (a cancellation), or null (a quote request). */
   policyNumber: z.string().nullable(),
@@ -80,6 +95,13 @@ export const UnknownClientGroundTruthSchema = z.object({
   scenario: z.literal('unknown_client'),
   requestType: z.literal('claim'),
   brokerCode: z.string(),
+  /** Language of the e-mail (and of its attachments). */
+  emailLanguage: LocaleSchema,
+  /** Expected language of `clientEmailDraft`: the e-mail's language. */
+  expectedDraftLanguage: LocaleSchema,
+  /** Expected language of `internalNote`: the brokerage's locale. */
+  expectedNoteLanguage: LocaleSchema,
+
   holderName: z.string(),
   policyNumber: z.null(),
   policyNumberInEmail: z.literal(false),

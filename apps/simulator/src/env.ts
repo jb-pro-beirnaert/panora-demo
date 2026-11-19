@@ -10,6 +10,8 @@ const EnvSchema = z.object({
   SIMULATOR_EMAIL_COUNT: z.coerce.number().int().positive().max(1_000).default(40),
   /** Default pace of the stream. */
   SIMULATOR_EMAILS_PER_MINUTE: z.coerce.number().positive().max(600).default(4),
+  /** Share of English-speaking clients in the world and of English e-mails in the stream. */
+  SIMULATOR_ENGLISH_SHARE: z.coerce.number().min(0).max(1).default(0.3),
   /** Origin of the web UI allowed by CORS (demo panel). */
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
 });

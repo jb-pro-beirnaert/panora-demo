@@ -12,6 +12,7 @@ export interface ControlDeps {
 }
 
 const SpeedSchema = z.object({ emailsPerMinute: z.number().positive().max(600) });
+const LanguageMixSchema = z.object({ en: z.number().min(0).max(1) });
 const AutoValidationSchema = z.object({
   enabled: z.boolean().optional(),
   delayMs: z.number().int().min(0).max(120_000).optional(),
@@ -56,6 +57,12 @@ export function controlRouter(deps: ControlDeps): Router {
     const body = parse(SpeedSchema, req, res);
     if (!body) return;
     deps.stream.setSpeed(body.emailsPerMinute);
+    res.json(state());
+  });
+  router.post('/language-mix', (req, res) => {
+    const body = parse(LanguageMixSchema, req, res);
+    if (!body) return;
+    deps.stream.setEnglishShare(body.en);
     res.json(state());
   });
   router.post('/send-one', async (_req, res) => {

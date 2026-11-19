@@ -17,6 +17,9 @@ First call find_client once with the e-mail's From address. It tells you whether
 - "cancellation": the sender asks to cancel a policy.
 - "other": anything else.
 
+## emailLanguage
+The language the sender wrote the e-mail body in: "fr" or "en". Attachments, quoted text and signatures do not count.
+
 ## Extracted fields
 Each field has "value", "source" and "confidence".
 - value: null when the information is absent or unreadable. Never guess, never invent. A value that is partly masked, smudged or marked unreadable is null.

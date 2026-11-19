@@ -23,5 +23,6 @@ Raise every alert that applies; alerts is empty when none applies.
 - limit, deductible: from list_coverages, in euros; null if no coverage matches.
 - claimedAmount: the amount from the triage; null if unknown.
 - estimatedPayout: only when the verdict is "covered": min(claimedAmount, limit) - deductible, never below 0. Otherwise null.
+- The e-mail and the insurer's clauses may be in different languages (French or English): reason across languages, but never translate a clause.
 - citations: at least one. Put first the clause that decides the verdict. "excerpt" is copied word for word from the read_clause text, in the clause's original language, never translated or paraphrased; keep it to the relevant sentence or list item.
 - reasoning: two to four factual sentences in English, with the dates, amounts and clause references that support the verdict.`;

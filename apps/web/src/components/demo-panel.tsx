@@ -1,7 +1,7 @@
 'use client';
 
 import type { CaseStats } from '@demo/shared';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -9,10 +9,12 @@ import { coreApi, simulatorApi, type SimulatorState } from '@/lib/api';
 import { useRealtime } from '@/lib/realtime';
 
 const SPEEDS = [1, 2, 4, 6, 10, 20, 30];
+const ENGLISH_SHARES = [0, 0.1, 0.3, 0.5, 0.7, 1];
 
 /** Top bar that drives the simulator (demo tool, not part of the product). */
 export function DemoPanel() {
   const t = useTranslations('demo');
+  const format = useFormatter();
   const [state, setState] = useState<SimulatorState | null>(null);
   const [stats, setStats] = useState<CaseStats | null>(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -125,6 +127,24 @@ export function DemoPanel() {
                   ))}
               </select>
             </label>
+            <label className="flex items-center gap-1">
+              <span>{t('languageMix')}</span>
+              <select
+                className="h-7 rounded border border-amber-300 bg-background px-1"
+                value={state?.englishShare ?? 0.3}
+                onChange={(event) =>
+                  run(() => simulatorApi.languageMix(Number(event.target.value)))
+                }
+              >
+                {[...new Set([...ENGLISH_SHARES, state?.englishShare ?? 0.3])]
+                  .sort((a, b) => a - b)
+                  .map((share) => (
+                    <option key={share} value={share}>
+                      {format.number(share, { style: 'percent' })}
+                    </option>
+                  ))}
+              </select>
+            </label>
             <label className="flex items-center gap-2">
               <Switch
                 checked={state?.autoValidation.enabled ?? false}
@@ -136,7 +156,7 @@ export function DemoPanel() {
               {state?.autoValidation.enabled && (
                 <span className="text-xs opacity-75">
                   {t('rejectionRate', {
-                    rate: `${Math.round(state.autoValidation.rejectionRate * 100)} %`,
+                    rate: format.number(state.autoValidation.rejectionRate, { style: 'percent' }),
                   })}
                 </span>
               )}

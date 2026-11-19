@@ -39,6 +39,7 @@ export function triageReport(triage: TriageResult, timing: Timing): AgentStepCal
     stepType: 'triage.completed',
     params: {
       requestType: triage.requestType,
+      emailLanguage: triage.emailLanguage,
       policyNumber: triage.policyNumber.value,
       nature: triage.nature.value,
       incidentDate: triage.incidentDate.value,

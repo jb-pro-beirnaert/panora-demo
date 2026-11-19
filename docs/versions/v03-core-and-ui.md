@@ -7,11 +7,11 @@ Spec : [`specs/v03-core-and-ui.md`](../../specs/v03-core-and-ui.md).
 
 ### Nouveaux services
 
-| Service | Créé avec | Rôle |
-| --- | --- | --- |
-| `apps/core-api` (port 3001) | `nest new core-api --strict` (Nest 12 : ESM, Vitest, oxlint) | métier, audit, files BullMQ, SSE |
-| `apps/web` (port 3000) | `create-next-app` (Next 16) puis `shadcn init` + `shadcn add …` | UI courtier FR/EN + panneau de démo |
-| Redis (6379) | `compose.yaml`, `--save '' --appendonly no` | files BullMQ, sans persistance |
+| Service                     | Créé avec                                                       | Rôle                                |
+| --------------------------- | --------------------------------------------------------------- | ----------------------------------- |
+| `apps/core-api` (port 3001) | `nest new core-api --strict` (Nest 12 : ESM, Vitest, oxlint)    | métier, audit, files BullMQ, SSE    |
+| `apps/web` (port 3000)      | `create-next-app` (Next 16) puis `shadcn init` + `shadcn add …` | UI courtier FR/EN + panneau de démo |
+| Redis (6379)                | `compose.yaml`, `--save '' --appendonly no`                     | files BullMQ, sans persistance      |
 
 `infra/postgres/init.sql` crée maintenant la base `core` en plus de `extranet` et `agents`.
 
@@ -28,7 +28,7 @@ Spec : [`specs/v03-core-and-ui.md`](../../specs/v03-core-and-ui.md).
   Un rappel pour un dossier inexistant renvoie `{ status: 'ignored' }`.
 - **Admin** (`/admin/seed`, `/admin/reset`) : module enregistré **seulement** si `DEMO_MODE=true`
   (`AppModule.register({ demoMode })`), protégé par `ADMIN_TOKEN`. Le reset fait un `TRUNCATE …
-  RESTART IDENTITY` (les dossiers repartent à `CASE-0001`), vide les deux files et émet `demo.reset`.
+RESTART IDENTITY` (les dossiers repartent à `CASE-0001`), vide les deux files et émet `demo.reset`.
 - **Files BullMQ** (`@nestjs/bullmq`) :
   - `process-email` : `createRun` sur Mastra → enregistre `workflowRunId` + statut `processing` →
     `start` (Mastra exécute en arrière-plan) → retour immédiat. L'identifiant de tâche est l'id de
@@ -98,14 +98,14 @@ Spec : [`specs/v03-core-and-ui.md`](../../specs/v03-core-and-ui.md).
 
 ## Tests
 
-| Où | Type | Ce qui est couvert |
-| --- | --- | --- |
-| `apps/core-api/src/**/*.spec.ts` | unitaires (Vitest) | env, vues des dossiers |
+| Où                                          | Type                                                    | Ce qui est couvert                                                                                                                                                                            |
+| ------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/core-api/src/**/*.spec.ts`            | unitaires (Vitest)                                      | env, vues des dossiers                                                                                                                                                                        |
 | `apps/core-api/test/cases-flow.int-spec.ts` | intégration, vrai Postgres (`core_test`) + Redis (db 1) | cycle complet d'un dossier, idempotence, jetons, cloisonnement de la décision, rappels ignorés, échec, reset, pas de route d'écriture sur l'audit, pas d'`/admin` sans `DEMO_MODE` (16 tests) |
-| `apps/agents/src/**/*.test.ts` | unitaires | construction des rapports d'étapes |
-| `apps/simulator/src/**/*.test.ts` | unitaires | cadence, pause/reprise, cycles, erreurs, décision simulée, parseur SSE |
-| `apps/web/src/lib/messages.test.ts` | unitaires | mêmes clés FR/EN, une traduction pour chaque valeur stockée, rendu des étapes en FR et EN |
-| `packages/world-generator` | unitaires | nouveau scénario, seed Core cohérent |
+| `apps/agents/src/**/*.test.ts`              | unitaires                                               | construction des rapports d'étapes                                                                                                                                                            |
+| `apps/simulator/src/**/*.test.ts`           | unitaires                                               | cadence, pause/reprise, cycles, erreurs, décision simulée, parseur SSE                                                                                                                        |
+| `apps/web/src/lib/messages.test.ts`         | unitaires                                               | mêmes clés FR/EN, une traduction pour chaque valeur stockée, rendu des étapes en FR et EN                                                                                                     |
+| `packages/world-generator`                  | unitaires                                               | nouveau scénario, seed Core cohérent                                                                                                                                                          |
 
 Commandes : `npm test` (unitaires) et `npm run test:integration` (demande `docker compose up -d
 postgres redis`).

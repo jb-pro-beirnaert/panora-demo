@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   ConfidenceSchema,
+  LocaleSchema,
   DocumentTypeSchema,
   PerilSchema,
   RequestTypeSchema,
@@ -29,6 +30,8 @@ function extracted<T extends z.ZodType>(value: T) {
 /** Output of `triageAgent`. */
 export const TriageResultSchema = z.object({
   requestType: RequestTypeSchema,
+  /** Language the e-mail is written in (its body, not the attachments). */
+  emailLanguage: LocaleSchema,
   /** Company or person the e-mail is sent on behalf of (the policy holder). */
   holderName: extracted(z.string()),
   policyNumber: extracted(z.string()),

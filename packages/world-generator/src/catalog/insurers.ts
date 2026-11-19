@@ -1,4 +1,5 @@
 import type { ExtranetClause, ExtranetInsurer, Peril } from '@demo/shared';
+import { COVERAGE_CLAUSE_EN, generalClausesEn, PERILS_EN } from './english.js';
 import { PERILS } from './perils.js';
 
 /** Fictional insurers. Their general conditions ("CG") are fixed text, identical for every seed. */
@@ -28,8 +29,19 @@ export const INSURERS: InsurerDefinition[] = [
   },
 ];
 
+/** English-language insurer, added with the English data (V4). */
+export const NORTHBRIDGE: InsurerDefinition = {
+  id: 'ins-northbridge',
+  name: 'Northbridge Insurance',
+  locale: 'en',
+  code: 'NB',
+  declarationDelayDays: 5,
+};
+
+export const ALL_INSURERS: InsurerDefinition[] = [...INSURERS, NORTHBRIDGE];
+
 export function insurerById(id: string): InsurerDefinition {
-  const insurer = INSURERS.find((candidate) => candidate.id === id);
+  const insurer = ALL_INSURERS.find((candidate) => candidate.id === id);
   if (!insurer) throw new Error(`Unknown insurer ${id}`);
   return insurer;
 }
@@ -51,6 +63,17 @@ export function coverageClauseRef(insurer: InsurerDefinition, peril: Peril): str
 }
 
 function generalClauses(insurer: InsurerDefinition): ExtranetClause[] {
+  if (insurer.locale === 'en') {
+    return Object.entries(generalClausesEn(insurer.declarationDelayDays)).map(
+      ([number, [title, text]]) => ({
+        ref: clauseRef(insurer, number),
+        insurerId: insurer.id,
+        title,
+        text,
+        general: true,
+      }),
+    );
+  }
   const general = (number: string, title: string, text: string): ExtranetClause => ({
     ref: clauseRef(insurer, number),
     insurerId: insurer.id,
@@ -83,6 +106,23 @@ function generalClauses(insurer: InsurerDefinition): ExtranetClause[] {
 }
 
 function coverageClauses(insurer: InsurerDefinition): ExtranetClause[] {
+  if (insurer.locale === 'en') {
+    return Object.values(PERILS).map((definition) => {
+      const wording = PERILS_EN[definition.peril];
+      return {
+        ref: coverageClauseRef(insurer, definition.peril),
+        insurerId: insurer.id,
+        title: wording.label,
+        text: [
+          wording.guarantee,
+          COVERAGE_CLAUSE_EN.limits,
+          COVERAGE_CLAUSE_EN.excluded,
+          ...wording.exclusions.map((exclusion) => `- ${exclusion.clauseText};`),
+        ].join('\n'),
+        general: false,
+      };
+    });
+  }
   return Object.values(PERILS).map((definition) => {
     const exclusions = definition.exclusions.map((exclusion) => `- ${exclusion.clauseText} ;`);
     return {

@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 /** Language-neutral business vocabulary shared by every service. */
 
-export const LocaleSchema = z.enum(['fr']);
+/** Languages of the demo: UI, generated data, e-mails, clauses. */
+export const LocaleSchema = z.enum(['fr', 'en']);
 export type Locale = z.infer<typeof LocaleSchema>;
 
 /** Kind of damage. Used for coverages, claims and triage extraction. */

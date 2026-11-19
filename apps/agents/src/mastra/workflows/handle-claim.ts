@@ -1,5 +1,4 @@
 import {
-  detectLanguage,
   ApprovalDecisionSchema,
   CoverageVerdictSchema,
   DraftSchema,
@@ -28,7 +27,7 @@ import {
 /** Upper bound on LLM round-trips for the coverage agent (about 7 tool calls + the answer). */
 const COVERAGE_MAX_STEPS = 16;
 
-const LANGUAGE_NAMES: Record<Locale, string> = { fr: 'French' };
+const LANGUAGE_NAMES: Record<Locale, string> = { fr: 'French', en: 'English' };
 
 /** What the brokerage's own software knows about the sender, for the coverage agent. */
 function clientSection(claim: TriagedEmail): string {
@@ -72,7 +71,7 @@ function draftingPrompt(state: ClaimLoopState): string {
   const sections = [
     [
       'Languages:',
-      '- clientEmailDraft (subject and body): the language the inbound e-mail below is written in.',
+      `- clientEmailDraft (subject and body): ${LANGUAGE_NAMES[claim.triage.emailLanguage]} (the language of the inbound e-mail, "${claim.triage.emailLanguage}").`,
       `- internalNote: ${LANGUAGE_NAMES[claim.brokerage.locale]} (brokerage locale "${claim.brokerage.locale}").`,
     ].join('\n'),
     `The e-mail was received on ${claim.receivedDate}.`,
@@ -161,10 +160,7 @@ const approval = createStep({
       await core.proposedAction(claim.caseId, {
         workflowRunId: runId,
         action,
-        draftLanguage: detectLanguage(
-          `${claim.email.subject}\n${claim.email.body}`,
-          claim.brokerage.locale,
-        ),
+        draftLanguage: claim.triage.emailLanguage,
         noteLanguage: claim.brokerage.locale,
         verdict: coverage.verdict,
         alerts: coverage.alerts,

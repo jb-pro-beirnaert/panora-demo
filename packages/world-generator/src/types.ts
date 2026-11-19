@@ -37,7 +37,9 @@ export interface Client {
   contactName: string;
   phone: string;
   address: { street: string; postalCode: string; city: string };
-  /** Index in `BUSINESSES`. */
+  /** Language the client writes in. */
+  language: Locale;
+  /** Index in `BUSINESSES` (French-speaking client) or `BUSINESSES_EN` (English-speaking). */
   businessIndex: number;
 }
 
@@ -59,7 +61,10 @@ export interface Vehicle {
 
 export interface World {
   seed: number;
-  locale: Locale;
+  /** Languages of the generated data. */
+  locales: Locale[];
+  /** Share of English-speaking clients and e-mails (0 when `locales` is `['fr']`). */
+  mix: { en: number };
   /** "Today" of the generated world (`YYYY-MM-DD`). All dates are relative to it. */
   referenceDate: string;
   // Brokerage side (Core, from V3).

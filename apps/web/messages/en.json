@@ -38,7 +38,8 @@
       "closed": "Processed",
       "failed": "Failed"
     },
-    "counter": "{label}: <strong>{value}</strong>"
+    "counter": "{label}: <strong>{value}</strong>",
+    "languageMix": "English e-mails"
   },
   "inbox": {
     "title": "Inbox",
@@ -54,7 +55,11 @@
       "status": "Status",
       "verdict": "Verdict"
     },
-    "unknownClient": "Unknown sender"
+    "unknownClient": "Unknown sender",
+    "languageFilter": {
+      "label": "Language",
+      "all": "All"
+    }
   },
   "case": {
     "back": "Back to the inbox",
