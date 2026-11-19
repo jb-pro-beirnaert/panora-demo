@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "mastra dev --env ../../.env",
     "build": "mastra build",
-    "start": "mastra start --env ../../.env",
+    "start": "node --env-file-if-exists=../../.env .mastra/output/index.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test 'src/**/*.test.ts'"

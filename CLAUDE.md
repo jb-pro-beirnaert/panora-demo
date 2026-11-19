@@ -55,19 +55,18 @@ Core keeps business-level audit rows; Langfuse keeps technical detail (prompts, 
 
 The scenario catalog (expected verdicts, alerts, actions, ground truth) is in `specs/00-demo-data-and-scenarios.md`; evals (`evals/`, V7) score agents against that ground truth, per language.
 
-## Commands (planned, per `specs/00-overview.md` §5)
-
-These do not exist until the corresponding version is implemented.
+## Commands
 
 - `npm install` — single install at the root (one lockfile, shared `node_modules`).
-- `npm run dev` — recreate empty Postgres (+ Redis from V3) and start all apps in watch mode.
+- `npm run dev` — create `.env` from `.env.example` if missing, recreate empty Postgres + Redis and start all apps in watch mode.
 - `npm run dev:langfuse` — same, with self-hosted Langfuse (Compose profile `langfuse`, V6).
 - `npm run infra:down` — stop and remove containers.
-- `npm run build` / `lint` / `typecheck` / `test` — across all workspaces via Turborepo.
+- `npm run build` / `lint` / `typecheck` / `test` / `test:integration` — across all workspaces via Turborepo (integration tests need `docker compose up -d postgres redis`).
 - `npm run dev -w apps/core-api` — run a script in a single workspace.
 - `npm run token -w apps/mcp-extranet -- read DLM-075` — print an MCP extranet token (`read` or `write`, per brokerage), e.g. for the MCP inspector (V2).
 - `npm run gen:evals -- --seed 7 --count 60` — generate the eval dataset into `evals/datasets/` (V7).
 - `npm run evals` (`-- --matrix` for model comparison, V8) — run evals, write JSON + Markdown report, push scores to Langfuse.
+- `npm run load-test -w apps/simulator -- --count 1000` — burst load test (V9; use `AGENTS_MODE=simulated` to avoid LLM cost).
 - `npm run start:docker` — full stack in containers (Compose profile `apps`, V11). Docker images are built per app via `turbo prune --docker`.
 
 CI (V7): `.github/workflows/ci.yml` (lint, typecheck, unit + integration tests) and `evals.yml` (on PRs touching `apps/agents`; fails if a score drops below its threshold or by more than 2 points vs. main).

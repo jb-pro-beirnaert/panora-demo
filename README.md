@@ -1,21 +1,138 @@
-# Panora demo — AI claims handling for an insurance brokerage
+# Claims desk — AI agents for an insurance brokerage (demo)
 
-A claim e-mail reaches a brokerage, three AI agents analyze it, check coverage at the insurer
-through an MCP connector, and a broker approves the proposed action before it is executed and
-audited. Specifications (in French) are in [`specs/`](specs/); what each version did is in
-[`docs/versions/`](docs/versions/).
+A claim e-mail reaches a brokerage. Three AI agents read it, check the coverage at the insurer
+through an MCP connector, and propose an action; a broker approves or rejects it before anything is
+declared or sent, and every step is audited. Built as a demo for Panora — **all data is fictional**,
+generated from a fixed seed.
 
-> The full README (architecture, trade-offs, figures) is written in V11.
+> **En bref (FR).** Une démo de bout en bout du métier de Panora : un e-mail de sinistre arrive
+> dans un cabinet de courtage, trois agents (tri, garanties, rédaction) l'analysent et interrogent
+> l'extranet de l'assureur via un serveur MCP, puis un courtier valide l'action proposée (déclaration
+> du sinistre, refus motivé, demande de pièces) avant son exécution, tracée dans un journal d'audit.
+> Interface bilingue FR/EN, données FR/EN, tracing Langfuse, evals par agent et par langue avec
+> non-régression en CI, comparaison chiffrée des modèles (coût, latence), tests de charge (1 000
+> dossiers, extranet instable, instance tuée en cours de route) et cloisonnement entre cabinets testé
+> en CI. Les specs (en français) sont dans [`specs/`](specs/), le détail de chaque version dans
+> [`docs/versions/`](docs/versions/). Lancement : `npm install` puis `npm run dev`.
 
-## Running locally
+## The journey of a case
+
+1. **E-mail in.** The mail gateway (the simulator, in the demo) posts the e-mail to Core, which
+   opens a case and queues a job; the worker starts a Mastra workflow and returns at once.
+2. **Triage** (`triageAgent`, light model): request type, the client (looked up in the brokerage's
+   records with a `find_client` tool), policy number, date, peril, amount, documents present and
+   missing, e-mail language — each fact with its source (e-mail, attachment page) and confidence.
+3. **Coverage** (`coverageAgent`, read-only MCP tools on the insurer's extranet): policy status
+   at the insurer — which may contradict what the brokerage believes (the flagship case: a policy
+   terminated for non-payment that the brokerage still shows as active) — coverages, limits,
+   deductibles, exclusions, claim history, declaration delay; a verdict (`covered`, `not_covered`,
+   `uncertain`) with alerts and **verbatim clause citations**.
+4. **Drafting** (`draftingAgent`, no tools): the action (`file_claim`, `notify_denial`,
+   `request_documents`), the e-mail to the client in the client's language, and an internal note in
+   the brokerage's language.
+5. **Human approval.** The workflow suspends (snapshot in Postgres, survives restarts); the broker
+   approves, or rejects with a comment that the drafting agent applies in a new proposal.
+6. **Execution.** Only now, in code and with a separate `write` token, the claim is filed through
+   MCP (`file_claim`); other actions become "ready to send". Everything lands in the audit trail,
+   the UI follows each step and each tool call live (SSE), and Langfuse holds one trace per case.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  sim["Simulator<br/>(demo: mail gateway, broker, load)"] -->|e-mails| core
+  web["Web UI<br/>Next.js, FR/EN"] -->|HTTP + SSE, session| core
+  web -.->|demo panel| sim
+  subgraph core["Core API — NestJS"]
+    api["cases · audit · auth"] --- q["BullMQ workers<br/>start · resume · watchdog · purge"]
+  end
+  core --- coredb[("Postgres: core")]
+  q --- redis[("Redis")]
+  q -->|start / resume, token| mastra["Mastra server ×N<br/>workflow + 3 agents"]
+  mastra -->|callbacks, token| core
+  mastra -->|MCP read / write tokens| mcp["MCP server<br/>insurer extranet"]
+  mcp --- extdb[("Postgres: extranet")]
+  mastra --- agentsdb[("Postgres: agents<br/>snapshots")]
+  mastra -.->|traces| langfuse["Langfuse<br/>Cloud or self-hosted"]
+  mastra -->|LLM| llm["OpenAI<br/>(or Ollama)"]
+```
+
+| Service                                                        | Directory                                      | Port | Database   |
+| -------------------------------------------------------------- | ---------------------------------------------- | ---- | ---------- |
+| Web (Next.js 16, next-intl, shadcn/ui)                         | `apps/web`                                     | 3000 | —          |
+| Core API (NestJS 12, Prisma, BullMQ)                           | `apps/core-api`                                | 3001 | `core`     |
+| MCP extranet server (official TypeScript SDK, Streamable HTTP) | `apps/mcp-extranet`                            | 3002 | `extranet` |
+| Simulator (demo tool)                                          | `apps/simulator`                               | 3003 | —          |
+| Mastra server (workflow, agents)                               | `apps/agents`                                  | 4111 | `agents`   |
+| Shared Zod contracts · fictional world generator               | `packages/shared` · `packages/world-generator` |      |            |
+| Evals                                                          | `evals/`                                       |      |            |
+
+One database per service, Zod on every boundary, Postgres on tmpfs and Redis without persistence:
+every `npm run dev` starts from empty databases that the simulator seeds again.
+
+## Design choices and trade-offs
+
+- **Microservices around one product.** Core owns the business data and the audit; Mastra owns
+  the reasoning and its snapshots; the MCP server plays the insurer's extranet behind the protocol
+  Panora's connectors speak. More moving parts than a monolith, but each boundary is a real one
+  (an insurer is another company; agents must not touch the brokerage's database) and is enforced
+  by tokens and tested.
+- **Three agents rather than one.** The measured single agent is as accurate and cheaper on a small
+  sample (V8). Three agents are kept because each one is evaluated and traced on its own, a light
+  model does the triage, only the analysis agent gets tools — read-only — and a rejected draft is
+  rewritten without re-running the analysis.
+- **Mastra in framework mode, behind Core.** Core never waits for a workflow (it starts or resumes
+  and returns); progress comes back through callbacks; suspended runs survive restarts; several
+  Mastra instances share their storage.
+- **Least privilege by construction.** Agents only hold read tools; writes happen in a code step
+  after human approval with a separate `write` token; the token carries the brokerage, so a prompt
+  cannot reach another brokerage's policies.
+- **One English prompt per agent for a bilingual product.** Structured outputs use neutral values;
+  the languages are passed explicitly (draft in the e-mail's language, note in the brokerage's,
+  clauses quoted in their own language); the UI renders stored `type + params`, so the timeline
+  follows the UI language. Measured per language in the evals.
+- **Langfuse, self-hostable.** Business audit in Core, technical detail (prompts, tokens, cost) in
+  Langfuse; switching Cloud ↔ self-hosted is a `.env` change.
+- **Cheap models, measured.** The defaults are small OpenAI models chosen with the comparison table
+  below; the evals gate any prompt or model change in CI.
+
+## Results at a glance
+
+- **Evals** (real models, samples to fit the budget): 100 % on every strict scorer (request type,
+  fields, language, verdict, limits, citations, action, amounts, languages) on 6 French and 4
+  English cases; LLM judge for tone and completeness 75–83 %. A deliberately degraded prompt is
+  blocked by the gate (`drafting/action_type` 100 → 50). [`evals/reports/`](evals/reports/)
+- **Cost**: **$0.0034 per case** for the whole workflow (≈ 62 % of input tokens served from the
+  prompt cache); triage on a smaller model halves it at equal score.
+- **Load**: 1,000 cases in a burst against a flaky extranet (5 % errors) with a Mastra instance
+  killed mid-run: **1,000 closed, 0 failed, 0 processed twice**, 299 cases/min (the rate limit).
+- **Isolation**: brokerage isolation suites (Core API, MCP server) green in CI.
+
+## Run it locally
+
+Requirements: Node.js 24, Docker.
 
 ```bash
 npm install
-cp .env.example .env   # then fill OPENAI_API_KEY and the secrets
-npm run dev            # Postgres + Redis (empty, tmpfs) and the 5 apps in watch mode
+npm run dev
 ```
 
-UI: http://localhost:3000 — the demo panel at the top drives the e-mail stream.
+On the first run `npm run dev` creates `.env` from `.env.example` with random secrets; set
+`OPENAI_API_KEY` in it (or `AGENTS_MODE=simulated` to try everything without an LLM). It then starts
+Postgres and Redis (empty), the five apps in watch mode, and seeds the fictional world.
+
+Open http://localhost:3000, sign in with a demo account (listed on the sign-in page), press
+**Start** in the demo panel: e-mails arrive, the timeline fills up live, approve or reject the
+proposals; switch the UI between FR and EN at any time. Other entry points: Mastra Studio on
+http://localhost:4111, the Evals screen, `npm run evals`, `npm run load-test -w apps/simulator`.
+
+| Command                                                                    | What it does                                          |
+| -------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `npm run dev` / `npm run dev:langfuse`                                     | the stack (+ self-hosted Langfuse on :3100)           |
+| `npm run build` / `lint` / `typecheck` / `test` / `test:integration`       | across all workspaces                                 |
+| `npm run gen:evals -- --seed 7 --count 60` · `npm run evals [-- --matrix]` | eval dataset, eval run, model matrix                  |
+| `npm run start:docker`                                                     | the full stack in containers (Compose profile `apps`) |
+| `npm run infra:down`                                                       | stop and remove the containers                        |
 
 ## Tracing: Langfuse Cloud or self-hosted
 
@@ -169,3 +286,9 @@ claims data, but EU hosting and a data processing agreement with the LLM provide
 vault with rotation, SSO for brokers with MFA, periodic access reviews, a records-of-processing
 entry and a DPIA for the automated analysis, PII redaction in traces, and a retention policy agreed
 with the brokerage's DPO for the case files themselves.
+
+## Deployment
+
+`npm run start:docker` builds one image per app (`turbo prune --docker`) and starts the whole stack
+with Compose. To put the demo online on a VPS with Dokploy, see
+[`docs/deployment.md`](docs/deployment.md).

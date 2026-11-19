@@ -12,10 +12,10 @@
     "evals"
   ],
   "scripts": {
-    "dev": "npm run infra:reset && turbo run dev",
+    "dev": "npm run setup:env && npm run infra:reset && turbo run dev",
     "infra:reset": "docker compose up -d --force-recreate --wait postgres redis",
     "infra:down": "docker compose --profile apps --profile langfuse down --remove-orphans",
-    "start:docker": "docker compose --profile apps up -d --build --force-recreate --wait",
+    "start:docker": "npm run setup:env && docker compose --profile apps up -d --build --force-recreate --wait",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
@@ -24,9 +24,10 @@
     "format:check": "prettier --check .",
     "test:integration": "turbo run test:integration",
     "infra:reset:langfuse": "docker compose --profile langfuse up -d --force-recreate --wait postgres redis langfuse-web langfuse-worker",
-    "dev:langfuse": "npm run infra:reset:langfuse && turbo run dev",
+    "dev:langfuse": "npm run setup:env && npm run infra:reset:langfuse && turbo run dev",
     "gen:evals": "npm run gen -w evals --",
-    "evals": "npm run run -w evals --"
+    "evals": "npm run run -w evals --",
+    "setup:env": "node scripts/ensure-env.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
