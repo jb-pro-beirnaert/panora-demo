@@ -1,9 +1,11 @@
 import {
+  AgentEventCallbackSchema,
   AgentStepCallbackSchema,
   ClientLookupQuerySchema,
   ExecutedActionCallbackSchema,
   ProposedActionCallbackSchema,
   WorkflowFailedCallbackSchema,
+  type AgentEventCallback,
   type AgentStepCallback,
   type ClientLookupQuery,
   type ClientLookupResult,
@@ -28,6 +30,15 @@ export class InternalController {
     @Body({ schema: AgentStepCallbackSchema }) body: AgentStepCallback,
   ): Promise<CallbackOutcome> {
     return this.internal.recordStep(id, body);
+  }
+
+  @Post('cases/:id/agent-events')
+  @HttpCode(200)
+  agentEvent(
+    @Param('id') id: string,
+    @Body({ schema: AgentEventCallbackSchema }) body: AgentEventCallback,
+  ): Promise<CallbackOutcome> {
+    return this.internal.recordAgentEvent(id, body);
   }
 
   @Post('cases/:id/proposed-action')

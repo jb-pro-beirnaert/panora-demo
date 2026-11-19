@@ -110,6 +110,13 @@ describe('case lifecycle (Postgres + Redis)', () => {
       caseId,
       brokerage: { brokerCode: 'DLM-075', locale: 'fr' },
     });
+    // One Langfuse trace and session per case, stored on the case.
+    const traceId = caseId.replace(/-/g, '');
+    expect(mastra.started[0]?.tracing).toEqual({
+      traceId,
+      metadata: { sessionId: caseId, caseId, brokerCode: 'DLM-075', emailLanguage: 'fr' },
+    });
+    expect((await detail(caseId)).traceId).toBe(traceId);
     // A retried job does not start a second run.
     await processor.process({ data: { caseId } } as never);
     expect(mastra.started).toHaveLength(1);
@@ -167,6 +174,34 @@ describe('case lifecycle (Postgres + Redis)', () => {
       knownStatus: 'active',
     });
     expect(view.auditLogs.at(-1)).toMatchObject({ actor: 'agent', action: 'agent_step' });
+  });
+
+  it("pushes the agents' tool calls live to the timeline", async () => {
+    await http
+      .post(`/internal/cases/${caseId}/agent-events`)
+      .set(service)
+      .send({
+        agent: 'coverage',
+        eventType: 'tool_call',
+        params: { tool: 'get_policy', number: 'C-48213' },
+      })
+      .expect(200, { status: 'recorded' });
+    await http
+      .post(`/internal/cases/${caseId}/agent-events`)
+      .set(service)
+      .send({ agent: 'coverage', eventType: 'unknown', params: {} })
+      .expect(400);
+    const view = await detail(caseId);
+    expect(view.agentEvents).toEqual([
+      expect.objectContaining({
+        agent: 'coverage',
+        eventType: 'tool_call',
+        params: { tool: 'get_policy', number: 'C-48213' },
+      }),
+    ]);
+    expect(events.at(-1)).toMatchObject({ type: 'case.agent_event', caseId });
+    // Live events are not business steps: no audit row.
+    expect(view.auditLogs.at(-1)?.action).toBe('agent_step');
   });
 
   it('a proposed action puts the case on hold for the broker', async () => {

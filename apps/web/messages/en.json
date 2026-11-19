@@ -94,7 +94,9 @@
     "brokerage": "Brokerage",
     "policy": "Policy",
     "client": "Client",
-    "decisionError": "The decision could not be saved: {message}"
+    "decisionError": "The decision could not be saved: {message}",
+    "viewTrace": "View the trace",
+    "tokens": "{input} + {output} tokens"
   },
   "status": {
     "received": "Received",
@@ -197,5 +199,16 @@
     "none": "none",
     "unknown": "unknown",
     "error": "Something went wrong."
+  },
+  "events": {
+    "tool": {
+      "get_policy": "{agent} checks policy {number} at the insurer",
+      "search_policy": "{agent} searches the insurer's policies for {query}",
+      "list_coverages": "{agent} lists the coverages of policy {policyNumber}",
+      "read_clause": "{agent} reads clause {ref}",
+      "get_claim_history": "{agent} checks the claim history of policy {policyNumber}",
+      "find_client": "{agent} looks up the sender {email} in the brokerage's records",
+      "other": "{agent} calls {tool}"
+    }
   }
 }

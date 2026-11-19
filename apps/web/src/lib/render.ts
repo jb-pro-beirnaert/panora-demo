@@ -1,4 +1,4 @@
-import type { AgentStepView, AuditLogView, StepParams } from '@demo/shared';
+import type { AgentEventView, AgentStepView, AuditLogView, StepParams } from '@demo/shared';
 
 /**
  * Turns stored `type + params` into a sentence in the UI language. Enum values are translated
@@ -76,4 +76,31 @@ export function renderAudit(
     return t('audit.agent_step', { step });
   }
   return t(`audit.${log.action}`, formatParams(log.params, t, format));
+}
+
+const KNOWN_TOOLS = new Set([
+  'get_policy',
+  'search_policy',
+  'list_coverages',
+  'read_clause',
+  'get_claim_history',
+  'find_client',
+]);
+
+/** "Coverage agent checks policy C-48213 at the insurer", in the UI language. */
+export function renderAgentEvent(
+  event: Pick<AgentEventView, 'agent' | 'eventType' | 'params'>,
+  t: Translate,
+): string {
+  const { tool = 'unknown', ...args } = event.params;
+  const values: Record<string, string> = {
+    agent: t(`agent.${event.agent}`),
+    tool,
+    number: args.number ?? args.policyNumber ?? '—',
+    policyNumber: args.policyNumber ?? args.number ?? '—',
+    query: args.holderName ?? args.number ?? '—',
+    ref: args.ref ?? '—',
+    email: args.email ?? '—',
+  };
+  return t(`events.tool.${KNOWN_TOOLS.has(tool) ? tool : 'other'}`, values);
 }

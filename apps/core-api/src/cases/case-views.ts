@@ -1,4 +1,5 @@
 import type {
+  AgentEventView,
   AgentStepView,
   AuditLogView,
   CaseDetail,
@@ -22,6 +23,7 @@ export const caseDetailInclude = {
   client: true,
   email: { include: { attachments: { orderBy: { position: 'asc' } } } },
   steps: { orderBy: { createdAt: 'asc' } },
+  agentEvents: { orderBy: { createdAt: 'asc' } },
   proposedActions: { orderBy: { revision: 'asc' } },
   auditLogs: { orderBy: { createdAt: 'asc' } },
 } satisfies Prisma.CaseInclude;
@@ -62,8 +64,17 @@ export function toCaseDetail(
     sources: step.sources as AgentStepView['sources'],
     model: step.model,
     durationMs: step.durationMs,
+    inputTokens: step.inputTokens,
+    outputTokens: step.outputTokens,
     costUsd: step.costUsd,
     createdAt: step.createdAt.toISOString(),
+  }));
+  const agentEvents: AgentEventView[] = kase.agentEvents.map((event) => ({
+    id: event.id,
+    agent: event.agent as AgentEventView['agent'],
+    eventType: event.eventType as AgentEventView['eventType'],
+    params: event.params as AgentEventView['params'],
+    createdAt: event.createdAt.toISOString(),
   }));
   const proposedActions: ProposedActionView[] = kase.proposedActions.map((action) => ({
     id: action.id,
@@ -110,6 +121,7 @@ export function toCaseDetail(
     claimNumber: kase.claimNumber,
     failureReason: kase.failureReason,
     workflowRunId: kase.workflowRunId,
+    traceId: kase.traceId,
     email: {
       from: kase.email.from,
       to: kase.email.to,
@@ -124,6 +136,7 @@ export function toCaseDetail(
       })),
     },
     steps,
+    agentEvents,
     proposedActions,
     auditLogs,
   };

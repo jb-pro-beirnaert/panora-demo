@@ -1,4 +1,5 @@
 import type {
+  AgentEventCallback,
   AgentStepCallback,
   ClientLookupQuery,
   ClientLookupResult,
@@ -67,6 +68,8 @@ export class InternalService {
           sources: step.sources,
           model: step.model,
           durationMs: step.durationMs,
+          inputTokens: step.inputTokens,
+          outputTokens: step.outputTokens,
           costUsd: step.costUsd,
         },
       });
@@ -87,6 +90,21 @@ export class InternalService {
       return row;
     });
     this.realtime.publish('case.step', caseId, { stepId: created.id, stepType: step.stepType });
+    return { status: 'recorded' };
+  }
+
+  /** A tool call while an agent works: live timeline only (the audit keeps business steps). */
+  async recordAgentEvent(caseId: string, event: AgentEventCallback): Promise<CallbackOutcome> {
+    if (!(await this.exists(caseId))) return IGNORED;
+    const row = await this.prisma.agentEvent.create({
+      data: { caseId, agent: event.agent, eventType: event.eventType, params: event.params },
+    });
+    this.realtime.publish('case.agent_event', caseId, {
+      eventId: row.id,
+      agent: event.agent,
+      eventType: event.eventType,
+      params: event.params,
+    });
     return { status: 'recorded' };
   }
 

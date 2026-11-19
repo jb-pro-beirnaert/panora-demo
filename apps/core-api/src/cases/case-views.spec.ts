@@ -20,6 +20,7 @@ describe('toCaseSummary', () => {
       policyNumber: null,
       status: 'awaiting_approval',
       workflowRunId: 'run-1',
+      traceId: null,
       requestType: 'claim',
       verdict: 'not_covered',
       alerts: ['policy_terminated'],

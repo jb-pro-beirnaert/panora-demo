@@ -17,7 +17,9 @@
   "dependencies": {
     "@demo/shared": "^0.0.0",
     "@mastra/core": "^1.84.0",
+    "@mastra/langfuse": "^1.7.1",
     "@mastra/mcp": "^2.10.0",
+    "@mastra/observability": "^1.24.2",
     "@mastra/pg": "^1.37.0",
     "zod": "^4.6.7"
   },

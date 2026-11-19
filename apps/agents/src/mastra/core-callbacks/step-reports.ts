@@ -9,9 +9,33 @@ import type {
 
 /** Business-level step reports sent to Core, built from the agents' structured outputs. */
 
+/** Token usage of an agent call, as returned by Mastra (fields may be missing). */
+export interface Usage {
+  inputTokens?: number | undefined;
+  outputTokens?: number | undefined;
+}
+
 export interface Timing {
   model: string | null;
   durationMs: number;
+  usage?: Usage | undefined;
+}
+
+export function addUsage(a: Usage | undefined, b: Usage | undefined): Usage {
+  return {
+    inputTokens: (a?.inputTokens ?? 0) + (b?.inputTokens ?? 0),
+    outputTokens: (a?.outputTokens ?? 0) + (b?.outputTokens ?? 0),
+  };
+}
+
+/** Model, duration and tokens of a step report. */
+function metrics(timing: Timing) {
+  return {
+    model: timing.model,
+    durationMs: timing.durationMs,
+    inputTokens: timing.usage?.inputTokens ?? null,
+    outputTokens: timing.usage?.outputTokens ?? null,
+  };
 }
 
 function documentSource(document: string, page: number | null): StepSource {
@@ -56,8 +80,7 @@ export function triageReport(triage: TriageResult, timing: Timing): AgentStepCal
         .map(([name]) => name),
     },
     sources: [...sources.values()],
-    model: timing.model,
-    durationMs: timing.durationMs,
+    ...metrics(timing),
   };
 }
 
@@ -94,8 +117,7 @@ export function coverageReports(coverage: CoverageVerdict, timing: Timing): Agen
       ref: citation.clauseRef,
       excerpt: citation.excerpt,
     })),
-    model: timing.model,
-    durationMs: timing.durationMs,
+    ...metrics(timing),
   });
   return reports;
 }
@@ -105,8 +127,7 @@ export function draftReport(action: ProposedAction, timing: Timing): AgentStepCa
     agent: 'drafting',
     stepType: 'drafting.proposed',
     params: { actionType: action.actionType, revision: action.revision },
-    model: timing.model,
-    durationMs: timing.durationMs,
+    ...metrics(timing),
   };
 }
 

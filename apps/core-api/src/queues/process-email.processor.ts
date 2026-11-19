@@ -3,7 +3,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { AuditService } from '../audit/audit.service.js';
-import { MastraClient } from '../mastra-client/mastra-client.service.js';
+import { caseTracing, MastraClient } from '../mastra-client/mastra-client.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import { PROCESS_EMAIL_QUEUE, type ProcessEmailJob } from './queue-names.js';
@@ -60,11 +60,15 @@ export class ProcessEmailProcessor extends WorkerHost {
 
     // The run id is stored before the run starts, so no callback can precede it.
     const workflowRunId = await this.mastra.createRun();
+    const tracing = caseTracing(kase.id, {
+      brokerCode: kase.brokerage.brokerCode,
+      emailLanguage: kase.email.language,
+    });
     await this.prisma.case.update({
       where: { id: kase.id },
-      data: { workflowRunId, status: 'processing' },
+      data: { workflowRunId, traceId: tracing.traceId, status: 'processing' },
     });
-    await this.mastra.start(workflowRunId, input);
+    await this.mastra.start(workflowRunId, input, tracing);
     await this.audit.record({
       caseId: kase.id,
       actor: 'system',

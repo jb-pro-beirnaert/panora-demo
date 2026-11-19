@@ -8,6 +8,22 @@ export const PROCESS_EMAIL_WORKFLOW = 'processEmailWorkflow';
 const TIMEOUT_MS = 10_000;
 
 /**
+ * One Langfuse trace and one session per case: the trace id is derived from the case id, so the
+ * initial run and every resume land in the same trace.
+ */
+export interface CaseTracing {
+  traceId: string;
+  metadata: Record<string, string>;
+}
+
+export function caseTracing(caseId: string, metadata: Record<string, string> = {}): CaseTracing {
+  return {
+    traceId: caseId.replace(/-/g, '').toLowerCase(),
+    metadata: { sessionId: caseId, caseId, ...metadata },
+  };
+}
+
+/**
  * HTTP client of the Mastra server. Every call is fire-and-forget on the Mastra side: Core never
  * waits for a workflow to finish; progress comes back through the `/internal/*` callbacks.
  */
@@ -38,18 +54,18 @@ export class MastraClient {
   }
 
   /** Starts the run and returns immediately. */
-  async start(runId: string, input: ProcessEmailInput): Promise<void> {
+  async start(runId: string, input: ProcessEmailInput, tracing: CaseTracing): Promise<void> {
     await this.post(
       `/api/workflows/${PROCESS_EMAIL_WORKFLOW}/start?runId=${encodeURIComponent(runId)}`,
-      { inputData: input },
+      { inputData: input, tracingOptions: tracing },
     );
   }
 
   /** Resumes the run suspended on `approval` and returns immediately. */
-  async resume(runId: string, decision: ApprovalDecision): Promise<void> {
+  async resume(runId: string, decision: ApprovalDecision, tracing: CaseTracing): Promise<void> {
     await this.post(
       `/api/workflows/${PROCESS_EMAIL_WORKFLOW}/resume-no-wait?runId=${encodeURIComponent(runId)}`,
-      { resumeData: decision },
+      { resumeData: decision, tracingOptions: tracing },
     );
   }
 }

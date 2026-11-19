@@ -9,11 +9,18 @@ import {
   type ProcessEmailResult,
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
+import { reportToolCalls } from '../core-callbacks/agent-events.js';
 import { core } from '../core-callbacks/core-client.js';
-import { coverageReports, draftReport, executeReport } from '../core-callbacks/step-reports.js';
+import {
+  addUsage,
+  type Usage,
+  coverageReports,
+  draftReport,
+  executeReport,
+} from '../core-callbacks/step-reports.js';
 import { env } from '../env.js';
 import { extranetTools } from '../mcp/extranet-client.js';
-import { caseContext } from './context.js';
+import { annotateSpan, caseContext } from './context.js';
 import { actionTypeProblem, buildClaimFiling, toProposedAction } from './claim-filing.js';
 import {
   ApprovalSuspendSchema,
@@ -42,7 +49,10 @@ const analyzeCoverage = createStep({
   description: "coverageAgent checks the claim against the insurer's extranet through MCP.",
   inputSchema: TriagedEmailSchema,
   outputSchema: ClaimLoopStateSchema,
-  execute: async ({ inputData, mastra }) => {
+  execute: async ({ inputData, mastra, tracingContext }) => {
+    annotateSpan(tracingContext, 'coverage', env.COVERAGE_MODEL, {
+      emailLanguage: inputData.triage.emailLanguage,
+    });
     const prompt = [
       `The e-mail was received on ${inputData.receivedDate}.`,
       clientSection(inputData),
@@ -54,11 +64,14 @@ const analyzeCoverage = createStep({
       maxSteps: COVERAGE_MAX_STEPS,
       structuredOutput: { schema: CoverageVerdictSchema },
       requestContext: caseContext(inputData.brokerage.brokerCode, inputData.caseId),
+      tracingContext,
+      onStepFinish: reportToolCalls(inputData.caseId, 'coverage'),
     });
     const coverage = CoverageVerdictSchema.parse(response.object);
     for (const report of coverageReports(coverage, {
       model: env.COVERAGE_MODEL,
       durationMs: Date.now() - startedAt,
+      usage: response.usage,
     })) {
       await core.step(inputData.caseId, report);
     }
@@ -111,33 +124,42 @@ const draft = createStep({
     "draftingAgent proposes an action, an e-mail to the client and a note for the broker (and takes the broker's comment into account after a rejection).",
   inputSchema: ClaimLoopStateSchema,
   outputSchema: DraftedStateSchema,
-  execute: async ({ inputData, mastra }) => {
+  execute: async ({ inputData, mastra, tracingContext }) => {
+    annotateSpan(tracingContext, 'drafting', env.DRAFTING_MODEL, {
+      emailLanguage: inputData.claim.triage.emailLanguage,
+      revision: inputData.rounds.length + 1,
+    });
     const agent = mastra.getAgent('draftingAgent');
     const filing = buildClaimFiling(inputData.claim, inputData.coverage);
     const prompt = draftingPrompt(inputData);
     const startedAt = Date.now();
 
-    let result: Draft = DraftSchema.parse(
-      (await agent.generate(prompt, { structuredOutput: { schema: DraftSchema } })).object,
-    );
+    const first = await agent.generate(prompt, {
+      structuredOutput: { schema: DraftSchema },
+      tracingContext,
+    });
+    let usage: Usage | undefined = first.usage;
+    let result: Draft = DraftSchema.parse(first.object);
     // The action type must be executable: one corrective retry, then fail the step.
     const problem = actionTypeProblem(result.actionType, filing);
     if (problem) {
-      result = DraftSchema.parse(
-        (
-          await agent.generate(
-            `${prompt}\n\nYour previous answer was invalid: ${problem} Answer again.`,
-            { structuredOutput: { schema: DraftSchema } },
-          )
-        ).object,
+      const retry = await agent.generate(
+        `${prompt}\n\nYour previous answer was invalid: ${problem} Answer again.`,
+        { structuredOutput: { schema: DraftSchema }, tracingContext },
       );
+      usage = addUsage(usage, retry.usage);
+      result = DraftSchema.parse(retry.object);
       const again = actionTypeProblem(result.actionType, filing);
       if (again) throw new Error(`draftingAgent proposed an invalid action: ${again}`);
     }
     const action = toProposedAction(result, inputData.rounds, filing);
     await core.step(
       inputData.claim.caseId,
-      draftReport(action, { model: env.DRAFTING_MODEL, durationMs: Date.now() - startedAt }),
+      draftReport(action, {
+        model: env.DRAFTING_MODEL,
+        durationMs: Date.now() - startedAt,
+        usage,
+      }),
     );
     return { ...inputData, action };
   },

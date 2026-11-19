@@ -32,6 +32,11 @@ const EnvSchema = z
     MCP_TOKEN_SECRET: z
       .string()
       .min(32, 'MCP_TOKEN_SECRET (32+ characters) is required (see .env.example)'),
+    /** Langfuse (Cloud in V5, self-hosted in V6): tracing is off without the keys. */
+    LANGFUSE_PUBLIC_KEY: z.string().optional(),
+    LANGFUSE_SECRET_KEY: z.string().optional(),
+    LANGFUSE_BASE_URL: z.url().default('https://cloud.langfuse.com'),
+    LANGFUSE_ENVIRONMENT: z.string().default('local'),
     /** Light model: extraction only. */
     TRIAGE_MODEL: ModelIdSchema.default('openai/gpt-5-nano'),
     /** Model for multi-step tool use and reasoning over clauses. */

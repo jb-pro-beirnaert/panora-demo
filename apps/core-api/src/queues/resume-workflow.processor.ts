@@ -2,7 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { AuditService } from '../audit/audit.service.js';
-import { MastraClient } from '../mastra-client/mastra-client.service.js';
+import { caseTracing, MastraClient } from '../mastra-client/mastra-client.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RESUME_WORKFLOW_QUEUE, type ResumeWorkflowJob } from './queue-names.js';
 
@@ -21,11 +21,22 @@ export class ResumeWorkflowProcessor extends WorkerHost {
 
   async process(job: Job<ResumeWorkflowJob>): Promise<void> {
     const { caseId, workflowRunId, decision } = job.data;
-    if ((await this.prisma.case.count({ where: { id: caseId } })) === 0) {
+    const kase = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      include: { brokerage: true, email: true },
+    });
+    if (!kase) {
       this.logger.warn(`case ${caseId} no longer exists (reset?): job skipped`);
       return;
     }
-    await this.mastra.resume(workflowRunId, decision);
+    await this.mastra.resume(
+      workflowRunId,
+      decision,
+      caseTracing(caseId, {
+        brokerCode: kase.brokerage.brokerCode,
+        emailLanguage: kase.email.language,
+      }),
+    );
     await this.audit.record({
       caseId,
       actor: 'system',

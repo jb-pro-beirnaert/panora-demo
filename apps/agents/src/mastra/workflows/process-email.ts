@@ -9,12 +9,13 @@ import {
 } from '@demo/shared';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
+import { reportToolCalls } from '../core-callbacks/agent-events.js';
 import { core } from '../core-callbacks/core-client.js';
 import { classifiedReport, triageReport } from '../core-callbacks/step-reports.js';
 import { env } from '../env.js';
 import { CLIENT_LOOKUP_KEY } from '../mcp/extranet-client.js';
 import { lookupClient } from '../tools/find-client.js';
-import { caseContext } from './context.js';
+import { annotateSpan, caseContext } from './context.js';
 import { handleClaimWorkflow } from './handle-claim.js';
 import { PreparedEmailSchema, TriagedEmailSchema } from './schemas.js';
 
@@ -71,8 +72,9 @@ const triage = createStep({
     'triageAgent looks the sender up (find_client), classifies the e-mail and extracts the claim facts.',
   inputSchema: PreparedEmailSchema,
   outputSchema: TriagedEmailSchema,
-  execute: async ({ inputData, mastra }) => {
+  execute: async ({ inputData, mastra, tracingContext }) => {
     const requestContext = caseContext(inputData.brokerage.brokerCode, inputData.caseId);
+    annotateSpan(tracingContext, 'triage', env.TRIAGE_MODEL);
     const startedAt = Date.now();
     const response = await mastra
       .getAgent('triageAgent')
@@ -80,6 +82,8 @@ const triage = createStep({
         maxSteps: TRIAGE_MAX_STEPS,
         structuredOutput: { schema: TriageResultSchema },
         requestContext,
+        tracingContext,
+        onStepFinish: reportToolCalls(inputData.caseId, 'triage'),
       });
     const triageResult = TriageResultSchema.parse(response.object);
     // The model is asked to call find_client; if it did not, look the sender up anyway.
@@ -89,9 +93,16 @@ const triage = createStep({
     const client = ClientLookupResultSchema.nullable().parse(
       requestContext.get(CLIENT_LOOKUP_KEY) ?? null,
     );
+    annotateSpan(tracingContext, 'triage', env.TRIAGE_MODEL, {
+      emailLanguage: triageResult.emailLanguage,
+    });
     await core.step(
       inputData.caseId,
-      triageReport(triageResult, { model: env.TRIAGE_MODEL, durationMs: Date.now() - startedAt }),
+      triageReport(triageResult, {
+        model: env.TRIAGE_MODEL,
+        durationMs: Date.now() - startedAt,
+        usage: response.usage,
+      }),
     );
     return { ...inputData, triage: triageResult, client };
   },

@@ -1,5 +1,6 @@
 import {
   ClientLookupResultSchema,
+  type AgentEventCallback,
   type AgentStepCallback,
   type ClientLookupResult,
   type ExecutedActionCallback,
@@ -55,6 +56,9 @@ const casePath = (caseId: string, suffix: string) =>
 export const core = {
   async step(caseId: string | null | undefined, step: AgentStepCallback): Promise<void> {
     if (caseId) await post(casePath(caseId, 'steps'), step);
+  },
+  async agentEvent(caseId: string | null | undefined, event: AgentEventCallback): Promise<void> {
+    if (caseId) await post(casePath(caseId, 'agent-events'), event);
   },
   async proposedAction(
     caseId: string | null | undefined,

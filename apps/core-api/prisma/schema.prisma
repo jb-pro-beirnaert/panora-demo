@@ -55,7 +55,9 @@ model Brokerage {
   name       String
   brokerCode String   @unique
   locale     Locale
-  /** Claims inbox the clients write to: routes an inbound e-mail to its brokerage. */
+  /**
+   * Claims inbox the clients write to: routes an inbound e-mail to its brokerage.
+   */
   inboxEmail String   @unique
   brokers    Broker[]
   clients    Client[]
@@ -85,7 +87,9 @@ model Client {
   @@unique([brokerageId, email])
 }
 
-/** A policy as the brokerage's own software knows it: `knownStatus` may be out of date. */
+/**
+ * A policy as the brokerage's own software knows it: `knownStatus` may be out of date.
+ */
 model Policy {
   number      String       @id
   clientId    String
@@ -98,7 +102,9 @@ model Policy {
 
 model InboundEmail {
   id          String       @id @default(uuid())
-  /** RFC 5322 Message-ID: the same e-mail received twice creates a single case. */
+  /**
+   * RFC 5322 Message-ID: the same e-mail received twice creates a single case.
+   */
   messageId   String       @unique
   from        String
   to          String
@@ -122,7 +128,9 @@ model Attachment {
 
 model Case {
   id              String           @id @default(uuid())
-  /** Human-readable reference: CASE-0001. */
+  /**
+   * Human-readable reference: CASE-0001.
+   */
   number          Int              @unique @default(autoincrement())
   brokerageId     String
   brokerage       Brokerage        @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
@@ -133,7 +141,13 @@ model Case {
   policyNumber    String?
   status          CaseStatus       @default(received)
   workflowRunId   String?          @unique
-  /** Filled as the workflow progresses (language-neutral values). */
+  /**
+   * Langfuse trace id: one trace per case (initial run and every resume).
+   */
+  traceId         String?
+  /**
+   * Filled as the workflow progresses (language-neutral values).
+   */
   requestType     String?
   verdict         String?
   alerts          String[]
@@ -142,6 +156,7 @@ model Case {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   steps           AgentStep[]
+  agentEvents     AgentEvent[]
   proposedActions ProposedAction[]
   auditLogs       AuditLog[]
 
@@ -149,57 +164,84 @@ model Case {
   @@index([createdAt])
 }
 
-/** A business-level step of the workflow, stored as type + params and translated by the UI. */
+/**
+ * A business-level step of the workflow, stored as type + params and translated by the UI.
+ */
 model AgentStep {
-  id         String   @id @default(uuid())
-  caseId     String
-  case       Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  agent      String
-  stepType   String
-  params     Json
-  sources    Json
-  model      String?
-  durationMs Int?
-  costUsd    Float?
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  caseId       String
+  case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  agent        String
+  stepType     String
+  params       Json
+  sources      Json
+  model        String?
+  durationMs   Int?
+  inputTokens  Int?
+  outputTokens Int?
+  costUsd      Float?
+  createdAt    DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+/**
+ * What an agent does while it works (a tool call), pushed live to the timeline (V5).
+ */
+model AgentEvent {
+  id        String   @id @default(uuid())
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  agent     String
+  eventType String
+  params    Json
+  createdAt DateTime @default(now())
 
   @@index([caseId, createdAt])
 }
 
 model ProposedAction {
-  id               String               @id @default(uuid())
-  caseId           String
-  case             Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  revision         Int
-  workflowRunId    String
-  actionType       ActionType
-  draftSubject     String
-  draftBody        String
-  draftLanguage    Locale
-  internalNote     String
-  noteLanguage     Locale
-  /** Arguments of `file_claim` (null for other action types). */
-  claimFiling      Json?
-  status           ProposedActionStatus @default(pending)
-  decidedById      String?
-  comment          String?
-  decidedAt        DateTime?
-  createdAt        DateTime             @default(now())
+  id            String               @id @default(uuid())
+  caseId        String
+  case          Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  revision      Int
+  workflowRunId String
+  actionType    ActionType
+  draftSubject  String
+  draftBody     String
+  draftLanguage Locale
+  internalNote  String
+  noteLanguage  Locale
+  /**
+   * Arguments of `file_claim` (null for other action types).
+   */
+  claimFiling   Json?
+  status        ProposedActionStatus @default(pending)
+  decidedById   String?
+  comment       String?
+  decidedAt     DateTime?
+  createdAt     DateTime             @default(now())
 
   @@unique([caseId, revision])
 }
 
-/** Append-only: no route updates or deletes a row (only a demo reset wipes the table). */
+/**
+ * Append-only: no route updates or deletes a row (only a demo reset wipes the table).
+ */
 model AuditLog {
   id        String     @id @default(uuid())
   caseId    String?
   case      Case?      @relation(fields: [caseId], references: [id], onDelete: Cascade)
   actor     AuditActor
-  /** Broker id, agent name or "system". */
+  /**
+   * Broker id, agent name or "system".
+   */
   actorId   String
   action    String
   params    Json
-  /** Where the fact comes from (step type, tool, clause…). */
+  /**
+   * Where the fact comes from (step type, tool, clause…).
+   */
   source    String?
   createdAt DateTime   @default(now())
 

@@ -15,6 +15,7 @@ const TABLES = [
   'AuditLog',
   'ProposedAction',
   'AgentStep',
+  'AgentEvent',
   'Case',
   'Attachment',
   'InboundEmail',

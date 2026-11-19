@@ -130,6 +130,8 @@ export const AgentStepCallbackSchema = z.object({
   sources: z.array(StepSourceSchema).default([]),
   model: z.string().nullable().default(null),
   durationMs: z.number().int().nonnegative().nullable().default(null),
+  inputTokens: z.number().int().nonnegative().nullable().default(null),
+  outputTokens: z.number().int().nonnegative().nullable().default(null),
   costUsd: z.number().nonnegative().nullable().default(null),
 });
 export type AgentStepCallback = z.input<typeof AgentStepCallbackSchema>;
@@ -230,6 +232,7 @@ export const RealtimeEventTypeSchema = z.enum([
   'case.updated',
   'case.step',
   'case.action_proposed',
+  'case.agent_event',
   'case.closed',
   'demo.reset',
 ]);
@@ -252,6 +255,27 @@ export const CaseStatsSchema = z.object({
   failed: z.number().int(),
 });
 export type CaseStats = z.infer<typeof CaseStatsSchema>;
+
+// --- Live agent events (V5) ---
+
+/** What an agent is doing right now (one tool call), rendered by the UI (`events.<eventType>`). */
+export const AgentEventTypeSchema = z.enum(['tool_call']);
+export type AgentEventType = z.infer<typeof AgentEventTypeSchema>;
+
+/** `POST /internal/cases/:id/agent-events` (Mastra → Core), sent from the agents' loop. */
+export const AgentEventCallbackSchema = z.object({
+  agent: AgentNameSchema,
+  eventType: AgentEventTypeSchema,
+  /** `tool` plus the few arguments worth showing (policy number, clause ref…). */
+  params: z.record(z.string(), z.string()),
+});
+export type AgentEventCallback = z.infer<typeof AgentEventCallbackSchema>;
+
+export const AgentEventViewSchema = AgentEventCallbackSchema.extend({
+  id: z.string(),
+  createdAt: z.string(),
+});
+export type AgentEventView = z.infer<typeof AgentEventViewSchema>;
 
 // --- Public API views (Core → Web) ---
 
@@ -289,6 +313,8 @@ export const AgentStepViewSchema = z.object({
   sources: z.array(StepSourceSchema),
   model: z.string().nullable(),
   durationMs: z.number().nullable(),
+  inputTokens: z.number().nullable(),
+  outputTokens: z.number().nullable(),
   costUsd: z.number().nullable(),
   createdAt: z.string(),
 });
@@ -339,6 +365,8 @@ export const CaseDetailSchema = CaseSummarySchema.extend({
   claimNumber: z.string().nullable(),
   failureReason: z.string().nullable(),
   workflowRunId: z.string().nullable(),
+  /** Langfuse trace of the case (one trace per case: initial run and resumes). */
+  traceId: z.string().nullable(),
   email: z.object({
     from: z.string(),
     to: z.string(),
@@ -351,6 +379,7 @@ export const CaseDetailSchema = CaseSummarySchema.extend({
     ),
   }),
   steps: z.array(AgentStepViewSchema),
+  agentEvents: z.array(AgentEventViewSchema),
   proposedActions: z.array(ProposedActionViewSchema),
   auditLogs: z.array(AuditLogViewSchema),
 });

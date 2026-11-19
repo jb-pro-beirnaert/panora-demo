@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { createTranslator } from 'use-intl/core';
-import { renderAudit, renderStep, type Translate } from './render';
+import { renderAgentEvent, renderAudit, renderStep, type Translate } from './render';
 
 type Messages = { [key: string]: string | Messages };
 
@@ -79,6 +79,26 @@ describe('renderStep', () => {
     assert.equal(
       renderStep(step, translators.en, formatters),
       'Verdict: Covered (unknown), alerts: Limit exceeded',
+    );
+  });
+
+  it('renders a live tool call in the UI language', () => {
+    const event = {
+      agent: 'coverage' as const,
+      eventType: 'tool_call' as const,
+      params: { tool: 'get_policy', number: 'C-48213' },
+    };
+    assert.equal(
+      renderAgentEvent(event, translators.fr),
+      "Agent Garanties consulte le contrat C-48213 chez l'assureur",
+    );
+    assert.equal(
+      renderAgentEvent(event, translators.en),
+      'Coverage agent checks policy C-48213 at the insurer',
+    );
+    assert.equal(
+      renderAgentEvent({ ...event, params: { tool: 'mystery' } }, translators.en),
+      'Coverage agent calls mystery',
     );
   });
 

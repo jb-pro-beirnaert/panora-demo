@@ -1,6 +1,6 @@
 'use client';
 
-import type { AgentStepView, CaseDetail, ProposedActionView } from '@demo/shared';
+import type { AgentEventView, AgentStepView, CaseDetail, ProposedActionView } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertBadges, LanguageBadge, StatusBadge, VerdictBadge } from '@/components/case-badges';
@@ -12,7 +12,14 @@ import { Link } from '@/i18n/navigation';
 import { ApiError, coreApi } from '@/lib/api';
 import { useBroker } from '@/lib/broker';
 import { useRealtime } from '@/lib/realtime';
-import { renderAudit, renderStep, type Formatters, type Translate } from '@/lib/render';
+import { traceUrl } from '@/lib/config';
+import {
+  renderAgentEvent,
+  renderAudit,
+  renderStep,
+  type Formatters,
+  type Translate,
+} from '@/lib/render';
 import { cn } from '@/lib/utils';
 
 function useFormatters(): Formatters {
@@ -95,7 +102,7 @@ export function CaseView({ caseId }: { caseId: string }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <EmailCard kase={kase} />
-          <TimelineCard steps={kase.steps} />
+          <TimelineCard steps={kase.steps} events={kase.agentEvents} />
         </div>
         <div className="space-y-4">
           <ProposalCard kase={kase} onDecided={load} />
@@ -187,57 +194,96 @@ function EmailCard({ kase }: { kase: CaseDetail }) {
   );
 }
 
-function TimelineCard({ steps }: { steps: AgentStepView[] }) {
+type TimelineItem =
+  | { kind: 'step'; at: string; step: AgentStepView }
+  | { kind: 'event'; at: string; event: AgentEventView };
+
+function TimelineCard({ steps, events }: { steps: AgentStepView[]; events: AgentEventView[] }) {
   const t = useTranslations();
   const format = useFormatter();
-  const formatters = useFormatters();
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('case.timeline')}</CardTitle>
       </CardHeader>
       <CardContent>
-        {steps.length === 0 ? (
+        {steps.length === 0 && events.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('case.timelineEmpty')}</p>
         ) : (
           <ol className="space-y-3">
-            {steps.map((step) => (
-              <li
-                key={step.id}
-                className={cn(
-                  'rounded-lg border-l-4 bg-background p-2 text-sm',
-                  isMismatch(step) ? 'border-red-500 bg-red-50' : 'border-muted-foreground/30',
-                )}
-              >
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t(`agent.${step.agent}`)}</span>
-                  <span>
-                    {format.dateTime(new Date(step.createdAt), { timeStyle: 'medium' })}
-                    {step.durationMs !== null &&
-                      ` · ${format.number(step.durationMs / 1000, { maximumFractionDigits: 1 })} s`}
-                  </span>
-                </div>
-                <div>{renderStep(step, t as Translate, formatters)}</div>
-                {step.sources.length > 0 && (
-                  <div className="mt-1 space-y-1 text-xs text-muted-foreground">
-                    <span>{t('case.sources')} </span>
-                    {step.sources.map((source, index) => (
-                      <div key={`${source.ref}-${index}`}>
-                        <span className="font-mono">
-                          {source.ref}
-                          {source.page ? ` p.${source.page}` : ''}
-                        </span>
-                        {source.excerpt && <q className="ml-1 italic">{source.excerpt}</q>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </li>
-            ))}
+            {[
+              ...steps.map((step): TimelineItem => ({ kind: 'step', at: step.createdAt, step })),
+              ...events.map((event): TimelineItem => ({
+                kind: 'event',
+                at: event.createdAt,
+                event,
+              })),
+            ]
+              .sort((a, b) => a.at.localeCompare(b.at))
+              .map((item) =>
+                item.kind === 'event' ? (
+                  <li
+                    key={item.event.id}
+                    className="ml-4 flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <span className="size-1.5 rounded-full bg-blue-400" />
+                    <span className="font-mono">
+                      {format.dateTime(new Date(item.at), { timeStyle: 'medium' })}
+                    </span>
+                    <span>{renderAgentEvent(item.event, t as Translate)}</span>
+                  </li>
+                ) : (
+                  <StepItem key={item.step.id} step={item.step} />
+                ),
+              )}
           </ol>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function StepItem({ step }: { step: AgentStepView }) {
+  const t = useTranslations();
+  const format = useFormatter();
+  const formatters = useFormatters();
+  return (
+    <li
+      className={cn(
+        'rounded-lg border-l-4 bg-background p-2 text-sm',
+        isMismatch(step) ? 'border-red-500 bg-red-50' : 'border-muted-foreground/30',
+      )}
+    >
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{t(`agent.${step.agent}`)}</span>
+        <span>
+          {format.dateTime(new Date(step.createdAt), { timeStyle: 'medium' })}
+          {step.durationMs !== null &&
+            ` · ${format.number(step.durationMs / 1000, { maximumFractionDigits: 1 })} s`}
+          {step.inputTokens !== null &&
+            step.outputTokens !== null &&
+            ` · ${t('case.tokens', {
+              input: format.number(step.inputTokens),
+              output: format.number(step.outputTokens),
+            })}`}
+        </span>
+      </div>
+      <div>{renderStep(step, t as Translate, formatters)}</div>
+      {step.sources.length > 0 && (
+        <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+          <span>{t('case.sources')} </span>
+          {step.sources.map((source, index) => (
+            <div key={`${source.ref}-${index}`}>
+              <span className="font-mono">
+                {source.ref}
+                {source.page ? ` p.${source.page}` : ''}
+              </span>
+              {source.excerpt && <q className="ml-1 italic">{source.excerpt}</q>}
+            </div>
+          ))}
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -391,8 +437,18 @@ function AuditCard({ kase }: { kase: CaseDetail }) {
   const formatters = useFormatters();
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{t('case.audit')}</CardTitle>
+        {kase.traceId && (
+          <a
+            href={traceUrl(kase.traceId)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-primary underline-offset-4 hover:underline"
+          >
+            {t('case.viewTrace')} ↗
+          </a>
+        )}
       </CardHeader>
       <CardContent>
         <ol className="space-y-1 text-sm">

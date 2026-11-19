@@ -94,7 +94,9 @@
     "brokerage": "Cabinet",
     "policy": "Contrat",
     "client": "Client",
-    "decisionError": "La décision n'a pas pu être enregistrée : {message}"
+    "decisionError": "La décision n'a pas pu être enregistrée : {message}",
+    "viewTrace": "Voir la trace",
+    "tokens": "{input} + {output} jetons"
   },
   "status": {
     "received": "Reçu",
@@ -197,5 +199,16 @@
     "none": "aucune",
     "unknown": "inconnu",
     "error": "Une erreur est survenue."
+  },
+  "events": {
+    "tool": {
+      "get_policy": "{agent} consulte le contrat {number} chez l'assureur",
+      "search_policy": "{agent} recherche les contrats de {query} chez l'assureur",
+      "list_coverages": "{agent} liste les garanties du contrat {policyNumber}",
+      "read_clause": "{agent} lit la clause {ref}",
+      "get_claim_history": "{agent} consulte l'historique des sinistres du contrat {policyNumber}",
+      "find_client": "{agent} cherche l'expéditeur {email} dans les fichiers du cabinet",
+      "other": "{agent} appelle {tool}"
+    }
   }
 }
