@@ -1,6 +1,6 @@
 # Démo agents IA courtage (Panora) — Vue d'ensemble
 
-> Résumé global du projet. Le détail de chaque version est dans `v01-…md` à `v11-…md` ; les données et scénarios de la démo sont dans `00-demo-data-and-scenarios.md`.
+> Résumé global du projet. Le détail de chaque version est dans `v01-…md` à `v13-…md` ; les données et scénarios de la démo sont dans `00-demo-data-and-scenarios.md`.
 > Les specs sont rédigées en français ; **tout le code est en anglais** (identifiants, routes, tables, outils MCP, événements, commits).
 
 ## 1. Objectif
@@ -263,6 +263,8 @@ Next.js bilingue FR / EN dès V3 (next-intl, préfixe `/fr` et `/en`, sélecteur
 | V9 | Échelle et résilience | `v09-scale-resilience.md` |
 | V10 | Sécurité et conformité | `v10-security-compliance.md` |
 | V11 | Finitions pour la candidature | `v11-finishing.md` |
+| V12 | Un seul courtier, sans connexion ; Langfuse local par défaut | `v12-single-broker.md` |
+| V13 | Boîte de réception vivante : statuts des agents en direct | `v13-live-inbox.md` |
 
 ### Minimum pour postuler
 
