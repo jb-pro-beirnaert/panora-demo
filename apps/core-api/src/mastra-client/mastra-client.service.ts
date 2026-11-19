@@ -31,17 +31,37 @@ export function caseTracing(caseId: string, metadata: Record<string, string> = {
 export class MastraClient {
   constructor(@Inject(ENV) private readonly env: Env) {}
 
+  private next = 0;
+
+  /**
+   * POSTs to one Mastra instance, round robin; on a network error, a timeout or a 5xx, tries the
+   * next instance (they share their storage, so any of them can start, resume or restart any run).
+   */
   private async post(path: string, body: unknown): Promise<unknown> {
-    const response = await fetch(new URL(path, this.env.MASTRA_URL), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!response.ok) {
-      throw new Error(`Mastra ${path} failed (${response.status}): ${await response.text()}`);
+    const urls = this.env.MASTRA_URL;
+    const first = this.next++ % urls.length;
+    let lastError: unknown;
+    for (let offset = 0; offset < urls.length; offset++) {
+      const base = urls[(first + offset) % urls.length]!;
+      try {
+        const response = await fetch(new URL(path, base), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        });
+        if (response.ok) return response.json();
+        const error = new Error(
+          `Mastra ${path} failed (${response.status}): ${await response.text()}`,
+        );
+        if (response.status < 500) throw Object.assign(error, { permanent: true });
+        lastError = error;
+      } catch (error) {
+        if ((error as { permanent?: boolean }).permanent) throw error;
+        lastError = error;
+      }
     }
-    return response.json();
+    throw lastError;
   }
 
   /** Creates a run (so its id can be stored before any step runs). */
@@ -58,6 +78,14 @@ export class MastraClient {
     await this.post(
       `/api/workflows/${PROCESS_EMAIL_WORKFLOW}/start?runId=${encodeURIComponent(runId)}`,
       { inputData: input, tracingOptions: tracing },
+    );
+  }
+
+  /** Restarts an active run from its last snapshot (instance lost mid-run), in the background. */
+  async restart(runId: string, tracing: CaseTracing): Promise<void> {
+    await this.post(
+      `/api/workflows/${PROCESS_EMAIL_WORKFLOW}/restart?runId=${encodeURIComponent(runId)}`,
+      { tracingOptions: tracing },
     );
   }
 

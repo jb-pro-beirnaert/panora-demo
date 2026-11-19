@@ -7,6 +7,7 @@ import request from 'supertest';
 import { AuditService } from '../src/audit/audit.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { ProcessEmailProcessor } from '../src/queues/process-email.processor.js';
+import { MAX_RESTARTS, WatchdogService } from '../src/queues/watchdog.service.js';
 import { PROCESS_EMAIL_QUEUE, RESUME_WORKFLOW_QUEUE } from '../src/queues/queue-names.js';
 import { RealtimeService } from '../src/realtime/realtime.service.js';
 import { createTestApp, type FakeMastraClient } from './app.js';
@@ -317,6 +318,83 @@ describe('case lifecycle (Postgres + Redis)', () => {
     const view = await detail(body.caseId);
     expect(view.status).toBe('failed');
     expect(view.failureReason).toBe('LLM unavailable');
+
+    // A broker of the case's brokerage relaunches it: a new run is queued, the history is kept.
+    const owner = world.brokers.find((b) => b.brokerageId === view.brokerage.id)!;
+    await http.post(`/cases/${body.caseId}/retry`).set('x-broker-id', owner.id).expect(202);
+    await http.post(`/cases/${body.caseId}/retry`).set('x-broker-id', owner.id).expect(409);
+    const relaunched = await detail(body.caseId);
+    expect(relaunched).toMatchObject({
+      status: 'received',
+      workflowRunId: null,
+      failureReason: null,
+    });
+    expect(relaunched.auditLogs.at(-1)).toMatchObject({
+      actor: 'broker',
+      action: 'workflow_retried',
+    });
+  });
+
+  it('the watchdog restarts a run that stopped progressing, then gives up', async () => {
+    const stuck = emails.find((e) => e.groundTruth.scenario === 'deductible')!.email;
+    const { body } = await receive(stuck).expect(202);
+    const prisma = app.get(PrismaService);
+    await prisma.case.update({
+      where: { id: body.caseId },
+      data: { status: 'processing', workflowRunId: 'run-stuck' },
+    });
+    const watchdog = app.get(WatchdogService);
+    const later = (minutes: number) => new Date(Date.now() + minutes * 60_000);
+    // Still recent: nothing to do.
+    expect((await watchdog.run(new Date())).restarted).toBe(0);
+    for (let attempt = 1; attempt <= MAX_RESTARTS; attempt++) {
+      expect((await watchdog.run(later(10 * attempt))).restarted).toBe(1);
+    }
+    expect(mastra.restarted.filter((id) => id === 'run-stuck')).toHaveLength(MAX_RESTARTS);
+    expect((await watchdog.run(later(50))).failed).toBe(1);
+    expect((await detail(body.caseId)).status).toBe('failed');
+  });
+
+  it('the watchdog requeues a case that never started, but not one still waiting in the queue', async () => {
+    const waiting = emails.find((e) => e.groundTruth.scenario === 'late_declaration')!.email;
+    const { body } = await receive(waiting).expect(202);
+    const watchdog = app.get(WatchdogService);
+    const later = new Date(Date.now() + 10 * 60_000);
+    // Its process-email job is still waiting (no worker in tests): nothing to do.
+    expect((await watchdog.run(later)).requeued).toBe(0);
+    // The job is gone (exhausted attempts): the case is queued again.
+    const queue = app.get<Queue>(getQueueToken(PROCESS_EMAIL_QUEUE));
+    const kase = await app
+      .get(PrismaService)
+      .case.findUniqueOrThrow({ where: { id: body.caseId } });
+    await (await queue.getJob(kase.emailId))?.remove();
+    expect((await watchdog.run(later)).requeued).toBe(1);
+  });
+
+  it('two jobs for the same case start a single run', async () => {
+    const twice = emails.find((e) => e.groundTruth.scenario === 'unreadable_field')!.email;
+    const { body } = await receive(twice).expect(202);
+    const processor = new ProcessEmailProcessor(
+      app.get(PrismaService),
+      mastra as never,
+      app.get(AuditService),
+      app.get(RealtimeService),
+    );
+    const before = mastra.started.length;
+    await Promise.all([
+      processor.process({ data: { caseId: body.caseId } } as never),
+      processor.process({ data: { caseId: body.caseId } } as never),
+    ]);
+    expect(mastra.started.length - before).toBe(1);
+  });
+
+  it('exposes load metrics', async () => {
+    const metrics = (await http.get('/cases/metrics').expect(200)).body;
+    expect(metrics.total).toBeGreaterThanOrEqual(3);
+    expect(metrics.byStatus.ready_to_send).toBe(1);
+    expect(metrics.durationMs.p50).toBeGreaterThanOrEqual(0);
+    expect(Object.keys(metrics.queues)).toEqual(['process-email', 'resume-workflow']);
+    expect(metrics.restarts).toBeGreaterThanOrEqual(MAX_RESTARTS + 1);
   });
 
   it('forwards eval run options to the workflow (demo mode)', async () => {

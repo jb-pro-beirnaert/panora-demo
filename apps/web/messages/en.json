@@ -37,10 +37,14 @@
       "inProgress": "In progress",
       "awaitingApproval": "Awaiting approval",
       "closed": "Processed",
-      "failed": "Failed"
+      "failed": "Failed",
+      "throughput": "Closed / min",
+      "queued": "Queued"
     },
     "counter": "{label}: <strong>{value}</strong>",
-    "languageMix": "English e-mails"
+    "languageMix": "English e-mails",
+    "burst": "Burst (1,000)",
+    "burstProgress": "Burst: {sent}/{requested}"
   },
   "inbox": {
     "title": "Inbox",
@@ -97,7 +101,9 @@
     "client": "Client",
     "decisionError": "The decision could not be saved: {message}",
     "viewTrace": "View the trace",
-    "tokens": "{input} + {output} tokens"
+    "tokens": "{input} + {output} tokens",
+    "retry": "Relaunch",
+    "retryHint": "The case failed; relaunch it from the start (the history is kept)."
   },
   "status": {
     "received": "Received",
@@ -195,7 +201,9 @@
     "case_classified": "Classified as {requestType}",
     "claim_filed": "Claim {claimNumber} filed",
     "ready_to_send": "E-mail ready to send",
-    "workflow_failed": "Processing failed"
+    "workflow_failed": "Processing failed",
+    "workflow_restarted": "Processing restarted after an interruption (attempt {attempt})",
+    "workflow_retried": "Case relaunched by the broker"
   },
   "common": {
     "none": "none",

@@ -1,0 +1,40 @@
+{
+  "label": "smoke",
+  "at": "2026-11-19T04:56:33.721Z",
+  "requested": 20,
+  "burst": {
+    "requested": 20,
+    "sent": 20,
+    "duplicates": 0,
+    "errors": 0,
+    "startedAt": "2026-11-19T04:56:23.580Z",
+    "finishedAt": "2026-11-19T04:56:23.731Z"
+  },
+  "casesCreated": 20,
+  "closed": 20,
+  "failed": 0,
+  "stillOpen": 0,
+  "durationMin": 0.17,
+  "throughputPerMin": 118.3,
+  "caseDurationMs": {
+    "p50": 2742,
+    "p95": 3703
+  },
+  "workflowRestarts": 0,
+  "mcp": {
+    "toolCalls": 33,
+    "retries": 1,
+    "definitiveFailures": 0,
+    "retryRate": 0.0303
+  },
+  "definitiveFailureRate": 0,
+  "chaos": {
+    "latencyMinMs": 50,
+    "latencyMaxMs": 400,
+    "errorRate": 0.05,
+    "rateLimitPerSecond": 0,
+    "calls": 42,
+    "injectedErrors": 3,
+    "rateLimited": 0
+  }
+}

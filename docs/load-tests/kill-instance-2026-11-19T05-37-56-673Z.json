@@ -1,0 +1,40 @@
+{
+  "label": "kill-instance",
+  "at": "2026-11-19T05:37:56.673Z",
+  "requested": 300,
+  "burst": {
+    "requested": 300,
+    "sent": 300,
+    "duplicates": 14,
+    "errors": 0,
+    "startedAt": "2026-11-19T05:36:26.290Z",
+    "finishedAt": "2026-11-19T05:36:27.752Z"
+  },
+  "casesCreated": 300,
+  "closed": 300,
+  "failed": 0,
+  "stillOpen": 0,
+  "durationMin": 1.51,
+  "throughputPerMin": 199.2,
+  "caseDurationMs": {
+    "p50": 13959,
+    "p95": 79854
+  },
+  "workflowRestarts": 100,
+  "mcp": {
+    "toolCalls": 925,
+    "retries": 27,
+    "definitiveFailures": 0,
+    "retryRate": 0.0292
+  },
+  "definitiveFailureRate": 0,
+  "chaos": {
+    "latencyMinMs": 50,
+    "latencyMaxMs": 400,
+    "errorRate": 0.05,
+    "rateLimitPerSecond": 0,
+    "calls": 2373,
+    "injectedErrors": 117,
+    "rateLimited": 0
+  }
+}

@@ -1,4 +1,11 @@
-import type { BrokerView, CaseDetail, CaseStats, CaseSummary, DecisionRequest } from '@demo/shared';
+import type {
+  BrokerView,
+  CaseDetail,
+  CaseMetrics,
+  CaseStats,
+  CaseSummary,
+  DecisionRequest,
+} from '@demo/shared';
 import { CORE_API_URL, SIMULATOR_URL } from './config';
 
 export class ApiError extends Error {
@@ -33,6 +40,12 @@ export const coreApi = {
   brokers: () => request<BrokerView[]>(CORE_API_URL, '/brokers'),
   cases: () => request<CaseSummary[]>(CORE_API_URL, '/cases'),
   stats: () => request<CaseStats>(CORE_API_URL, '/cases/stats'),
+  metrics: () => request<CaseMetrics>(CORE_API_URL, '/cases/metrics'),
+  retry: (id: string, brokerId: string) =>
+    request<{ status: string }>(CORE_API_URL, `/cases/${id}/retry`, {
+      method: 'POST',
+      headers: { 'x-broker-id': brokerId },
+    }),
   case: (id: string) => request<CaseDetail>(CORE_API_URL, `/cases/${id}`),
   decide: (id: string, brokerId: string, decision: DecisionRequest) =>
     request<{ status: string }>(CORE_API_URL, `/cases/${id}/decision`, {
@@ -51,6 +64,7 @@ export interface SimulatorState {
   englishShare: number;
   seeding: 'pending' | 'done';
   autoValidation: { enabled: boolean; delayMs: number; rejectionRate: number };
+  burst: { requested: number; sent: number; finishedAt: string | null; startedAt: string | null };
 }
 
 const post = (path: string, body?: unknown) =>
@@ -68,6 +82,7 @@ export const simulatorApi = {
   sendOne: () => post('/send-one'),
   speed: (emailsPerMinute: number) => post('/speed', { emailsPerMinute }),
   languageMix: (en: number) => post('/language-mix', { en }),
+  burst: (count: number) => post('/burst', { count }),
   autoValidation: (settings: Partial<SimulatorState['autoValidation']>) =>
     post('/auto-validation', settings),
 };

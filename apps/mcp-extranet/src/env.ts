@@ -15,6 +15,11 @@ const EnvSchema = z
       .default('false')
       .transform((value) => value === 'true'),
     ADMIN_TOKEN: z.string().optional(),
+    /** "Flaky extranet" mode (V9): all zero = off. */
+    CHAOS_LATENCY_MIN_MS: z.coerce.number().int().min(0).default(0),
+    CHAOS_LATENCY_MAX_MS: z.coerce.number().int().min(0).default(0),
+    CHAOS_ERROR_RATE: z.coerce.number().min(0).max(1).default(0),
+    CHAOS_RATE_LIMIT_PER_SECOND: z.coerce.number().int().min(0).default(0),
   })
   .refine((env) => !env.DEMO_MODE || (env.ADMIN_TOKEN?.length ?? 0) >= 16, {
     message: 'ADMIN_TOKEN (16+ characters) is required when DEMO_MODE=true',

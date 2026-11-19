@@ -7,12 +7,13 @@ import { caseTracing, MastraClient } from '../mastra-client/mastra-client.servic
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import { PROCESS_EMAIL_QUEUE, type ProcessEmailJob } from './queue-names.js';
+import { workerOptions } from './worker-options.js';
 
 /**
  * Starts the Mastra workflow of a case and returns at once: it never waits for the workflow,
  * whose progress comes back through the `/internal/*` callbacks.
  */
-@Processor(PROCESS_EMAIL_QUEUE)
+@Processor(PROCESS_EMAIL_QUEUE, workerOptions())
 export class ProcessEmailProcessor extends WorkerHost {
   private readonly logger = new Logger(ProcessEmailProcessor.name);
 
@@ -37,8 +38,14 @@ export class ProcessEmailProcessor extends WorkerHost {
       this.logger.warn(`case ${job.data.caseId} no longer exists (reset?): job skipped`);
       return null;
     }
-    // A retried job after a successful start must not start a second run.
+    // A retried or duplicated job must not start a second run: the case is claimed atomically
+    // (only one job can move it from `received` to `processing`).
     if (kase.workflowRunId) return { workflowRunId: kase.workflowRunId };
+    const claimed = await this.prisma.case.updateMany({
+      where: { id: kase.id, status: 'received', workflowRunId: null },
+      data: { status: 'processing' },
+    });
+    if (claimed.count === 0) return null;
 
     const input: ProcessEmailInput = {
       caseId: kase.id,
@@ -60,7 +67,14 @@ export class ProcessEmailProcessor extends WorkerHost {
     };
 
     // The run id is stored before the run starts, so no callback can precede it.
-    const workflowRunId = await this.mastra.createRun();
+    let workflowRunId: string;
+    try {
+      workflowRunId = await this.mastra.createRun();
+    } catch (error) {
+      // Give the case back, so the job's retry (or the watchdog) can claim it again.
+      await this.prisma.case.update({ where: { id: kase.id }, data: { status: 'received' } });
+      throw error;
+    }
     const tracing = caseTracing(kase.id, {
       brokerCode: kase.brokerage.brokerCode,
       emailLanguage: kase.email.language,

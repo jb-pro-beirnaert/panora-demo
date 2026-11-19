@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { PROCESS_EMAIL_QUEUE, RESUME_WORKFLOW_QUEUE } from './queue-names.js';
+import { MAINTENANCE_QUEUE, PROCESS_EMAIL_QUEUE, RESUME_WORKFLOW_QUEUE } from './queue-names.js';
 
 const defaultJobOptions = {
   attempts: 3,
@@ -15,6 +15,7 @@ const defaultJobOptions = {
     BullModule.registerQueue(
       { name: PROCESS_EMAIL_QUEUE, defaultJobOptions },
       { name: RESUME_WORKFLOW_QUEUE, defaultJobOptions },
+      { name: MAINTENANCE_QUEUE, defaultJobOptions: { removeOnComplete: 100, removeOnFail: 100 } },
     ),
   ],
   exports: [BullModule],

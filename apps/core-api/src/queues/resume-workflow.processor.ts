@@ -5,9 +5,10 @@ import { AuditService } from '../audit/audit.service.js';
 import { caseTracing, MastraClient } from '../mastra-client/mastra-client.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RESUME_WORKFLOW_QUEUE, type ResumeWorkflowJob } from './queue-names.js';
+import { workerOptions } from './worker-options.js';
 
 /** Resumes the suspended workflow with the broker's decision, without waiting for it. */
-@Processor(RESUME_WORKFLOW_QUEUE)
+@Processor(RESUME_WORKFLOW_QUEUE, workerOptions())
 export class ResumeWorkflowProcessor extends WorkerHost {
   private readonly logger = new Logger(ResumeWorkflowProcessor.name);
 

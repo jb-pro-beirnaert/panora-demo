@@ -1,0 +1,40 @@
+{
+  "label": "burst-1000",
+  "at": "2026-11-19T04:59:31.230Z",
+  "requested": 1000,
+  "burst": {
+    "requested": 1000,
+    "sent": 1000,
+    "duplicates": 59,
+    "errors": 0,
+    "startedAt": "2026-11-19T04:57:00.156Z",
+    "finishedAt": "2026-11-19T04:57:10.760Z"
+  },
+  "casesCreated": 1000,
+  "closed": 1000,
+  "failed": 0,
+  "stillOpen": 0,
+  "durationMin": 2.52,
+  "throughputPerMin": 397.2,
+  "caseDurationMs": {
+    "p50": 25791,
+    "p95": 136994
+  },
+  "workflowRestarts": 0,
+  "mcp": {
+    "toolCalls": 2165,
+    "retries": 71,
+    "definitiveFailures": 0,
+    "retryRate": 0.0328
+  },
+  "definitiveFailureRate": 0,
+  "chaos": {
+    "latencyMinMs": 50,
+    "latencyMaxMs": 400,
+    "errorRate": 0.05,
+    "rateLimitPerSecond": 0,
+    "calls": 2018,
+    "injectedErrors": 104,
+    "rateLimited": 0
+  }
+}

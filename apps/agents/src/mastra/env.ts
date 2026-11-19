@@ -37,6 +37,19 @@ const EnvSchema = z
     LANGFUSE_SECRET_KEY: z.string().optional(),
     LANGFUSE_BASE_URL: z.url().default('https://cloud.langfuse.com'),
     LANGFUSE_ENVIRONMENT: z.string().default('local'),
+    /** V9 resilience: MCP request timeout and attempts per tool call. */
+    MCP_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
+    MCP_RETRY_ATTEMPTS: z.coerce.number().int().min(1).default(4),
+    /** Timeout of one agent call (LLM loop); the step is then retried by the workflow. */
+    LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(180_000),
+    /**
+     * `simulated`: deterministic stand-ins instead of the LLM agents (same workflow, MCP calls,
+     * suspension and resume). Load tests only: 1,000 cases without API cost.
+     */
+    /** Attempts of each workflow step before the run fails (1 = no retry). */
+    WORKFLOW_STEP_ATTEMPTS: z.coerce.number().int().min(1).default(3),
+    AGENTS_MODE: z.enum(['llm', 'simulated']).default('llm'),
+    SIMULATED_LLM_LATENCY_MS: z.coerce.number().int().min(0).default(800),
     /** Ollama's URL, for `ollama/<model>` specs (V8, local Qwen). */
     OLLAMA_BASE_URL: z.url().default('http://localhost:11434'),
     /** Light model: extraction only. */
@@ -47,6 +60,8 @@ const EnvSchema = z
     DRAFTING_MODEL: ModelIdSchema.default('openai/gpt-6-luna'),
   })
   .superRefine((env, ctx) => {
+    // Simulated agents call no model: no API key needed.
+    if (env.AGENTS_MODE === 'simulated') return;
     for (const name of ['TRIAGE_MODEL', 'COVERAGE_MODEL', 'DRAFTING_MODEL'] as const) {
       const provider = env[name].split('/')[0] ?? '';
       const keyVar = PROVIDER_API_KEYS[provider];

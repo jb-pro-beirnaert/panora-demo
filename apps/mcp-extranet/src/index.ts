@@ -1,6 +1,7 @@
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express, { type ErrorRequestHandler } from 'express';
 import { adminRouter } from './admin/routes.js';
+import { chaosEnabled, chaosMiddleware, type ChaosConfig } from './chaos/chaos.js';
 import { authenticate } from './auth/authenticate.js';
 import { writeToolCalls } from './auth/write-tools.js';
 import { createDb } from './db.js';
@@ -15,9 +16,26 @@ const db = createDb(env.EXTRANET_DATABASE_URL);
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
+const chaosConfig: ChaosConfig = {
+  latencyMinMs: env.CHAOS_LATENCY_MIN_MS,
+  latencyMaxMs: env.CHAOS_LATENCY_MAX_MS,
+  errorRate: env.CHAOS_ERROR_RATE,
+  rateLimitPerSecond: env.CHAOS_RATE_LIMIT_PER_SECOND,
+};
+const chaos = chaosMiddleware(chaosConfig);
+
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'mcp-extranet' });
+  res.json({
+    status: 'ok',
+    service: 'mcp-extranet',
+    chaos: chaosEnabled(chaosConfig) ? { ...chaosConfig, ...chaos.stats } : null,
+  });
 });
+
+if (chaosEnabled(chaosConfig)) {
+  console.log('flaky extranet mode on:', chaosConfig);
+  app.use('/mcp', chaos.middleware);
+}
 
 function jsonRpcError(id: string | number | null, code: number, message: string) {
   return { jsonrpc: '2.0', error: { code, message }, id };

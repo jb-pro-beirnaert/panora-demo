@@ -37,10 +37,14 @@
       "inProgress": "En cours",
       "awaitingApproval": "En attente de validation",
       "closed": "Traités",
-      "failed": "En erreur"
+      "failed": "En erreur",
+      "throughput": "Traités / min",
+      "queued": "En file"
     },
     "counter": "{label} : <strong>{value}</strong>",
-    "languageMix": "E-mails en anglais"
+    "languageMix": "E-mails en anglais",
+    "burst": "Rafale (1 000)",
+    "burstProgress": "Rafale : {sent}/{requested}"
   },
   "inbox": {
     "title": "Boîte de réception",
@@ -97,7 +101,9 @@
     "client": "Client",
     "decisionError": "La décision n'a pas pu être enregistrée : {message}",
     "viewTrace": "Voir la trace",
-    "tokens": "{input} + {output} jetons"
+    "tokens": "{input} + {output} jetons",
+    "retry": "Relancer",
+    "retryHint": "Le dossier a échoué ; relancez-le depuis le début (l'historique est conservé)."
   },
   "status": {
     "received": "Reçu",
@@ -195,7 +201,9 @@
     "case_classified": "Classé comme {requestType}",
     "claim_filed": "Sinistre {claimNumber} déclaré",
     "ready_to_send": "E-mail prêt à envoyer",
-    "workflow_failed": "Le traitement a échoué"
+    "workflow_failed": "Le traitement a échoué",
+    "workflow_restarted": "Traitement relancé après une interruption (tentative {attempt})",
+    "workflow_retried": "Dossier relancé par le courtier"
   },
   "common": {
     "none": "aucune",

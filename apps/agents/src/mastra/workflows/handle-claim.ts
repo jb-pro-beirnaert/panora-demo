@@ -18,7 +18,9 @@ import {
   draftReport,
   executeReport,
 } from '../core-callbacks/step-reports.js';
+import { env } from '../env.js';
 import { modelSpecOf } from '../models.js';
+import { simulateCoverage, simulateDraft } from '../simulated/agents.js';
 import { extranetTools } from '../mcp/extranet-client.js';
 import { annotateSpan, caseContext } from './context.js';
 import { actionTypeProblem, buildClaimFiling, toProposedAction } from './claim-filing.js';
@@ -69,6 +71,17 @@ const analyzeCoverage = createStep({
     annotateSpan(tracingContext, 'coverage', model, {
       emailLanguage: inputData.triage.emailLanguage,
     });
+    if (env.AGENTS_MODE === 'simulated') {
+      const coverage = await simulateCoverage(
+        inputData,
+        requestContext,
+        env.SIMULATED_LLM_LATENCY_MS,
+      );
+      for (const report of coverageReports(coverage, { model: 'simulated', durationMs: 0 })) {
+        await core.step(inputData.caseId, report);
+      }
+      return { claim: inputData, coverage, rounds: [] };
+    }
     const prompt = [
       `The e-mail was received on ${inputData.receivedDate}.`,
       clientSection(inputData),
@@ -82,6 +95,7 @@ const analyzeCoverage = createStep({
       requestContext,
       tracingContext,
       onStepFinish: reportToolCalls(inputData.caseId, 'coverage'),
+      abortSignal: AbortSignal.timeout(env.LLM_TIMEOUT_MS),
     });
     const coverage = CoverageVerdictSchema.parse(response.object);
     for (const report of coverageReports(coverage, {
@@ -158,7 +172,14 @@ const draft = createStep({
     const startedAt = Date.now();
     let usage: Usage | undefined;
     let result: Draft;
-    if (claim.precomputed && inputData.rounds.length === 0) {
+    if (env.AGENTS_MODE === 'simulated') {
+      result = await simulateDraft(
+        inputData.coverage,
+        claim.triage.emailLanguage,
+        claim.brokerage.locale,
+        env.SIMULATED_LLM_LATENCY_MS,
+      );
+    } else if (claim.precomputed && inputData.rounds.length === 0) {
       // Single-agent architecture: the first draft was produced at triage.
       result = claim.precomputed.draft;
     } else {
@@ -166,6 +187,7 @@ const draft = createStep({
         structuredOutput: { schema: DraftSchema },
         requestContext,
         tracingContext,
+        abortSignal: AbortSignal.timeout(env.LLM_TIMEOUT_MS),
       });
       usage = first.usage;
       result = DraftSchema.parse(first.object);
@@ -283,6 +305,7 @@ export const handleClaimWorkflow = createWorkflow({
     'Coverage analysis, then proposals submitted to the broker until one is approved, then execution.',
   inputSchema: TriagedEmailSchema,
   outputSchema: ProcessEmailResultSchema,
+  retryConfig: { attempts: env.WORKFLOW_STEP_ATTEMPTS, delay: 2_000 },
 })
   .then(analyzeCoverage)
   .dountil(

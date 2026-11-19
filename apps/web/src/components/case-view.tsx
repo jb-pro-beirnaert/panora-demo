@@ -89,11 +89,7 @@ export function CaseView({ caseId }: { caseId: string }) {
           })}
         </div>
       )}
-      {kase.status === 'failed' && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900">
-          {t('case.failed', { reason: kase.failureReason ?? '—' })}
-        </div>
-      )}
+      {kase.status === 'failed' && <FailedBanner kase={kase} onRetried={load} />}
       {kase.claimNumber && (
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900">
           {t('case.claimFiled', { claimNumber: kase.claimNumber })}
@@ -109,6 +105,38 @@ export function CaseView({ caseId }: { caseId: string }) {
           <AuditCard kase={kase} />
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Failed case: the reason, and a button to relaunch it from the start (V9). */
+function FailedBanner({ kase, onRetried }: { kase: CaseDetail; onRetried: () => void }) {
+  const t = useTranslations('case');
+  const { broker } = useBroker();
+  const [sending, setSending] = useState(false);
+  const canRetry = broker?.brokerage.id === kase.brokerage.id;
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900">
+      <span className="mr-auto">{t('failed', { reason: kase.failureReason ?? '—' })}</span>
+      {canRetry && broker && (
+        <Button
+          size="sm"
+          variant="outline"
+          title={t('retryHint')}
+          disabled={sending}
+          onClick={async () => {
+            setSending(true);
+            try {
+              await coreApi.retry(kase.id, broker.id);
+              onRetried();
+            } finally {
+              setSending(false);
+            }
+          }}
+        >
+          {t('retry')}
+        </Button>
+      )}
     </div>
   );
 }

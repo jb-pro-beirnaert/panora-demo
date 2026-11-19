@@ -5,6 +5,7 @@ import { AutoValidator } from './auto-validation/auto-validator.js';
 import { controlRouter } from './control/routes.js';
 import { loadEnv } from './env.js';
 import { resetAll, seedAll, type SeedTargets } from './seeding/seeder.js';
+import { Burst } from './stream/burst.js';
 import { EmailStream } from './stream/email-stream.js';
 
 const env = loadEnv();
@@ -46,6 +47,10 @@ const stream = new EmailStream(
   emails.map(({ email, groundTruth }) => ({ email, language: groundTruth.emailLanguage })),
   deliver,
   { emailsPerMinute: env.SIMULATOR_EMAILS_PER_MINUTE, englishShare: env.SIMULATOR_ENGLISH_SHARE },
+);
+const burst = new Burst(
+  emails.map(({ email }) => email),
+  deliver,
 );
 const brokersByBrokerage = new Map<string, string[]>();
 for (const broker of world.brokers) {
@@ -107,6 +112,7 @@ app.get('/emails/:index', (req, res) => {
 app.use(
   controlRouter({
     stream,
+    burst,
     autoValidator,
     seeding: () => seeding,
     reset: async () => {

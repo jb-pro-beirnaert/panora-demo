@@ -1,6 +1,6 @@
 'use client';
 
-import type { CaseStats } from '@demo/shared';
+import type { CaseMetrics, CaseStats } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ export function DemoPanel() {
   const format = useFormatter();
   const [state, setState] = useState<SimulatorState | null>(null);
   const [stats, setStats] = useState<CaseStats | null>(null);
+  const [metrics, setMetrics] = useState<CaseMetrics | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -32,6 +33,10 @@ export function DemoPanel() {
       .stats()
       .then(setStats)
       .catch(() => setStats(null));
+    coreApi
+      .metrics()
+      .then(setMetrics)
+      .catch(() => setMetrics(null));
   }, []);
 
   useEffect(() => {
@@ -61,11 +66,18 @@ export function DemoPanel() {
   };
 
   const counters: [string, number | undefined][] = [
-    ['sent', state?.sent],
+    ['sent', state ? state.sent + (state.burst?.sent ?? 0) : undefined],
     ['inProgress', stats?.inProgress],
     ['awaitingApproval', stats?.awaitingApproval],
     ['closed', stats?.closed],
     ['failed', stats?.failed],
+    ['throughput', metrics?.closedLastMinute],
+    [
+      'queued',
+      metrics
+        ? Object.values(metrics.queues).reduce((sum, q) => sum + q.waiting + q.delayed, 0)
+        : undefined,
+    ],
   ];
 
   return (
@@ -161,6 +173,19 @@ export function DemoPanel() {
                 </span>
               )}
             </label>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy || state?.seeding !== 'done'}
+              onClick={() => run(() => simulatorApi.burst(1_000))}
+            >
+              {t('burst')}
+            </Button>
+            {state?.burst?.startedAt && !state.burst.finishedAt && (
+              <span className="text-xs">
+                {t('burstProgress', { sent: state.burst.sent, requested: state.burst.requested })}
+              </span>
+            )}
             <Button
               size="sm"
               variant="destructive"

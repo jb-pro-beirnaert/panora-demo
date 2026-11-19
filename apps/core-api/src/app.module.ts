@@ -11,7 +11,9 @@ import { InfraModule } from './infra.module.js';
 import { InternalController } from './internal/internal.controller.js';
 import { InternalService } from './internal/internal.service.js';
 import { ServiceTokenGuard } from './internal/service-token.guard.js';
+import { MaintenanceProcessor } from './queues/maintenance.processor.js';
 import { ProcessEmailProcessor } from './queues/process-email.processor.js';
+import { WatchdogService } from './queues/watchdog.service.js';
 import { QueuesModule } from './queues/queues.module.js';
 import { ResumeWorkflowProcessor } from './queues/resume-workflow.processor.js';
 import { RealtimeController } from './realtime/realtime.controller.js';
@@ -52,7 +54,8 @@ export class AppModule {
         CasesService,
         InternalService,
         ServiceTokenGuard,
-        ...(workers ? [ProcessEmailProcessor, ResumeWorkflowProcessor] : []),
+        WatchdogService,
+        ...(workers ? [ProcessEmailProcessor, ResumeWorkflowProcessor, MaintenanceProcessor] : []),
       ],
     };
   }

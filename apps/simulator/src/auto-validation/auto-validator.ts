@@ -31,6 +31,9 @@ export function chooseDecision(
   return { approved: true };
 }
 
+/** Core sends a heartbeat every 15 s: silence for longer means a dead connection. */
+export const SSE_IDLE_TIMEOUT_MS = 45_000;
+
 /** Parses an SSE stream into `{ event, data }` messages. */
 export async function* readSse(
   body: ReadableStream<Uint8Array>,
@@ -92,16 +95,24 @@ export class AutoValidator {
     void (async () => {
       for (;;) {
         this.abort = new AbortController();
+        const abort = this.abort;
+        let idle = setTimeout(() => abort.abort(), SSE_IDLE_TIMEOUT_MS);
         try {
           const response = await fetch(new URL('/realtime', this.coreUrl), {
-            signal: this.abort.signal,
+            signal: abort.signal,
             headers: { accept: 'text/event-stream' },
           });
           if (response.ok && response.body) {
-            for await (const message of readSse(response.body)) this.onMessage(message.data);
+            for await (const message of readSse(response.body)) {
+              clearTimeout(idle);
+              idle = setTimeout(() => abort.abort(), SSE_IDLE_TIMEOUT_MS);
+              this.onMessage(message.data);
+            }
           }
         } catch {
-          // Core not up yet or restarted: retry below.
+          // Core not up yet, restarted, or silent for too long: reconnect below.
+        } finally {
+          clearTimeout(idle);
         }
         await new Promise((resolve) => setTimeout(resolve, 2_000));
       }

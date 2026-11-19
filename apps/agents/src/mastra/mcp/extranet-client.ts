@@ -3,6 +3,7 @@ import { issueMcpToken } from '@demo/shared/mcp-token';
 import type { RequestContext } from '@mastra/core/request-context';
 import { MCPClient } from '@mastra/mcp';
 import { env } from '../env.js';
+import { isTransientToolError, withRetry } from '../resilience.js';
 
 /** Request-context key carrying the brokerage of the case, set by the workflow steps. */
 export const BROKER_CODE_KEY = 'brokerCode';
@@ -29,7 +30,8 @@ export function extranetClient(scope: McpTokenScope, brokerCode: string): MCPCli
         extranet: {
           url: new URL('/mcp', env.MCP_EXTRANET_URL),
           requestInit: { headers: { Authorization: `Bearer ${token}` } },
-          timeout: 20_000,
+          // Explicit timeout of every MCP request (a slow extranet ends in a retry, not a hang).
+          timeout: env.MCP_TIMEOUT_MS,
         },
       },
     });
@@ -44,8 +46,29 @@ export function extranetClient(scope: McpTokenScope, brokerCode: string): MCPCli
  * the Mastra server starts even when the MCP server is not up yet.
  */
 export async function extranetTools(scope: McpTokenScope, brokerCode: string) {
-  const toolsets = await extranetClient(scope, brokerCode).listToolsets();
-  return toolsets.extranet ?? {};
+  const toolsets = await withRetry(
+    'extranet listToolsets',
+    () => extranetClient(scope, brokerCode).listToolsets(),
+    { attempts: 4, baseDelayMs: 300 },
+  );
+  const tools = toolsets.extranet ?? {};
+  // Every tool call is retried on transient errors (flaky extranet, rate limit): thrown errors
+  // and error results that look like transport failures alike.
+  for (const [name, tool] of Object.entries(tools)) {
+    const execute = tool.execute?.bind(tool);
+    if (!execute) continue;
+    tool.execute = (async (...args: Parameters<typeof execute>) =>
+      withRetry(
+        `extranet ${name}`,
+        async () => {
+          const result = await execute(...args);
+          if (isTransientToolError(result)) throw new Error(JSON.stringify(result).slice(0, 300));
+          return result;
+        },
+        { attempts: env.MCP_RETRY_ATTEMPTS, baseDelayMs: 400 },
+      )) as typeof tool.execute;
+  }
+  return tools;
 }
 
 export function brokerCodeOf(requestContext: RequestContext): string {

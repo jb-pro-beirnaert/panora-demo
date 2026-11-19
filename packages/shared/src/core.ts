@@ -229,6 +229,9 @@ export const AuditActionSchema = z.enum([
   'claim_filed',
   'ready_to_send',
   'workflow_failed',
+  /** V9: the watchdog restarted a stuck run, or a broker relaunched a failed case. */
+  'workflow_restarted',
+  'workflow_retried',
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 
@@ -252,6 +255,29 @@ export const RealtimeEventSchema = z.object({
   data: z.record(z.string(), z.unknown()).default({}),
 });
 export type RealtimeEvent = z.infer<typeof RealtimeEventSchema>;
+
+/** Load metrics (`GET /cases/metrics`, V9): throughput, durations, queues. */
+export const CaseMetricsSchema = z.object({
+  total: z.number().int(),
+  byStatus: z.record(z.string(), z.number().int()),
+  /** Cases closed during the last minute. */
+  closedLastMinute: z.number().int(),
+  /** From reception to closing, for closed cases. */
+  durationMs: z.object({ p50: z.number(), p95: z.number() }).nullable(),
+  queues: z.record(
+    z.string(),
+    z.object({
+      waiting: z.number().int(),
+      active: z.number().int(),
+      delayed: z.number().int(),
+      failed: z.number().int(),
+      completed: z.number().int(),
+    }),
+  ),
+  /** Watchdog restarts and broker relaunches. */
+  restarts: z.number().int(),
+});
+export type CaseMetrics = z.infer<typeof CaseMetricsSchema>;
 
 /** Counters of the demo panel (`GET /cases/stats`). */
 export const CaseStatsSchema = z.object({

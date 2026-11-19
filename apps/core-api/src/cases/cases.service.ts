@@ -1,4 +1,11 @@
-import type { BrokerView, CaseDetail, CaseStats, CaseSummary, DecisionRequest } from '@demo/shared';
+import type {
+  BrokerView,
+  CaseDetail,
+  CaseMetrics,
+  CaseStats,
+  CaseSummary,
+  DecisionRequest,
+} from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
   ConflictException,
@@ -10,7 +17,12 @@ import {
 import type { Queue } from 'bullmq';
 import { AuditService } from '../audit/audit.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { RESUME_WORKFLOW_QUEUE, type ResumeWorkflowJob } from '../queues/queue-names.js';
+import {
+  PROCESS_EMAIL_QUEUE,
+  RESUME_WORKFLOW_QUEUE,
+  type ProcessEmailJob,
+  type ResumeWorkflowJob,
+} from '../queues/queue-names.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import {
   caseDetailInclude,
@@ -28,7 +40,83 @@ export class CasesService {
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
     @InjectQueue(RESUME_WORKFLOW_QUEUE) private readonly resumeQueue: Queue<ResumeWorkflowJob>,
+    @InjectQueue(PROCESS_EMAIL_QUEUE) private readonly processEmailQueue: Queue<ProcessEmailJob>,
   ) {}
+
+  /** Load metrics (V9): status counts, throughput, durations, queue depths. */
+  async metrics(now = new Date()): Promise<CaseMetrics> {
+    const groups = await this.prisma.case.groupBy({ by: ['status'], _count: { _all: true } });
+    const byStatus = Object.fromEntries(groups.map((g) => [g.status, g._count._all]));
+    const closedStatuses = ['classified', 'claim_filed', 'ready_to_send'] as const;
+    const closedLastMinute = await this.prisma.case.count({
+      where: {
+        status: { in: [...closedStatuses] },
+        updatedAt: { gte: new Date(now.getTime() - 60_000) },
+      },
+    });
+    const closed = await this.prisma.case.findMany({
+      where: { status: { in: [...closedStatuses] } },
+      select: { createdAt: true, updatedAt: true },
+    });
+    const durations = closed
+      .map((c) => c.updatedAt.getTime() - c.createdAt.getTime())
+      .sort((a, b) => a - b);
+    const at = (p: number) =>
+      durations[Math.min(durations.length - 1, Math.floor(p * durations.length))]!;
+    const queues: CaseMetrics['queues'] = {};
+    for (const queue of [this.processEmailQueue, this.resumeQueue]) {
+      const c = await queue.getJobCounts('waiting', 'active', 'delayed', 'failed', 'completed');
+      queues[queue.name] = {
+        waiting: c.waiting ?? 0,
+        active: c.active ?? 0,
+        delayed: c.delayed ?? 0,
+        failed: c.failed ?? 0,
+        completed: c.completed ?? 0,
+      };
+    }
+    const restarts = await this.prisma.auditLog.count({
+      where: { action: { in: ['workflow_restarted', 'workflow_retried'] } },
+    });
+    return {
+      total: groups.reduce((sum, g) => sum + g._count._all, 0),
+      byStatus,
+      closedLastMinute,
+      durationMs: durations.length ? { p50: at(0.5), p95: at(0.95) } : null,
+      queues,
+      restarts,
+    };
+  }
+
+  /** A failed case is relaunched from the start (a new workflow run; the history is kept). */
+  async retry(caseId: string, brokerId: string): Promise<void> {
+    const broker = await this.prisma.broker.findUnique({ where: { id: brokerId } });
+    if (!broker) throw new UnauthorizedException(`Unknown broker ${brokerId}.`);
+    const kase = await this.prisma.case.findUnique({ where: { id: caseId } });
+    if (!kase) throw new NotFoundException(`No case ${caseId}.`);
+    if (kase.brokerageId !== broker.brokerageId) {
+      throw new ForbiddenException('This case belongs to another brokerage.');
+    }
+    if (kase.status !== 'failed') {
+      throw new ConflictException('Only a failed case can be relaunched.');
+    }
+    await this.prisma.case.update({
+      where: { id: caseId },
+      data: { status: 'received', workflowRunId: null, failureReason: null },
+    });
+    await this.audit.record({
+      caseId,
+      actor: 'broker',
+      actorId: broker.id,
+      action: 'workflow_retried',
+      params: {},
+    });
+    await this.processEmailQueue.add(
+      'process-email',
+      { caseId },
+      { jobId: `${kase.emailId}-retry-${Date.now()}` },
+    );
+    this.realtime.publish('case.updated', caseId, { status: 'received' });
+  }
 
   async listBrokers(): Promise<BrokerView[]> {
     const brokers = await this.prisma.broker.findMany({

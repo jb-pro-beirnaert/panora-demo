@@ -17,6 +17,10 @@ export class FakeMastraClient {
   async start(runId: string, input: ProcessEmailInput, tracing: CaseTracing): Promise<void> {
     this.started.push({ runId, input, tracing });
   }
+  restarted: string[] = [];
+  async restart(runId: string): Promise<void> {
+    this.restarted.push(runId);
+  }
   async resume(runId: string, decision: ApprovalDecision, tracing: CaseTracing): Promise<void> {
     this.resumed.push({ runId, decision, tracing });
   }

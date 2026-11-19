@@ -2,6 +2,7 @@ import {
   DecisionRequestSchema,
   type BrokerView,
   type CaseDetail,
+  type CaseMetrics,
   type CaseStats,
   type CaseSummary,
   type DecisionRequest,
@@ -30,9 +31,24 @@ export class CasesController {
     return this.cases.stats();
   }
 
+  @Get('cases/metrics')
+  metrics(): Promise<CaseMetrics> {
+    return this.cases.metrics();
+  }
+
   @Get('cases/:id')
   detail(@Param('id') id: string): Promise<CaseDetail> {
     return this.cases.detail(id);
+  }
+
+  @Post('cases/:id/retry')
+  @HttpCode(202)
+  async retry(
+    @Param('id') id: string,
+    @CurrentBrokerId() brokerId: string,
+  ): Promise<{ status: 'accepted' }> {
+    await this.cases.retry(id, brokerId);
+    return { status: 'accepted' };
   }
 
   @Post('cases/:id/decision')

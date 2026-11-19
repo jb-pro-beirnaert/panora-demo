@@ -15,7 +15,9 @@ import { z } from 'zod';
 import { reportToolCalls } from '../core-callbacks/agent-events.js';
 import { core } from '../core-callbacks/core-client.js';
 import { classifiedReport, triageReport } from '../core-callbacks/step-reports.js';
+import { env } from '../env.js';
 import { modelSpecOf } from '../models.js';
+import { simulateTriage } from '../simulated/agents.js';
 import { CLIENT_LOOKUP_KEY } from '../mcp/extranet-client.js';
 import { lookupClient } from '../tools/find-client.js';
 import { annotateSpan, caseContext } from './context.js';
@@ -114,7 +116,13 @@ const triage = createStep({
     let triageResult;
     let precomputed;
     let usage;
-    if (single) {
+    if (env.AGENTS_MODE === 'simulated') {
+      triageResult = await simulateTriage(
+        inputData.email,
+        inputData.receivedDate,
+        env.SIMULATED_LLM_LATENCY_MS,
+      );
+    } else if (single) {
       // V8 comparison: one agent produces the triage, the verdict and the first draft at once.
       const response = await mastra
         .getAgent('singleAgent')
@@ -130,6 +138,7 @@ const triage = createStep({
             requestContext,
             tracingContext,
             onStepFinish: reportToolCalls(inputData.caseId, 'coverage'),
+            abortSignal: AbortSignal.timeout(env.LLM_TIMEOUT_MS),
           },
         );
       const result = SingleAgentResultSchema.parse(response.object);
@@ -145,6 +154,7 @@ const triage = createStep({
           requestContext,
           tracingContext,
           onStepFinish: reportToolCalls(inputData.caseId, 'triage'),
+          abortSignal: AbortSignal.timeout(env.LLM_TIMEOUT_MS),
         });
       triageResult = TriageResultSchema.parse(response.object);
       usage = response.usage;
@@ -211,6 +221,8 @@ export const processEmailWorkflow = createWorkflow({
     'Processes one inbound e-mail: triage, then for a claim coverage analysis, a proposed action approved by a broker, and its execution.',
   inputSchema: ProcessEmailInputSchema,
   outputSchema: ProcessEmailResultSchema,
+  // Transient failures (LLM API, extranet, timeouts): each step is retried before the run fails.
+  retryConfig: { attempts: env.WORKFLOW_STEP_ATTEMPTS, delay: 2_000 },
   options: {
     onFinish: async ({ status, result, runId, getInitData }) => {
       if (status !== 'success') return;

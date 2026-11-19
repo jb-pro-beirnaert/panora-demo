@@ -1,10 +1,12 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import type { AutoValidator } from '../auto-validation/auto-validator.js';
+import type { Burst } from '../stream/burst.js';
 import type { EmailStream } from '../stream/email-stream.js';
 
 export interface ControlDeps {
   stream: EmailStream;
+  burst: Burst;
   autoValidator: AutoValidator;
   /** Wipes Core and the extranet, then seeds them again. */
   reset: () => Promise<void>;
@@ -12,6 +14,10 @@ export interface ControlDeps {
 }
 
 const SpeedSchema = z.object({ emailsPerMinute: z.number().positive().max(600) });
+const BurstSchema = z.object({
+  count: z.number().int().positive().max(5_000),
+  concurrency: z.number().int().positive().max(100).optional(),
+});
 const LanguageMixSchema = z.object({ en: z.number().min(0).max(1) });
 const AutoValidationSchema = z.object({
   enabled: z.boolean().optional(),
@@ -36,6 +42,7 @@ export function controlRouter(deps: ControlDeps): Router {
     seeding: deps.seeding(),
     autoValidation: deps.autoValidator.settings,
     decisions: deps.autoValidator.decisions,
+    burst: deps.burst.state,
   });
 
   router.get('/state', (_req, res) => {
@@ -58,6 +65,12 @@ export function controlRouter(deps: ControlDeps): Router {
     if (!body) return;
     deps.stream.setSpeed(body.emailsPerMinute);
     res.json(state());
+  });
+  router.post('/burst', (req, res) => {
+    const body = parse(BurstSchema, req, res);
+    if (!body) return;
+    deps.burst.start(body.count, body.concurrency);
+    res.status(202).json(state());
   });
   router.post('/language-mix', (req, res) => {
     const body = parse(LanguageMixSchema, req, res);

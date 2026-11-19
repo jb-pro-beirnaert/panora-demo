@@ -18,8 +18,27 @@ const EnvSchema = z
       .min(1)
       .default('postgresql://postgres:postgres@localhost:5432/core'),
     REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
-    /** Base URL of the Mastra server (workflow start / resume). */
-    MASTRA_URL: z.url().default('http://localhost:4111'),
+    /**
+     * Base URL(s) of the Mastra server(s), comma-separated (V9: several instances, round robin
+     * with failover; they share the `agents` database, so any instance can resume any run).
+     */
+    MASTRA_URL: z
+      .string()
+      .default('http://localhost:4111')
+      .transform((value) =>
+        value
+          .split(',')
+          .map((url) => url.trim())
+          .filter(Boolean),
+      )
+      .pipe(z.array(z.url()).min(1)),
+    /** BullMQ workers (V9): jobs in parallel, and rate limit aligned with the LLM API quota. */
+    WORKER_CONCURRENCY: z.coerce.number().int().positive().default(10),
+    /** Max workflow starts per WORKER_RATE_DURATION_MS (0 = no limit). */
+    WORKER_RATE_MAX: z.coerce.number().int().min(0).default(0),
+    WORKER_RATE_DURATION_MS: z.coerce.number().int().positive().default(60_000),
+    /** A case with no activity for this long while processing is restarted by the watchdog. */
+    STUCK_CASE_AFTER_MS: z.coerce.number().int().positive().default(300_000),
     /** Bearer token the Mastra server presents on `/internal/*` callbacks. */
     CORE_SERVICE_TOKEN: z
       .string()

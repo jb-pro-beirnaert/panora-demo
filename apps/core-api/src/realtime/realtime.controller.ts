@@ -1,5 +1,5 @@
 import { Controller, Sse, type MessageEvent } from '@nestjs/common';
-import { interval, map, merge, type Observable } from 'rxjs';
+import { interval, map, merge, takeUntil, type Observable } from 'rxjs';
 import { RealtimeService } from './realtime.service.js';
 
 const HEARTBEAT_MS = 15_000;
@@ -18,6 +18,8 @@ export class RealtimeController {
     const heartbeat = interval(HEARTBEAT_MS).pipe(
       map((): MessageEvent => ({ type: 'heartbeat', data: {} })),
     );
-    return merge(events, heartbeat);
+    // Without this, a stopping server waits for the open streams forever (and keeps clients
+    // attached to a process that no longer accepts connections).
+    return merge(events, heartbeat).pipe(takeUntil(this.realtime.shutdown));
   }
 }

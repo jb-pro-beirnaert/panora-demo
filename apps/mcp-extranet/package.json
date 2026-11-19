@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "prisma generate && tsc --noEmit",
     "generate": "prisma generate",
-    "token": "tsx --env-file-if-exists=../../.env src/scripts/issue-token.ts"
+    "token": "tsx --env-file-if-exists=../../.env src/scripts/issue-token.ts",
+    "test": "tsx --test 'src/**/*.test.ts'"
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",
