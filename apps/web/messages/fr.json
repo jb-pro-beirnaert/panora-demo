@@ -191,7 +191,7 @@
     "openSource": "Ouvrir la donnée consultée par l'agent",
     "injection": {
       "title": "Tentative de manipulation de l'IA détectée dans {documents}",
-      "hint": "Ces pièces contiennent des instructions adressées à l'IA, invisibles à l'œil dans le PDF. Les agents les ont ignorées et ont analysé le dossier sur les faits visibles. Aucune action ne sera exécutée sans votre confirmation explicite.",
+      "hint": "Ces pièces contiennent des instructions adressées à l'IA, glissées dans le PDF. Les agents les ont ignorées et ont analysé le dossier sur les faits visibles. Aucune action ne sera exécutée sans votre confirmation explicite.",
       "ignored": "{count, plural, one {Instruction ignorée} other {# instructions ignorées}}",
       "acknowledge": "J'ai lu l'alerte d'injection et vérifié les pièces moi-même : le montant, le contrat et les coordonnées de la proposition sont corrects.",
       "required": "Cochez la confirmation pour valider ce dossier."

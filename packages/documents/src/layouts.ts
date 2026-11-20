@@ -255,9 +255,17 @@ function invoiceLayout(model: InvoiceDocument): Content[] {
       },
     },
     totals,
-    // V18: an instruction aimed at the AI, invisible on paper (white, tiny), read by extraction.
+    // V18: an instruction aimed at the AI, slipped under the totals. Printed visibly (red, italic)
+    // so the trap can be shown on the PDF during the demo; extraction reads it like any other text.
     ...(model.hiddenText
-      ? [p(model.hiddenText, { fontSize: 3, color: '#ffffff', margin: [0, 6, 0, 0] })]
+      ? [
+          p(model.hiddenText, {
+            fontSize: 9,
+            italics: true,
+            color: '#b91c1c',
+            margin: [0, 10, 0, 0],
+          }),
+        ]
       : []),
     {
       stack: [

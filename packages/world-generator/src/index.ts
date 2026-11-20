@@ -5,6 +5,8 @@ export {
   DEMO_SCRIPT,
   generateDemoScript,
   generateEmails,
+  INJECTED_INSTRUCTIONS_EN,
+  INJECTED_INSTRUCTIONS_FR,
   SCENARIO_ORDER,
   SCENARIO_WEIGHTS,
 } from './emails.js';

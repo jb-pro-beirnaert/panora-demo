@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { INJECTED_INSTRUCTIONS_EN, INJECTED_INSTRUCTIONS_FR } from '@demo/world-generator';
 import {
   assertInjectionAcknowledged,
   findSuspicious,
@@ -66,5 +67,12 @@ describe('prompt-injection guard (V18)', () => {
       assertInjectionAcknowledged(['prompt_injection'], { injectionAcknowledged: true }),
     );
     assert.doesNotThrow(() => assertInjectionAcknowledged([], {}));
+  });
+
+  it('detects every instruction the generator prints in a trapped invoice', () => {
+    for (const instruction of [...INJECTED_INSTRUCTIONS_FR, ...INJECTED_INSTRUCTIONS_EN]) {
+      const text = instruction(1840);
+      assert.ok(findSuspicious(email(`--- page 1 ---\nTotal TTC : 1 840,00 €\n${text}`)).length > 0, text);
+    }
   });
 });

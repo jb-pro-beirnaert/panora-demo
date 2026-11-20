@@ -36,7 +36,7 @@ export interface AttachmentContext {
   location: string;
   circumstances: string;
   vehicle: Vehicle | undefined;
-  /** V18: printed invisibly in the invoice (prompt injection). */
+  /** V18: instruction for the AI printed under the invoice totals (prompt injection). */
   hiddenInstruction?: string | null;
 }
 

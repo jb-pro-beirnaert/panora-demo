@@ -249,7 +249,7 @@ test('the demo script covers every scenario once, in order, reproducibly (V14, V
   assert.equal(byScenario('follow_up_no_header').email.inReplyTo, undefined);
   assert.equal(byScenario('follow_up_no_header').email.from, script[0]!.email.from);
   assert.equal(byScenario('resent_claim').email.from, script[7]!.email.from);
-  // V18: the booby-trapped invoice hides an instruction, readable in the text but not printed visibly.
+  // V18: the booby-trapped invoice hides an instruction, readable in the text but also printed in red under the totals.
   const trap = byScenario('prompt_injection');
   const invoice = trap.email.attachments.find((a) => a.document?.kind === 'invoice')!;
   assert.ok(invoice.document && 'hiddenText' in invoice.document && invoice.document.hiddenText);

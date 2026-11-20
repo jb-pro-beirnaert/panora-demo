@@ -191,7 +191,7 @@
     "openSource": "Open the data the agent consulted",
     "injection": {
       "title": "AI manipulation attempt detected in {documents}",
-      "hint": "These documents contain instructions addressed to the AI, invisible to the eye in the PDF. The agents ignored them and analysed the case on the visible facts. No action will run without your explicit confirmation.",
+      "hint": "These documents contain instructions addressed to the AI, slipped into the PDF. The agents ignored them and analysed the case on the visible facts. No action will run without your explicit confirmation.",
       "ignored": "{count, plural, one {Ignored instruction} other {# ignored instructions}}",
       "acknowledge": "I read the injection alert and checked the documents myself: the amount, the policy and the contact details of the proposal are correct.",
       "required": "Tick the confirmation to approve this case."

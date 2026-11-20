@@ -27,6 +27,7 @@
   "devDependencies": {
     "@demo/eslint-config": "*",
     "@demo/tsconfig": "*",
+    "@demo/world-generator": "*",
     "mastra": "^1.40.0"
   }
 }
