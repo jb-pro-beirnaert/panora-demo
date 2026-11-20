@@ -19,6 +19,7 @@ import { env } from '../env.js';
 import { extranetTools } from '../mcp/extranet-client.js';
 import { modelSpecOf } from '../models.js';
 import { simulateService } from '../simulated/agents.js';
+import { assertInjectionAcknowledged, withInjectionAlert } from '../security/injection.js';
 import { annotateSpan, caseContext } from './context.js';
 import { clientSection } from './handle-claim.js';
 import {
@@ -134,6 +135,7 @@ const analyzeService = createStep({
       analysis = ServiceAnalysisSchema.parse(response.object);
       usage = response.usage;
     }
+    analysis = { ...analysis, alerts: withInjectionAlert(analysis.alerts, inputData) };
     for (const report of serviceReports(analysis, {
       model: env.AGENTS_MODE === 'simulated' ? 'simulated' : model,
       durationMs: Date.now() - startedAt,
@@ -276,6 +278,7 @@ const executeService = createStep({
     if (!approved?.decision.approved) throw new Error('execute reached without an approved action');
     const { action, decision } = approved;
     const { request } = inputData;
+    assertInjectionAcknowledged(inputData.analysis.alerts, decision);
     const language = request.triage.emailLanguage;
     await reportStepStarted(request.caseId, 'execute', { actionType: action.actionType });
     const reply = (values: Record<string, string>) =>

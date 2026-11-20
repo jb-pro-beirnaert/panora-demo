@@ -391,6 +391,7 @@ function writeUnrelated(
       subject: `${supplier.item} — ${received.slice(5, 7)}/${received.slice(0, 4)}`,
       lines: [{ label: supplier.item, quantity: 1, unitPrice: net }],
       vatRate: 0.2,
+      hiddenText: null,
       totals: { net, vat: Math.round((amount - net) * 100) / 100, gross: amount },
       iban: 'FR76 3000 4000 0312 3456 7890 143',
     };

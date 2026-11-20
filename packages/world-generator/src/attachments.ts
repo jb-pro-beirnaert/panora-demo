@@ -36,6 +36,8 @@ export interface AttachmentContext {
   location: string;
   circumstances: string;
   vehicle: Vehicle | undefined;
+  /** V18: printed invisibly in the invoice (prompt injection). */
+  hiddenInstruction?: string | null;
 }
 
 /**
@@ -163,6 +165,7 @@ function invoiceOrQuote(
       : `Réparation suite à sinistre ${nature}${ctx.vehicle ? ` — véhicule ${ctx.vehicle.plate}` : ''}`,
     ...invoiceLines(ctx.amount, ctx.peril, language),
     vatRate: 0.2,
+    hiddenText: ctx.hiddenInstruction ?? null,
     iban: `FR76 ${digits(random, 4)} ${digits(random, 4)} ${digits(random, 4)} ${digits(random, 4)} ${digits(random, 4)} ${digits(random, 3)}`,
   };
   const fileName = english

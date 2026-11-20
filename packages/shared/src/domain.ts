@@ -130,6 +130,11 @@ export const AlertTypeSchema = z.enum([
   'cancellation_already_requested',
   /** V15: the notice period is not met, the cancellation takes effect at the following renewal. */
   'notice_period_not_met',
+  /**
+   * V18: the e-mail or an attachment contains instructions addressed to the AI (prompt
+   * injection). The agents ignore them; the broker must confirm before any action.
+   */
+  'prompt_injection',
 ]);
 export type AlertType = z.infer<typeof AlertTypeSchema>;
 

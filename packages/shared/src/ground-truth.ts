@@ -27,6 +27,8 @@ export const ClaimScenarioIdSchema = z.enum([
   'partial_documents',
   /** V15 (demo script only): the same claim sent again while the first case is open. */
   'resent_claim',
+  /** V18: an ordinary claim whose invoice hides instructions for the AI. */
+  'prompt_injection',
 ]);
 export type ClaimScenarioId = z.infer<typeof ClaimScenarioIdSchema>;
 

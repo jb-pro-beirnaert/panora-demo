@@ -2,7 +2,7 @@
 
 import type { AgentEventView, AgentStepView, CaseDetail, ProposedActionView } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
-import { Bot, Cpu, ExternalLink, FileText, Loader2, UserRound } from 'lucide-react';
+import { Bot, Cpu, ExternalLink, FileText, Loader2, ShieldAlert, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertBadges, LanguageBadge, StatusBadge, VerdictBadge } from '@/components/case-badges';
 import { PipelineStepper } from '@/components/pipeline';
@@ -24,6 +24,43 @@ import {
 } from '@/lib/render';
 import { attachmentAnchor, eventLink, linkHref, sourceEvent } from '@/lib/source-links';
 import { cn } from '@/lib/utils';
+
+/** V18: passages addressed to the AI that the code found in the e-mail and its attachments. */
+function suspiciousPassages(
+  kase: CaseDetail,
+): { ref: string; page: number | null; excerpt: string }[] {
+  return kase.steps
+    .filter((step) => step.stepType === 'prepare.suspicious_content')
+    .flatMap((step) =>
+      step.sources.map((source) => ({
+        ref: source.ref,
+        page: source.page ?? null,
+        excerpt: source.excerpt ?? '',
+      })),
+    );
+}
+
+/** The extracted text with the suspicious passages marked in red (V18). */
+function MarkedText({ text, passages }: { text: string; passages: string[] }) {
+  const found = passages.filter((passage) => passage && text.includes(passage));
+  if (found.length === 0) return <>{text}</>;
+  const pattern = new RegExp(
+    `(${found.map((passage) => passage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+  );
+  return (
+    <>
+      {text.split(pattern).map((part, index) =>
+        found.includes(part) ? (
+          <mark key={index} className="rounded bg-red-200 px-0.5 text-red-900">
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
 
 function useFormatters(): Formatters {
   const format = useFormatter();
@@ -92,6 +129,9 @@ export function CaseView({ caseId }: { caseId: string }) {
             actual: t(`policyStatus.${String(mismatch.params.status)}`),
           })}
         </div>
+      )}
+      {(kase.alerts.includes('prompt_injection') || suspiciousPassages(kase).length > 0) && (
+        <InjectionBanner kase={kase} />
       )}
       {kase.status === 'failed' && <FailedBanner kase={kase} onRetried={load} />}
       {kase.status === 'needs_broker' && <HandoverBanner kase={kase} onHandled={load} />}
@@ -200,7 +240,14 @@ function FollowUpsCard({ kase, onRestarted }: { kase: CaseDetail; onRestarted: (
             <div className="font-medium">{email.subject}</div>
             <p className="whitespace-pre-wrap">{email.body}</p>
             {email.attachments.map((attachment) => (
-              <AttachmentRow key={attachment.id} caseId={kase.id} attachment={attachment} />
+              <AttachmentRow
+                key={attachment.id}
+                caseId={kase.id}
+                attachment={attachment}
+                suspicious={suspiciousPassages(kase)
+                  .filter((passage) => passage.ref === attachment.fileName)
+                  .map((passage) => passage.excerpt)}
+              />
             ))}
           </div>
         ))}
@@ -227,6 +274,46 @@ function FollowUpsCard({ kase, onRestarted }: { kase: CaseDetail; onRestarted: (
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * V18: instructions aimed at the AI were found. What they say, where, and what that means: the
+ * agents ignored them, and nothing is approved without the broker's confirmation.
+ */
+function InjectionBanner({ kase }: { kase: CaseDetail }) {
+  const t = useTranslations('case.injection');
+  const passages = suspiciousPassages(kase);
+  const documents = [...new Set(passages.map((passage) => passage.ref))];
+  return (
+    <div className="space-y-2 rounded-lg border-2 border-red-400 bg-red-50 p-3 text-sm text-red-950">
+      <div className="flex items-center gap-2 font-semibold">
+        <ShieldAlert className="size-5 text-red-600" />
+        {t('title', { documents: documents.join(', ') || '—' })}
+      </div>
+      <p>{t('hint')}</p>
+      {passages.length > 0 && (
+        <details>
+          <summary className="cursor-pointer font-medium">
+            {t('ignored', { count: passages.length })}
+          </summary>
+          <ul className="mt-1 space-y-1">
+            {passages.map((passage, index) => (
+              <li key={index} className="rounded bg-white/70 p-1.5">
+                <a
+                  href={`#${attachmentAnchor(passage.ref)}`}
+                  className="mr-1 font-mono text-xs text-red-800 underline"
+                >
+                  {passage.ref}
+                  {passage.page ? ` p.${passage.page}` : ''}
+                </a>
+                <q className="italic">{passage.excerpt}</q>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
   );
 }
 
@@ -355,9 +442,12 @@ function EmailCard({ kase }: { kase: CaseDetail }) {
 function AttachmentRow({
   caseId,
   attachment,
+  suspicious = [],
 }: {
   caseId: string;
   attachment: CaseDetail['email']['attachments'][number];
+  /** V18: passages of this attachment addressed to the AI, marked in red. */
+  suspicious?: string[];
 }) {
   const t = useTranslations('case');
   const format = useFormatter();
@@ -386,7 +476,7 @@ function AttachmentRow({
       </summary>
       <div className="mt-2 text-xs text-muted-foreground">{t('extractedText')}</div>
       <pre className="mt-1 max-h-72 overflow-auto whitespace-pre-wrap text-xs">
-        {attachment.extractedText}
+        <MarkedText text={attachment.extractedText} passages={suspicious} />
       </pre>
     </details>
   );
@@ -576,6 +666,9 @@ function Proposal({
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // V18: approving a case with a prompt-injection alert needs an explicit confirmation.
+  const injection = kase.alerts.includes('prompt_injection');
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const decide = async (approved: boolean) => {
     setSending(true);
@@ -585,6 +678,7 @@ function Proposal({
         approved,
         actionId: action.id,
         ...(comment.trim() ? { comment: comment.trim() } : {}),
+        ...(injection && approved ? { injectionAcknowledged: acknowledged } : {}),
       });
       setComment('');
       onDecided();
@@ -678,8 +772,23 @@ function Proposal({
             placeholder={t('case.commentPlaceholder')}
             onChange={(event) => setComment(event.target.value)}
           />
+          {injection && (
+            <label className="flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 p-2 text-sm text-red-950">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+              />
+              <span>{t('case.injection.acknowledge')}</span>
+            </label>
+          )}
           <div className="flex gap-2">
-            <Button disabled={sending} onClick={() => decide(true)}>
+            <Button
+              disabled={sending || (injection && !acknowledged)}
+              title={injection && !acknowledged ? t('case.injection.required') : undefined}
+              onClick={() => decide(true)}
+            >
               {t('case.approve')}
             </Button>
             <Button variant="outline" disabled={sending} onClick={() => decide(false)}>

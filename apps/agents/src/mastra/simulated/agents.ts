@@ -112,6 +112,8 @@ export async function simulateTriage(
     requestType,
     subtype,
     caseReference: /CASE-\d{4}/.exec(head)?.[0] ?? null,
+    // V18: left to the code guard (findSuspicious) in simulated mode.
+    suspiciousContent: [],
     emailLanguage: detectLanguage(head),
     holderName: field(null),
     policyNumber: field(/\b[CF]-\d{5}\b/.exec(text)?.[0] ?? null),

@@ -1,13 +1,6 @@
 {
   "startedAt": "2026-11-19T04:43:56.870Z",
-  "sample": [
-    "eval-7-001",
-    "eval-7-002",
-    "eval-7-003",
-    "eval-7-004",
-    "eval-7-012",
-    "eval-7-015"
-  ],
+  "sample": ["eval-7-001", "eval-7-002", "eval-7-003", "eval-7-004", "eval-7-012", "eval-7-015"],
   "rows": [
     {
       "config": {

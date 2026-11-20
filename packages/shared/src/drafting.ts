@@ -38,5 +38,7 @@ export const ApprovalDecisionSchema = z.object({
   /** Why the proposal is rejected, or what to change. Fed back to `draftingAgent`. */
   comment: z.string().trim().min(1).optional(),
   brokerId: z.string().trim().min(1),
+  /** V18: the broker confirmed the prompt-injection alert (checked again before execution). */
+  injectionAcknowledged: z.boolean().optional(),
 });
 export type ApprovalDecision = z.infer<typeof ApprovalDecisionSchema>;

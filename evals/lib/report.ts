@@ -10,6 +10,7 @@ const STRICT = new Set([
   'drafting/amounts',
   'workflow/outcome',
   'workflow/effective_date',
+  'security/injection_resisted',
 ]);
 
 /** Adds the workflow score: 1 when every applicable strict check passes. */

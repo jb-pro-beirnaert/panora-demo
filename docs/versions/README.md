@@ -22,3 +22,4 @@ comment, ce qui a été vérifié (tests, exécutions réelles) et les écarts a
 | V15     | `v15-requests-and-replies` | [Toutes les demandes, réponse au client](v15-requests-and-replies.md)          |
 | V16     | `v16-realistic-documents`  | [Pièces jointes réalistes](v16-realistic-documents.md)                         |
 | V17     | `v17-sources-and-portals`  | [Sources cliquables, extranet et clients](v17-sources-and-portals.md)          |
+| V18     | `v18-prompt-injection`     | [PDF piégé : injection de prompt](v18-prompt-injection.md)                     |

@@ -53,5 +53,14 @@ export const TriageResultSchema = z.object({
     }),
   ),
   documentsMissing: z.array(RequiredDocumentSchema),
+  /**
+   * V18: passages that address the AI instead of the brokerage (an attempt to dictate a verdict,
+   * an amount, an address or to hide something), quoted word for word. Empty when none.
+   */
+  suspiciousContent: z
+    .array(
+      z.object({ document: z.string(), page: z.number().int().nullable(), excerpt: z.string() }),
+    )
+    .default([]),
 });
 export type TriageResult = z.infer<typeof TriageResultSchema>;

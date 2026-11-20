@@ -23,6 +23,10 @@ export const PreparedEmailSchema = z.object({
   /** The e-mail and its attachments as one text, with named sections the agents cite as sources. */
   rendered: z.string(),
   receivedDate: z.iso.date(),
+  /** V18: passages addressed to the AI, found by code (prompt injection). */
+  suspicious: z
+    .array(z.object({ document: z.string(), page: z.number().nullable(), excerpt: z.string() }))
+    .default([]),
 });
 export type PreparedEmail = z.infer<typeof PreparedEmailSchema>;
 

@@ -10,6 +10,7 @@ import type {
 } from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -287,6 +288,14 @@ export class CasesService {
     if (!action || (action.awaitsWorkflow && kase.status !== 'awaiting_approval')) {
       throw new ConflictException('This case has no proposal awaiting a decision.');
     }
+    // V18: instructions aimed at the AI were found in this case. Nothing is approved until the
+    // broker confirms they read the alert and checked the documents themselves.
+    const injection = kase.alerts.includes('prompt_injection');
+    if (injection && request.approved && request.injectionAcknowledged !== true) {
+      throw new BadRequestException(
+        'This case contains a prompt-injection alert: confirm you read it and checked the documents (injectionAcknowledged) before approving.',
+      );
+    }
 
     // Conditional update: two concurrent decisions cannot both win.
     const decided = await this.prisma.$transaction(async (tx) => {
@@ -324,6 +333,18 @@ export class CasesService {
         },
         tx,
       );
+      if (injection && request.approved) {
+        await this.audit.record(
+          {
+            caseId,
+            actor: 'broker',
+            actorId: broker.id,
+            action: 'injection_acknowledged',
+            params: { revision: action.revision, actionType: action.actionType },
+          },
+          tx,
+        );
+      }
       if (!action.awaitsWorkflow && request.approved) {
         await this.audit.record(
           {
@@ -371,6 +392,7 @@ export class CasesService {
           approved: request.approved,
           brokerId: broker.id,
           ...(request.comment ? { comment: request.comment } : {}),
+          ...(request.injectionAcknowledged ? { injectionAcknowledged: true } : {}),
         },
       },
       { jobId: `${caseId}-${action.id}` },

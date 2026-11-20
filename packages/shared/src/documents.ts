@@ -31,6 +31,11 @@ export const InvoiceDocumentSchema = z.object({
     z.object({ label: z.string(), quantity: z.number(), unitPrice: z.number().nullable() }),
   ),
   vatRate: z.number(),
+  /**
+   * V18: text printed invisibly (white, tiny) under the table — an instruction aimed at the AI.
+   * A human does not see it; text extraction reads it.
+   */
+  hiddenText: z.string().nullable().default(null),
   /** Null: the totals are unreadable (scenario 9: amount masked on a damaged scan). */
   totals: z.object({ net: z.number(), vat: z.number(), gross: z.number() }).nullable(),
   iban: z.string(),
@@ -280,6 +285,7 @@ export function documentText(model: DocumentModel): string {
       } else {
         lines.push(`${l.gross} : [${l.unreadable}]`);
       }
+      if (model.hiddenText) lines.push(model.hiddenText);
       lines.push(l.payment, `${l.iban} ${model.iban}`);
       return `--- page 1 ---\n${lines.join('\n')}`;
     }

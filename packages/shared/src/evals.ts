@@ -3,7 +3,7 @@ import { LocaleSchema } from './domain.js';
 
 /** Eval reports (V7): written by `npm run evals`, shown by the web UI's Evals screen. */
 
-export const EvalAgentSchema = z.enum(['triage', 'coverage', 'drafting', 'workflow']);
+export const EvalAgentSchema = z.enum(['triage', 'coverage', 'drafting', 'workflow', 'security']);
 export type EvalAgent = z.infer<typeof EvalAgentSchema>;
 
 /** One scorer's result on one case: a score in [0, 1], or null when it does not apply. */

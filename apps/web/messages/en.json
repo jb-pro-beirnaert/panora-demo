@@ -69,7 +69,8 @@
       "supplier_invoice": "Supplier invoice",
       "follow_up": "Follow-up with documents",
       "follow_up_no_header": "“Where is my claim?” follow-up",
-      "resent_claim": "Claim sent twice (duplicate)"
+      "resent_claim": "Claim sent twice (duplicate)",
+      "prompt_injection": "Booby-trapped PDF (injection)"
     }
   },
   "inbox": {
@@ -187,7 +188,14 @@
     "standaloneReply": "Reply to the client",
     "cancellationFiling": "Cancellation to record: policy {policyNumber}, effective {date}",
     "finalDraft": "Final reply, ready to send",
-    "openSource": "Open the data the agent consulted"
+    "openSource": "Open the data the agent consulted",
+    "injection": {
+      "title": "AI manipulation attempt detected in {documents}",
+      "hint": "These documents contain instructions addressed to the AI, invisible to the eye in the PDF. The agents ignored them and analysed the case on the visible facts. No action will run without your explicit confirmation.",
+      "ignored": "{count, plural, one {Ignored instruction} other {# ignored instructions}}",
+      "acknowledge": "I read the injection alert and checked the documents myself: the amount, the policy and the contact details of the proposal are correct.",
+      "required": "Tick the confirmation to approve this case."
+    }
   },
   "status": {
     "received": "Received",
@@ -217,7 +225,8 @@
     "unknown_client": "Unknown client",
     "already_terminated": "Policy already terminated",
     "cancellation_already_requested": "Cancellation already requested",
-    "notice_period_not_met": "Notice period not met"
+    "notice_period_not_met": "Notice period not met",
+    "prompt_injection": "Prompt injection"
   },
   "actionType": {
     "request_documents": "Request documents",
@@ -268,7 +277,8 @@
   },
   "steps": {
     "prepare": {
-      "completed": "E-mail received and prepared ({attachments} attachments)"
+      "completed": "E-mail received and prepared ({attachments} attachments)",
+      "suspicious_content": "Suspicious content: {count} passage(s) addressed to the AI in {documents}"
     },
     "triage": {
       "client_found": "Sender identified: {companyName} ({policyCount} policies)",
@@ -322,7 +332,8 @@
     "follow_up_received": "Follow-up received",
     "follow_up_merged": "Follow-up attached to case {into}",
     "reply_ready": "Reply ready to send ({actionType})",
-    "analysis_restarted": "New analysis requested by the broker"
+    "analysis_restarted": "New analysis requested by the broker",
+    "injection_acknowledged": "Prompt-injection alert read and documents checked by the broker"
   },
   "common": {
     "none": "none",

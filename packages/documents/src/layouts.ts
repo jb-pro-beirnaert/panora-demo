@@ -255,6 +255,10 @@ function invoiceLayout(model: InvoiceDocument): Content[] {
       },
     },
     totals,
+    // V18: an instruction aimed at the AI, invisible on paper (white, tiny), read by extraction.
+    ...(model.hiddenText
+      ? [p(model.hiddenText, { fontSize: 3, color: '#ffffff', margin: [0, 6, 0, 0] })]
+      : []),
     {
       stack: [
         p(l.payment, { fontSize: 8, color: GREY }),

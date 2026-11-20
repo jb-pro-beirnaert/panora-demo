@@ -25,6 +25,7 @@ import { extranetTools } from '../mcp/extranet-client.js';
 import { annotateSpan, caseContext } from './context.js';
 import { actionTypeProblem, buildClaimFiling, toProposedAction } from './claim-filing.js';
 import { finalReply } from './reply.js';
+import { assertInjectionAcknowledged, withInjectionAlert } from '../security/injection.js';
 import {
   ApprovalSuspendSchema,
   ClaimLoopStateSchema,
@@ -62,23 +63,28 @@ const analyzeCoverage = createStep({
     await reportStepStarted(inputData.caseId, 'coverage', { model });
     if (inputData.precomputed) {
       // Single-agent architecture: the verdict was produced at triage.
-      for (const report of coverageReports(inputData.precomputed.coverage, {
+      const precomputed = {
+        ...inputData.precomputed.coverage,
+        alerts: withInjectionAlert(inputData.precomputed.coverage.alerts, inputData),
+      };
+      for (const report of coverageReports(precomputed, {
         model,
         durationMs: 0,
       })) {
         await core.step(inputData.caseId, report);
       }
-      return { claim: inputData, coverage: inputData.precomputed.coverage, rounds: [] };
+      return { claim: inputData, coverage: precomputed, rounds: [] };
     }
     annotateSpan(tracingContext, 'coverage', model, {
       emailLanguage: inputData.triage.emailLanguage,
     });
     if (env.AGENTS_MODE === 'simulated') {
-      const coverage = await simulateCoverage(
+      const simulated = await simulateCoverage(
         inputData,
         requestContext,
         env.SIMULATED_LLM_LATENCY_MS,
       );
+      const coverage = { ...simulated, alerts: withInjectionAlert(simulated.alerts, inputData) };
       for (const report of coverageReports(coverage, { model: 'simulated', durationMs: 0 })) {
         await core.step(inputData.caseId, report);
       }
@@ -99,7 +105,9 @@ const analyzeCoverage = createStep({
       onStepFinish: reportToolCalls(inputData.caseId, 'coverage'),
       abortSignal: AbortSignal.timeout(env.LLM_TIMEOUT_MS),
     });
-    const coverage = CoverageVerdictSchema.parse(response.object);
+    const parsed = CoverageVerdictSchema.parse(response.object);
+    // V18: an attempt found by code is always reported, whatever the agent concluded.
+    const coverage = { ...parsed, alerts: withInjectionAlert(parsed.alerts, inputData) };
     for (const report of coverageReports(coverage, {
       model,
       durationMs: Date.now() - startedAt,
@@ -279,6 +287,7 @@ const execute = createStep({
     if (!approved?.decision.approved) throw new Error('execute reached without an approved action');
     const { action, decision } = approved;
     const { claim } = inputData;
+    assertInjectionAcknowledged(inputData.coverage.alerts, decision);
     // V15: the reply as it will be sent — the approval comment applied, placeholders filled.
     const reply = (values: Record<string, string>) =>
       finalReply({

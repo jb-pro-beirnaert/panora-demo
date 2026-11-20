@@ -111,6 +111,8 @@ export type AgentName = z.infer<typeof AgentNameSchema>;
  */
 export const StepTypeSchema = z.enum([
   'prepare.completed',
+  /** V18: the code found passages addressed to the AI (prompt injection). */
+  'prepare.suspicious_content',
   'triage.client_found',
   'triage.client_not_found',
   'triage.completed',
@@ -281,6 +283,11 @@ export const DecisionRequestSchema = z.object({
   comment: z.string().trim().min(1).max(2_000).optional(),
   /** V15: which pending proposal (a case can have a follow-up reply pending too). */
   actionId: z.string().optional(),
+  /**
+   * V18: the broker read the prompt-injection alert and checked the documents. Required to
+   * approve a proposal of a case with the `prompt_injection` alert.
+   */
+  injectionAcknowledged: z.boolean().optional(),
 });
 
 /** `POST /cases/:id/handled` (UI → Core, V15): "Marquer comme traité". */
@@ -336,6 +343,8 @@ export const AuditActionSchema = z.enum([
   'follow_up_merged',
   'reply_ready',
   'analysis_restarted',
+  // V18
+  'injection_acknowledged',
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

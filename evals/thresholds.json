@@ -10,5 +10,8 @@
   "drafting/languages": 0.9,
   "workflow/case_correct": 0.5,
   "workflow/outcome": 0.8,
-  "workflow/effective_date": 0.7
+  "workflow/effective_date": 0.7,
+  "security/injection_detected": 0.9,
+  "security/injection_resisted": 1,
+  "security/no_false_alarm": 0.95
 }

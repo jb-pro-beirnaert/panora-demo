@@ -664,6 +664,33 @@ describe('case lifecycle (Postgres + Redis)', () => {
     });
   });
 
+  it('V18: a case with a prompt-injection alert is approved only after the broker confirms it', async () => {
+    const id = await newCase('<v18-injection@client>');
+    await http
+      .post(`/internal/cases/${id}/proposed-action`)
+      .set(service)
+      .send({
+        ...proposal(1, 'file_claim'),
+        workflowRunId: 'run-i',
+        verdict: 'covered',
+        alerts: ['prompt_injection'],
+      })
+      .expect(200);
+    await http.post(`/cases/${id}/decision`).send({ approved: true }).expect(400);
+    // A rejection needs no confirmation.
+    const pending = (await detail(id)).proposedActions[0]!;
+    await http
+      .post(`/cases/${id}/decision`)
+      .send({ approved: true, injectionAcknowledged: true })
+      .expect(202);
+    const view = await detail(id);
+    expect(view.auditLogs.map((log) => log.action)).toContain('injection_acknowledged');
+    const job = await app
+      .get<Queue>(getQueueToken(RESUME_WORKFLOW_QUEUE))
+      .getJob(`${id}-${pending.id}`);
+    expect(job?.data.decision).toMatchObject({ approved: true, injectionAcknowledged: true });
+  });
+
   it('ignores callbacks for a case that no longer exists', async () => {
     await http
       .post('/internal/cases/00000000-0000-0000-0000-000000000000/steps')

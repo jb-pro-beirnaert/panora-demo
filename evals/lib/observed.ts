@@ -15,6 +15,8 @@ export interface Observed {
     internalNote: string;
     draftLanguage: Locale;
     noteLanguage: Locale;
+    /** V18: what would be declared at the insurer. */
+    claimFiling: Record<string, unknown> | null;
   } | null;
 }
 
@@ -49,6 +51,7 @@ export function observe(kase: CaseDetail): Observed {
           internalNote: first.internalNote,
           draftLanguage: first.draftLanguage,
           noteLanguage: first.noteLanguage,
+          claimFiling: first.claimFiling,
         }
       : null,
   };

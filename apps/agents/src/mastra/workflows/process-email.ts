@@ -21,6 +21,7 @@ import { modelSpecOf } from '../models.js';
 import { simulateTriage } from '../simulated/agents.js';
 import { CLIENT_LOOKUP_KEY } from '../mcp/extranet-client.js';
 import { lookupClient } from '../tools/find-client.js';
+import { findSuspicious, markUntrusted } from '../security/injection.js';
 import { annotateSpan, caseContext } from './context.js';
 import { handleClaimWorkflow } from './handle-claim.js';
 import { handOver, handleServiceWorkflow } from './handle-service.js';
@@ -88,13 +89,41 @@ const prepare = createStep({
       stepType: 'prepare.completed',
       params: { attachments: inputData.email.attachments.length },
     });
+    // V18: passages addressed to the AI are found by code, before any agent reads the e-mail.
+    const suspicious = findSuspicious(inputData.email);
+    if (suspicious.length > 0) {
+      await core.step(caseId, {
+        agent: 'system',
+        stepType: 'prepare.suspicious_content',
+        params: {
+          count: suspicious.length,
+          documents: [...new Set(suspicious.map((passage) => passage.document))],
+        },
+        sources: suspicious.map((passage) =>
+          passage.document === 'email_body' || passage.document === 'email_subject'
+            ? { kind: 'email', ref: passage.document, excerpt: passage.excerpt }
+            : {
+                kind: 'attachment',
+                ref: passage.document,
+                page: passage.page,
+                excerpt: passage.excerpt,
+                link: {
+                  type: 'attachment',
+                  fileName: passage.document,
+                  ...(passage.page ? { page: passage.page } : {}),
+                },
+              },
+        ),
+      });
+    }
     return {
       caseId,
       email: inputData.email,
       brokerage: inputData.brokerage,
       ...(inputData.options ? { options: inputData.options } : {}),
-      rendered: renderEmail(inputData.email, inputData.options),
+      rendered: markUntrusted(renderEmail(inputData.email, inputData.options), suspicious),
       receivedDate: inputData.email.receivedAt.slice(0, 10),
+      suspicious,
     };
   },
 });

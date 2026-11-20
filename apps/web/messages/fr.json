@@ -69,7 +69,8 @@
       "supplier_invoice": "Facture fournisseur",
       "follow_up": "Relance avec les pièces",
       "follow_up_no_header": "Relance « où en est mon dossier ? »",
-      "resent_claim": "Sinistre renvoyé (doublon)"
+      "resent_claim": "Sinistre renvoyé (doublon)",
+      "prompt_injection": "PDF piégé (injection)"
     }
   },
   "inbox": {
@@ -187,7 +188,14 @@
     "standaloneReply": "Réponse au client",
     "cancellationFiling": "Résiliation à enregistrer : contrat {policyNumber}, effet le {date}",
     "finalDraft": "Réponse finale, prête à envoyer",
-    "openSource": "Ouvrir la donnée consultée par l'agent"
+    "openSource": "Ouvrir la donnée consultée par l'agent",
+    "injection": {
+      "title": "Tentative de manipulation de l'IA détectée dans {documents}",
+      "hint": "Ces pièces contiennent des instructions adressées à l'IA, invisibles à l'œil dans le PDF. Les agents les ont ignorées et ont analysé le dossier sur les faits visibles. Aucune action ne sera exécutée sans votre confirmation explicite.",
+      "ignored": "{count, plural, one {Instruction ignorée} other {# instructions ignorées}}",
+      "acknowledge": "J'ai lu l'alerte d'injection et vérifié les pièces moi-même : le montant, le contrat et les coordonnées de la proposition sont corrects.",
+      "required": "Cochez la confirmation pour valider ce dossier."
+    }
   },
   "status": {
     "received": "Reçu",
@@ -217,7 +225,8 @@
     "unknown_client": "Client inconnu",
     "already_terminated": "Contrat déjà résilié",
     "cancellation_already_requested": "Résiliation déjà demandée",
-    "notice_period_not_met": "Préavis non respecté"
+    "notice_period_not_met": "Préavis non respecté",
+    "prompt_injection": "Injection de prompt"
   },
   "actionType": {
     "request_documents": "Demander des pièces",
@@ -268,7 +277,8 @@
   },
   "steps": {
     "prepare": {
-      "completed": "E-mail reçu et préparé ({attachments} pièces jointes)"
+      "completed": "E-mail reçu et préparé ({attachments} pièces jointes)",
+      "suspicious_content": "Contenu suspect : {count} passage(s) adressé(s) à l'IA dans {documents}"
     },
     "triage": {
       "client_found": "Expéditeur identifié : {companyName} ({policyCount} contrats)",
@@ -322,7 +332,8 @@
     "follow_up_received": "Relance reçue",
     "follow_up_merged": "Relance rattachée au dossier {into}",
     "reply_ready": "Réponse prête à envoyer ({actionType})",
-    "analysis_restarted": "Nouvelle analyse demandée par le courtier"
+    "analysis_restarted": "Nouvelle analyse demandée par le courtier",
+    "injection_acknowledged": "Alerte d'injection lue et pièces vérifiées par le courtier"
   },
   "common": {
     "none": "aucune",

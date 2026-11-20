@@ -13,6 +13,7 @@ const triage: TriageResult = {
   requestType: 'claim',
   subtype: null,
   caseReference: null,
+  suspiciousContent: [],
   emailLanguage: 'fr',
   holderName: field('Boulangerie Martin SARL'),
   policyNumber: field<string>(null),

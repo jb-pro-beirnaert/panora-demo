@@ -245,10 +245,16 @@ test('the demo script covers every scenario once, in order, reproducibly (V14, V
   // Follow-ups and the resent claim refer to the right e-mails.
   const byScenario = (scenario: string) =>
     script.find(({ groundTruth }) => groundTruth.scenario === scenario)!;
-  assert.equal(byScenario('follow_up').email.inReplyTo, script[2]!.email.messageId);
+  assert.equal(byScenario('follow_up').email.inReplyTo, script[3]!.email.messageId);
   assert.equal(byScenario('follow_up_no_header').email.inReplyTo, undefined);
   assert.equal(byScenario('follow_up_no_header').email.from, script[0]!.email.from);
-  assert.equal(byScenario('resent_claim').email.from, script[6]!.email.from);
+  assert.equal(byScenario('resent_claim').email.from, script[7]!.email.from);
+  // V18: the booby-trapped invoice hides an instruction, readable in the text but not printed visibly.
+  const trap = byScenario('prompt_injection');
+  const invoice = trap.email.attachments.find((a) => a.document?.kind === 'invoice')!;
+  assert.ok(invoice.document && 'hiddenText' in invoice.document && invoice.document.hiddenText);
+  assert.ok(invoice.extractedText.includes(invoice.document.hiddenText));
+  assert.deepEqual(trap.groundTruth.alerts, ['prompt_injection']);
   for (const { email, groundTruth } of script) {
     InboundEmailInputSchema.parse(email);
     GroundTruthSchema.parse(groundTruth);

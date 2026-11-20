@@ -26,6 +26,7 @@ import { aggregate, toMarkdown, withWorkflowScore } from './lib/report.js';
 import { scoreCoverage } from './scorers/coverage.js';
 import { scoreDrafting } from './scorers/drafting.js';
 import { scoreOutcome } from './scorers/outcome.js';
+import { scoreSecurity } from './scorers/security.js';
 import { judge } from './scorers/judge.js';
 import { scoreTriage } from './scorers/triage.js';
 
@@ -150,6 +151,7 @@ async function runCase(
       ...scoreCoverage(truth, observed, clauses),
       ...scoreDrafting(truth, observed),
       ...scoreOutcome(truth, observed),
+      ...scoreSecurity(truth, observed),
     ];
     if (config.judge && process.env.OPENAI_API_KEY) {
       scores.push(
