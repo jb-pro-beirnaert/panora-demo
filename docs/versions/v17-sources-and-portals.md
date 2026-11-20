@@ -22,8 +22,15 @@ Spec : [`specs/v17-sources-and-portals.md`](../../specs/v17-sources-and-portals.
 ## Vérifié
 
 - `lint`, `typecheck`, `test`, `test:integration` (Core 31, extranet 10 dont 3 tests du portail).
-- Stack redémarrée, deux e-mails traités par les vrais modèles, `/insurer/policies` répond via Core.
+- Navigateur, avec deux dossiers traités par les vrais modèles :
+  - depuis CASE-0002, la clause citée `CG-HZ-12.1` ouvre les conditions générales d'Assurances
+    Horizon, clause encadrée et extrait surligné, avec « Ce que Agent Garanties a reçu » ;
+  - la source `get_policy` ouvre le contrat C-48213 avec le résultat reçu par l'agent et le
+    bandeau d'écart « le cabinet croit ce contrat actif, l'assureur le déclare résilié » ;
+  - les lignes du déroulé en direct mènent au contrat, à ses garanties ou à ses sinistres ;
+  - l'onglet Clients liste la base du cabinet.
 
 ## Non vérifié
 
-- Le parcours dans le navigateur (clic sur une source, encart « Ce que l'agent a reçu »).
+- L'encart « la donnée a changé depuis » sur un cas réel (par exemple après une résiliation
+  validée) : la comparaison est codée mais n'a pas été déclenchée dans le navigateur.
