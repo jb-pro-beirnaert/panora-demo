@@ -1,27 +1,87 @@
 # Claims desk — AI agents for an insurance brokerage (demo)
 
-A claim e-mail reaches a brokerage. Three AI agents read it, check the coverage at the insurer
-through an MCP connector, and propose an action; a broker approves or rejects it before anything is
-declared or sent, and every step is audited. Built as a demo for Panora — **all data is fictional**,
-generated from a fixed seed.
+An e-mail reaches a brokerage: a claim, a cancellation, a coverage question, a quote request, a
+follow-up, spam. AI agents read it and its PDF attachments, check the policy at the insurer through
+an MCP connector, and propose an action with the reply to the client; a broker approves or rejects
+it before anything is declared or sent, and every step is audited. Built as a demo for Panora —
+**all data is fictional**, generated from a fixed seed.
 
-> **En bref (FR).** Une démo de bout en bout du métier de Panora : un e-mail de sinistre arrive
-> dans un cabinet de courtage, trois agents (tri, garanties, rédaction) l'analysent et interrogent
-> l'extranet de l'assureur via un serveur MCP, puis un courtier valide l'action proposée (déclaration
-> du sinistre, refus motivé, demande de pièces) avant son exécution, tracée dans un journal d'audit.
-> Interface bilingue FR/EN, données FR/EN, tracing Langfuse, evals par agent et par langue avec
-> non-régression en CI, comparaison chiffrée des modèles (coût, latence), tests de charge (1 000
-> dossiers, extranet instable, instance tuée en cours de route) et moindre privilège des agents
-> (jetons MCP `read` / `write`) testé en CI. Les specs (en français) sont dans [`specs/`](specs/), le détail de chaque version dans
-> [`docs/versions/`](docs/versions/). Lancement : `npm install` puis `npm run dev`.
+> **En bref (FR).** Une démo de bout en bout du métier de Panora : un e-mail arrive dans un cabinet
+> de courtage (sinistre, résiliation, question, devis, relance, spam…), des agents (tri, garanties,
+> gestion de contrat, rédaction) l'analysent avec ses PDF et interrogent l'extranet de l'assureur
+> via un serveur MCP, puis un courtier valide l'action proposée (déclaration du sinistre,
+> résiliation, refus motivé, demande de pièces, réponse au client) avant son exécution, tracée dans
+> un journal d'audit. Ce qui relève du courtier (devis, attestation) lui est remis avec le motif.
+> Interface bilingue FR/EN, données FR/EN, sources cliquables (contrat, clause, pièce, ce que l'agent
+> a reçu), détection d'une injection de prompt cachée dans un PDF, tracing Langfuse, evals par agent
+> et par langue avec non-régression en CI, comparaison chiffrée des modèles (coût, latence), tests
+> de charge (1 000 dossiers, extranet instable, instance tuée en cours de route) et moindre
+> privilège des agents (jetons MCP `read` / `write`) testé en CI. Les specs (en français) sont dans
+> [`specs/`](specs/), le détail de chaque version dans [`docs/versions/`](docs/versions/).
+> **Pour tester : voir [Quick start](#quick-start-5-minutes) ci-dessous.**
+
+## Quick start (5 minutes)
+
+You need **Node.js 24+**, **Docker** (Docker Desktop running) and, to see the real agents, an
+**OpenAI API key** (the whole 26-e-mail demo costs a few cents). No key? The demo also runs with
+deterministic stand-ins for the agents.
+
+```bash
+git clone https://github.com/jb-pro-beirnaert/panora-demo.git
+cd panora-demo
+npm install
+npm run setup:env
+```
+
+`setup:env` creates `.env` from `.env.example` with random secrets. Open `.env` and set **one** of:
+
+```bash
+OPENAI_API_KEY=sk-...        # real agents (default models: gpt-5-nano / gpt-6-luna)
+AGENTS_MODE=simulated        # or: no LLM, canned agent outputs, same workflow and UI
+```
+
+Then start everything (Postgres, Redis and the five apps; databases start empty and are seeded):
+
+```bash
+npm run dev:lite
+```
+
+`npm run dev` does the same plus a self-hosted Langfuse on http://localhost:3100 (more containers,
+more RAM; login `demo@panora-demo.local` / `demo-password`). The first start pulls the Docker
+images and takes a few minutes; the stack is ready when http://localhost:3000 loads.
+
+**What to try** on http://localhost:3000 (no sign-in: you are Sophie Marchal, broker at Delorme
+Courtage):
+
+1. Press **Send 1 e-mail** in the demo panel (or **Play**: one e-mail every 20 s) and watch the
+   pipeline Triage → Coverage → Drafting → Approval → Execution fill in live.
+2. **E-mail 2** — the flagship case: the brokerage believes the policy is active, the insurer says it
+   was terminated for non-payment. The agent spots the mismatch and cites the clause; click the
+   sources to open the policy and the clause at the insurer.
+3. **E-mail 3** — a PDF invoice carries a hidden instruction to the AI (multiply the amount, drop
+   the deductible, change the IBAN). It is flagged, ignored by the agents, and approval needs an
+   explicit confirmation.
+4. **Approve** a proposal (the claim is filed at the insurer with a write token, the reply to the
+   client gets its claim number) or **reject it with a comment** (the drafting agent rewrites it).
+5. Switch the UI between **FR / EN**; open the **Insurer extranet** and **Clients** tabs, the audit
+   log, and the "For you to handle" column (quotes and certificates are handed to the broker).
+
+Stop with `Ctrl+C`, then `npm run infra:down` to remove the containers. Nothing persists: the next
+start is a fresh demo.
 
 ## The journey of a case
 
 1. **E-mail in.** The mail gateway (the simulator, in the demo) posts the e-mail to Core, which
    opens a case and queues a job; the worker starts a Mastra workflow and returns at once.
-2. **Triage** (`triageAgent`, light model): request type, the client (looked up in the brokerage's
-   records with a `find_client` tool), policy number, date, peril, amount, documents present and
-   missing, e-mail language — each fact with its source (e-mail, attachment page) and confidence.
+   PDF attachments are converted to text in reading order; before any agent runs, a rule looks for
+   injected instructions in the e-mail and the attachments and fences them as untrusted text.
+2. **Triage** (`triageAgent`, light model): request type (claim, cancellation, question, quote,
+   follow-up, unrelated), the client (looked up in the brokerage's records with a `find_client`
+   tool), policy number, date, peril, amount, documents present and missing, e-mail language — each
+   fact with its source (e-mail, attachment page) and confidence. Then the workflow branches: claims
+   go on below; cancellations and coverage questions go to `policyServiceAgent` (read tools, same
+   approval loop, cancellation filed through MCP `request_cancellation`); follow-ups are attached to
+   their case; quotes and certificates are handed to the broker with the reason; spam is classified.
 3. **Coverage** (`coverageAgent`, read-only MCP tools on the insurer's extranet): policy status
    at the insurer — which may contradict what the brokerage believes (the flagship case: a policy
    terminated for non-payment that the brokerage still shows as active) — coverages, limits,
@@ -35,6 +95,8 @@ generated from a fixed seed.
 6. **Execution.** Only now, in code and with a separate `write` token, the claim is filed through
    MCP (`file_claim`); other actions become "ready to send". Everything lands in the audit trail,
    the UI follows each step and each tool call live (SSE), and Langfuse holds one trace per case.
+   Every source the agents used (policy, coverage, clause, client, attachment page) is a link, with
+   what the tool returned to the agent at the time.
 
 ## Architecture
 
@@ -48,7 +110,7 @@ flowchart LR
   end
   core --- coredb[("Postgres: core")]
   q --- redis[("Redis")]
-  q -->|start / resume, token| mastra["Mastra server ×N<br/>workflow + 3 agents"]
+  q -->|start / resume, token| mastra["Mastra server ×N<br/>workflow + 4 agents"]
   mastra -->|callbacks, token| core
   mastra -->|MCP read / write tokens| mcp["MCP server<br/>insurer extranet"]
   mcp --- extdb[("Postgres: extranet")]
@@ -57,15 +119,15 @@ flowchart LR
   mastra -->|LLM| llm["OpenAI<br/>(or Ollama)"]
 ```
 
-| Service                                                        | Directory                                      | Port | Database   |
-| -------------------------------------------------------------- | ---------------------------------------------- | ---- | ---------- |
-| Web (Next.js 16, next-intl, shadcn/ui)                         | `apps/web`                                     | 3000 | —          |
-| Core API (NestJS 12, Prisma, BullMQ)                           | `apps/core-api`                                | 3001 | `core`     |
-| MCP extranet server (official TypeScript SDK, Streamable HTTP) | `apps/mcp-extranet`                            | 3002 | `extranet` |
-| Simulator (demo tool)                                          | `apps/simulator`                               | 3003 | —          |
-| Mastra server (workflow, agents)                               | `apps/agents`                                  | 4111 | `agents`   |
-| Shared Zod contracts · fictional world generator               | `packages/shared` · `packages/world-generator` |      |            |
-| Evals                                                          | `evals/`                                       |      |            |
+| Service                                                          | Directory                                                             | Port | Database   |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------- | ---- | ---------- |
+| Web (Next.js 16, next-intl, shadcn/ui)                           | `apps/web`                                                            | 3000 | —          |
+| Core API (NestJS 12, Prisma, BullMQ)                             | `apps/core-api`                                                       | 3001 | `core`     |
+| MCP extranet server (official TypeScript SDK, Streamable HTTP)   | `apps/mcp-extranet`                                                   | 3002 | `extranet` |
+| Simulator (demo tool)                                            | `apps/simulator`                                                      | 3003 | —          |
+| Mastra server (workflow, agents)                                 | `apps/agents`                                                         | 4111 | `agents`   |
+| Shared Zod contracts · fictional world generator · PDF rendering | `packages/shared` · `packages/world-generator` · `packages/documents` |      |            |
+| Evals                                                            | `evals/`                                                              |      |            |
 
 One database per service, Zod on every boundary, Postgres on tmpfs and Redis without persistence:
 every `npm run dev` starts from empty databases that the simulator seeds again.
@@ -77,8 +139,8 @@ every `npm run dev` starts from empty databases that the simulator seeds again.
   Panora's connectors speak. More moving parts than a monolith, but each boundary is a real one
   (an insurer is another company; agents must not touch the brokerage's database) and is enforced
   by tokens and tested.
-- **Three agents rather than one.** The measured single agent is as accurate and cheaper on a small
-  sample (V8). Three agents are kept because each one is evaluated and traced on its own, a light
+- **Several agents rather than one.** The measured single agent is as accurate and cheaper on a small
+  sample (V8). Separate agents are kept because each one is evaluated and traced on its own, a light
   model does the triage, only the analysis agent gets tools — read-only — and a rejected draft is
   rewritten without re-running the analysis.
 - **Mastra in framework mode, behind Core.** Core never waits for a workflow (it starts or resumes
@@ -87,6 +149,11 @@ every `npm run dev` starts from empty databases that the simulator seeds again.
 - **Least privilege by construction.** Agents only hold read tools; writes happen in a code step
   after human approval with a separate `write` token; the token carries the brokerage, so a prompt
   cannot reach another brokerage's policies.
+- **Attachments are data, never instructions.** A PDF can carry text aimed at the model. Detection
+  runs in code before the agents, the passages are fenced as untrusted, every prompt says content is
+  data, the alert is added by code whatever the model answers, and the write step refuses to run
+  without the broker's explicit confirmation (checked again by Core). Detection is a rule, not a
+  guarantee: the human approval and the read-only tools are what bound the damage.
 - **One English prompt per agent for a bilingual product.** Structured outputs use neutral values;
   the languages are passed explicitly (draft in the e-mail's language, note in the brokerage's,
   clauses quoted in their own language); the UI renders stored `type + params`, so the timeline
@@ -108,26 +175,18 @@ every `npm run dev` starts from empty databases that the simulator seeds again.
   killed mid-run: **1,000 closed, 0 failed, 0 processed twice**, 299 cases/min (the rate limit).
 - **Isolation**: MCP tokens are scoped to a brokerage and to `read` / `write`; suite green in CI.
 
-## Run it locally
+## Run it locally — details
 
-Requirements: Node.js 24, Docker.
+The short version is the [Quick start](#quick-start-5-minutes). `npm run dev` also creates `.env`
+on its own if it is missing (same random secrets), then starts Postgres and Redis (empty), a
+self-hosted Langfuse, the five apps in watch mode, and seeds the fictional world.
 
-```bash
-npm install
-npm run dev
-```
-
-On the first run `npm run dev` creates `.env` from `.env.example` with random secrets; set
-`OPENAI_API_KEY` in it (or `AGENTS_MODE=simulated` to try everything without an LLM). It then starts
-Postgres and Redis (empty), a self-hosted Langfuse, the five apps in watch mode, and seeds the
-fictional world.
-
-Open http://localhost:3000 — no sign-in: the demo has one brokerage (Delorme Courtage) and one
-broker (Sophie Marchal), and every e-mail lands in her inbox. The demo is a fixed script of 25
-e-mails covering every case of the catalog (claims, cancellations, questions, certificates, quotes,
-spam, follow-ups, duplicates) (the terminated-policy case comes second), with real PDF
-attachments: press **Play** (one e-mail every 20 s) or **Send 1 e-mail** in the demo panel, which
-shows "Demo · 7/25 e-mails sent". Every request ends with a reply proposed to the broker, "For you
+The demo has one brokerage (Delorme Courtage) and one broker (Sophie Marchal), and every e-mail
+lands in her inbox. It plays a fixed script of 26 e-mails (4 in English) covering every case of the
+catalog (claims, cancellations, questions, certificates, quotes, spam, follow-ups, duplicates; the
+terminated-policy case comes second, the injected PDF third), with real PDF attachments (invoices,
+incident reports, police receipts, fire reports): press **Play** (one e-mail every 20 s) or **Send
+1 e-mail** in the demo panel, which shows "Demo · 7/26 e-mails sent". Every request ends with a reply proposed to the broker, "For you
 to handle" (with the reason), or classified. Each e-mail pops in with a toast,
 its row shows a live pipeline (Triage → Coverage → Drafting → Approval → Execution) with the agent
 at work and the MCP tool it is calling, the "Live agents" panel shows what each Mastra agent is
@@ -139,6 +198,7 @@ http://localhost:4111, Langfuse on http://localhost:3100 (`demo@panora-demo.loca
 
 | Command                                                                    | What it does                                           |
 | -------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `npm run setup:env`                                                        | create `.env` from `.env.example` (random secrets)     |
 | `npm run dev` / `npm run dev:lite`                                         | the stack with self-hosted Langfuse on :3100 / without |
 | `npm run build` / `lint` / `typecheck` / `test` / `test:integration`       | across all workspaces                                  |
 | `npm run gen:evals -- --seed 7 --count 60` · `npm run evals [-- --matrix]` | eval dataset, eval run, model matrix                   |

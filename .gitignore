@@ -9,3 +9,7 @@ dist/
 *.log
 .turbo/
 **/src/generated/
+
+# Application video editing (local only)
+video/
+docs/video-candidature-script.md
