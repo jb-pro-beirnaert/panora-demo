@@ -764,7 +764,11 @@ class EmailFactory {
 
   // --- Not a claim (scenario 8): a quote request or a cancellation ---
 
-  writeNonClaim(index: number, language: Locale | null = null): GeneratedEmail {
+  writeNonClaim(
+    index: number,
+    language: Locale | null = null,
+    kind: 'cancellation' | 'quote_request' | null = null,
+  ): GeneratedEmail {
     const speakers = this.world.clients.filter((client) => client.language === language);
     const client = pick(
       this.faker,
@@ -777,7 +781,9 @@ class EmailFactory {
     const policies = this.world.brokeragePolicies.filter(
       (policy) => policy.clientId === client.id && policy.knownStatus === 'active',
     );
-    const cancellation = policies.length > 0 && this.faker.datatype.boolean(0.5);
+    const cancellation =
+      policies.length > 0 &&
+      (kind === null ? this.faker.datatype.boolean(0.5) : kind === 'cancellation');
     const policy = cancellation ? pick(this.faker, policies) : undefined;
     const received = this.receivedDate();
     const english = client.language === 'en';
@@ -1148,5 +1154,67 @@ export function generateEmails(world: World, options: GenerateEmailsOptions): Ge
       if (showcase) return showcase;
     }
     return factory.write(factory.draft(scenario, language), index);
+  });
+}
+
+/** One e-mail of the demo script (V14): a scenario, in a language. */
+export interface DemoScriptEntry {
+  scenario: ScenarioId;
+  language: Locale;
+  /** For `non_claim`: which kind of request. */
+  kind?: 'cancellation' | 'quote_request';
+  /** Scenario 13: an English e-mail about a policy whose clauses are in French. */
+  crossLanguage?: boolean;
+}
+
+/**
+ * The demo script (V14): every case of the catalog once, in an order that tells a story. The
+ * flagship case (terminated policy) comes second.
+ */
+export const DEMO_SCRIPT: DemoScriptEntry[] = [
+  { scenario: 'covered', language: 'fr' },
+  { scenario: 'policy_terminated', language: 'fr' },
+  { scenario: 'missing_document', language: 'fr' },
+  { scenario: 'exclusion', language: 'fr' },
+  { scenario: 'limit_exceeded', language: 'fr' },
+  { scenario: 'deductible', language: 'fr' },
+  { scenario: 'duplicate_claim', language: 'fr' },
+  { scenario: 'unreadable_field', language: 'fr' },
+  { scenario: 'late_declaration', language: 'fr' },
+  { scenario: 'non_claim', language: 'fr', kind: 'cancellation' },
+  { scenario: 'non_claim', language: 'fr', kind: 'quote_request' },
+  { scenario: 'unknown_client', language: 'fr' },
+  { scenario: 'covered', language: 'en' },
+  { scenario: 'covered', language: 'en', crossLanguage: true },
+];
+
+/**
+ * The e-mails of the demo script, with their ground truth. Same world and seed, same e-mails. The
+ * first e-mail of each claim scenario is its showcase version when the world has one.
+ */
+export function generateDemoScript(
+  world: World,
+  seed: number,
+  script: DemoScriptEntry[] = DEMO_SCRIPT,
+): GeneratedEmail[] {
+  const faker = createRandom(seed);
+  const factory = new EmailFactory(world, faker, seed);
+  const showcased = new Set<ScenarioId>();
+  return script.map((entry, index) => {
+    if (entry.crossLanguage) {
+      const showcase = factory.showcaseCrossLanguage(index);
+      if (showcase) return showcase;
+    }
+    if (entry.scenario === 'non_claim') {
+      return factory.writeNonClaim(index, entry.language, entry.kind ?? null);
+    }
+    if (entry.scenario === 'unknown_client')
+      return factory.writeUnknownClient(index, entry.language);
+    if (entry.language === 'fr' && !showcased.has(entry.scenario)) {
+      showcased.add(entry.scenario);
+      const showcase = factory.showcase(entry.scenario, index);
+      if (showcase) return showcase;
+    }
+    return factory.write(factory.draft(entry.scenario, entry.language), index);
   });
 }

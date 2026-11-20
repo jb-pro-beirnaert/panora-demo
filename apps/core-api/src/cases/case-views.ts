@@ -23,7 +23,7 @@ export const caseSummaryInclude = {
 export const caseDetailInclude = {
   brokerage: true,
   client: true,
-  email: { include: { attachments: { orderBy: { position: 'asc' } } } },
+  email: { include: { attachments: { orderBy: { position: 'asc' }, omit: { content: true } } } },
   steps: { orderBy: { createdAt: 'asc' } },
   agentEvents: { orderBy: { createdAt: 'asc' } },
   proposedActions: { orderBy: { revision: 'asc' } },
@@ -155,10 +155,14 @@ export function toCaseDetail(
       body: kase.email.body,
       receivedAt: kase.email.receivedAt.toISOString(),
       language: kase.email.language,
-      attachments: kase.email.attachments.map(({ fileName, type, extractedText }) => ({
-        fileName,
-        type,
-        extractedText,
+      attachments: kase.email.attachments.map((attachment) => ({
+        id: attachment.id,
+        fileName: attachment.fileName,
+        type: attachment.type,
+        extractedText: attachment.extractedText,
+        sizeBytes: attachment.sizeBytes,
+        pageCount: attachment.pageCount,
+        extractionStatus: attachment.extractionStatus as 'ok' | 'failed' | 'not_applicable',
       })),
     },
     steps,

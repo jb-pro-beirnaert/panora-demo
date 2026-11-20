@@ -1,3 +1,4 @@
+import { extractAttachment } from '@demo/documents';
 import { detectLanguage, type EmailAccepted, type ReceiveEmailRequest } from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
@@ -45,6 +46,16 @@ export class EmailsService {
       where: { brokerageId: brokerage.id, email: { equals: input.from, mode: 'insensitive' } },
     });
 
+    // V14: the agents only ever get text; the files stay in Core. Extraction runs before the
+    // transaction (it can take a moment on a long PDF).
+    const files = await Promise.all(
+      input.attachments.map(async (attachment) => ({
+        attachment,
+        content: Buffer.from(attachment.contentBase64, 'base64'),
+        extracted: await extractAttachment(attachment),
+      })),
+    );
+
     let created;
     try {
       created = await this.prisma.$transaction(async (tx) => {
@@ -58,10 +69,14 @@ export class EmailsService {
             receivedAt: new Date(input.receivedAt),
             language: detectLanguage(`${input.subject}\n${input.body}`, brokerage.locale),
             attachments: {
-              create: input.attachments.map((attachment, position) => ({
+              create: files.map(({ attachment, content, extracted }, position) => ({
                 fileName: attachment.fileName,
                 type: attachment.contentType,
-                extractedText: attachment.extractedText,
+                content,
+                sizeBytes: extracted.sizeBytes,
+                pageCount: extracted.pageCount,
+                extractionStatus: extracted.extractionStatus,
+                extractedText: extracted.extractedText,
                 position,
               })),
             },

@@ -19,20 +19,22 @@ Aujourd'hui, le simulateur tire des e-mails au hasard, sans fin, et propose une 
 
 | # | Scénario | Langue | Pièces jointes |
 | --- | --- | --- | --- |
-| 1 | Sinistre couvert | fr | constat + facture (PDF), photos |
-| 2 | Contrat résilié ★ | fr | rapport + devis (PDF) |
+| 1 | Sinistre couvert (bris de glace) | fr | facture (PDF) |
+| 2 | Contrat résilié ★ | fr | constat + facture (PDF) |
 | 3 | Pièce manquante | fr | aucune |
-| 4 | Exclusion | fr | constat + devis (PDF) |
-| 5 | Plafond dépassé | fr | rapport + devis (PDF) |
-| 6 | Franchise | fr | constat + facture (PDF) |
-| 7 | Doublon (sinistre déjà déclaré chez l'assureur) | fr | constat + facture (PDF) |
-| 8 | Champ illisible | fr | facture au montant masqué (PDF) |
-| 9 | Déclaration tardive | fr | constat + facture (PDF) |
+| 4 | Exclusion | fr | pièces complètes (PDF), photos possibles |
+| 5 | Plafond dépassé | fr | pièces complètes (PDF) |
+| 6 | Franchise | fr | pièces complètes (PDF) |
+| 7 | Doublon (sinistre déjà déclaré chez l'assureur) | fr | pièces complètes (PDF) |
+| 8 | Champ illisible | fr | facture au montant masqué, ou date absente (PDF) |
+| 9 | Déclaration tardive | fr | pièces complètes (PDF) |
 | 10 | Hors sinistre : résiliation | fr | aucune |
 | 11 | Hors sinistre : devis | fr | aucune |
 | 12 | Client inconnu | fr | aucune |
-| 13 | Sinistre couvert | en | constat + facture (PDF, en anglais) |
-| 14 | Langues croisées (e-mail en anglais, clauses en français) | en | constat + devis (PDF) |
+| 13 | Sinistre couvert | en | pièces complètes (PDF, en anglais) |
+| 14 | Langues croisées (e-mail en anglais, clauses en français) | en | pièces complètes (PDF) |
+
+« Pièces complètes » : celles que l'assureur exige pour la nature du sinistre (constat ou rapport, facture ou devis), plus des photos une fois sur trois.
 
 - Le générateur aléatoire (`generateEmails`) reste : il sert aux evals et au test de charge.
 
@@ -93,7 +95,7 @@ Aujourd'hui, le simulateur tire des e-mails au hasard, sans fin, et propose une 
 
 ### Evals
 
-- Les evals passent par le même chemin que la démo : le jeu de données contient les PDF (en base64), et le texte est extrait avec `extractText` avant d'appeler le workflow. Les evals mesurent ainsi les agents sur ce qu'ils reçoivent réellement.
+- Les evals passent par le même chemin que la démo : le jeu de données garde les pièces jointes sous forme de texte (lisible, léger), et le lanceur les met en page en vrais PDF avant de les envoyer à `POST /emails`. Core en extrait le texte comme pour la démo : les evals mesurent les agents sur ce qu'ils reçoivent réellement.
 - Le jeu de données `seed-7` est régénéré et la baseline est ré-enregistrée.
 
 ## Critères d'acceptation

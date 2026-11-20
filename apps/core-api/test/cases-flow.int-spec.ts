@@ -1,4 +1,5 @@
-import type { CaseDetail, InboundEmailInput, RealtimeEvent } from '@demo/shared';
+import { toRawEmail } from '@demo/documents';
+import type { CaseDetail, InboundEmailInput, RawEmailInput, RealtimeEvent } from '@demo/shared';
 import { generateEmails, generateWorld, toCoreSeed } from '@demo/world-generator';
 import { getQueueToken } from '@nestjs/bullmq';
 import type { INestApplication } from '@nestjs/common';
@@ -17,7 +18,11 @@ import { TEST_ADMIN_TOKEN, TEST_INBOUND_TOKEN, TEST_SERVICE_TOKEN } from './test
 const world = generateWorld({ seed: 42, locale: 'fr' });
 const emails = generateEmails(world, { seed: 42, count: 10 });
 /** Scenario 2: the policy the brokerage believes active is terminated at the insurer. */
-const terminated = emails.find((e) => e.groundTruth.scenario === 'policy_terminated')!.email;
+const terminatedText = emails.find((e) => e.groundTruth.scenario === 'policy_terminated')!.email;
+/** V14: the e-mail as it arrives, with real PDFs (set in `beforeAll`). */
+let terminated: RawEmailInput;
+/** Every generated e-mail with its real PDFs, by message id. */
+const rawById = new Map<string, RawEmailInput>();
 const delorme = world.brokerages.find((b) => b.brokerCode === 'DLM-075')!;
 const delormeBroker = world.brokers.find((b) => b.brokerageId === delorme.id)!;
 
@@ -49,6 +54,8 @@ describe('case lifecycle (Postgres + Redis)', () => {
 
   beforeAll(async () => {
     ({ app, mastra } = await createTestApp());
+    terminated = await toRawEmail(terminatedText);
+    for (const { email } of emails) rawById.set(email.messageId, await toRawEmail(email));
     http = request.agent(app.getHttpServer());
     app
       .get(RealtimeService)
@@ -61,7 +68,14 @@ describe('case lifecycle (Postgres + Redis)', () => {
     await app.close();
   });
 
-  const receive = (email: InboundEmailInput) => http.post('/emails').set(inbound).send(email);
+  /** Generated e-mails (attachments as text) are sent with their real PDFs, as the simulator does. */
+  const receive = (email: RawEmailInput | InboundEmailInput) => {
+    const asText = email.attachments.some((attachment) => 'extractedText' in attachment);
+    const raw = asText
+      ? { ...email, attachments: rawById.get(email.messageId)?.attachments ?? [] }
+      : email;
+    return http.post('/emails').set(inbound).send(raw);
+  };
   const detail = async (caseId: string) =>
     (await http.get(`/cases/${caseId}`).expect(200)).body as CaseDetail;
 
@@ -85,6 +99,18 @@ describe('case lifecycle (Postgres + Redis)', () => {
       'constat.pdf',
       'facture_plombier.pdf',
     ]);
+    // V14: Core keeps the file and extracts its text for the agents.
+    const [constat] = view.email.attachments;
+    expect(constat!.extractionStatus).toBe('ok');
+    expect(constat!.pageCount).toBeGreaterThan(0);
+    expect(constat!.extractedText).toMatch(/^--- page 1 ---\n.*CONSTAT/s);
+    const file = await http.get(`/cases/${caseId}/attachments/${constat!.id}/file`).expect(200);
+    expect(file.headers['content-type']).toBe('application/pdf');
+    expect(
+      Buffer.from(file.body as Buffer)
+        .subarray(0, 5)
+        .toString(),
+    ).toBe('%PDF-');
     expect(view.auditLogs.map((log) => log.action)).toEqual(['email_received']);
   });
 
@@ -293,8 +319,6 @@ describe('case lifecycle (Postgres + Redis)', () => {
       actorName: delormeBroker.name,
       action: 'action_rejected',
     });
-    // A human decision: no "auto" marker.
-    expect(view.auditLogs.at(-1)?.params).not.toHaveProperty('auto');
   });
 
   it('the approved second proposal is executed and closes the case', async () => {
@@ -303,13 +327,12 @@ describe('case lifecycle (Postgres + Redis)', () => {
       .set(service)
       .send(proposal(2))
       .expect(200);
-    // The simulated broker (auto-validation) decides with the demo admin token.
-    await http.post(`/cases/${caseId}/decision`).set(admin).send({ approved: true }).expect(202);
+    await http.post(`/cases/${caseId}/decision`).send({ approved: true }).expect(202);
     const decided = await detail(caseId);
     expect(decided.auditLogs.at(-1)).toMatchObject({
       action: 'action_approved',
       actorName: delormeBroker.name,
-      params: { auto: true },
+      params: { revision: 2 },
     });
     await http
       .post(`/internal/cases/${caseId}/executed-action`)

@@ -1,26 +1,29 @@
 'use client';
 
 import type { CaseMetrics, CaseStats } from '@demo/shared';
-import { useFormatter, useTranslations } from 'next-intl';
+import { Check, ChevronDown, ChevronUp, Pause, Play, Send } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { coreApi, simulatorApi, type SimulatorState } from '@/lib/api';
+import { coreApi, simulatorApi, type ScriptItem, type SimulatorState } from '@/lib/api';
 import { useRealtime } from '@/lib/realtime';
+import { cn } from '@/lib/utils';
 
-const SPEEDS = [1, 2, 4, 6, 10, 20, 30];
-const ENGLISH_SHARES = [0, 0.1, 0.3, 0.5, 0.7, 1];
+const INTERVALS = [5, 10, 20, 30, 60];
 const SPARK_POINTS = 40;
 
-/** Top bar that drives the simulator (demo tool, not part of the product). */
+/**
+ * Top bar that drives the simulator (demo tool, not part of the product). V14: the demo is a fixed
+ * script of e-mails, sent in order — "7/14 e-mails sent".
+ */
 export function DemoPanel() {
   const t = useTranslations('demo');
-  const format = useFormatter();
   const [state, setState] = useState<SimulatorState | null>(null);
   const [stats, setStats] = useState<CaseStats | null>(null);
   const [metrics, setMetrics] = useState<CaseMetrics | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
   /** Throughput samples (cases closed during the last minute), one per refresh. */
   const [throughput, setThroughput] = useState<number[]>([]);
   const lastSample = useRef(0);
@@ -56,7 +59,13 @@ export function DemoPanel() {
     return () => clearInterval(timer);
   }, [refresh]);
 
-  useRealtime(() => {
+  useRealtime((event) => {
+    if (event.type === 'case.created') {
+      simulatorApi
+        .state()
+        .then(setState)
+        .catch(() => undefined);
+    }
     coreApi
       .stats()
       .then(setStats)
@@ -76,34 +85,42 @@ export function DemoPanel() {
     }
   };
 
+  const ready = state?.seeding === 'done';
+  const sent = state?.sent ?? 0;
+  const total = state?.total ?? 0;
+  const finished = state?.status === 'finished';
   const counters: [string, number | undefined][] = [
-    ['sent', state ? state.sent + (state.burst?.sent ?? 0) : undefined],
     ['inProgress', stats?.inProgress],
     ['awaitingApproval', stats?.awaitingApproval],
     ['closed', stats?.closed],
     ['failed', stats?.failed],
-    ['throughput', metrics?.closedLastMinute],
-    [
-      'queued',
-      metrics
-        ? Object.values(metrics.queues).reduce((sum, q) => sum + q.waiting + q.delayed, 0)
-        : undefined,
-    ],
   ];
 
   return (
     <div className="border-b border-amber-300 bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-50">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2 text-sm">
-        <span className="font-semibold">{t('title')}</span>
         {unavailable ? (
-          <span className="text-destructive">{t('unavailable')}</span>
+          <>
+            <span className="font-semibold">{t('title')}</span>
+            <span className="text-destructive">{t('unavailable')}</span>
+          </>
         ) : (
           <>
-            <span className="rounded bg-amber-200/60 px-2 py-0.5 text-xs dark:bg-amber-800">
-              {state?.seeding === 'pending'
-                ? t('seeding')
-                : t(`status.${state?.status ?? 'ready'}`)}
-            </span>
+            <div className="flex min-w-48 flex-col gap-1">
+              <span className="font-semibold tabular-nums">
+                {!ready
+                  ? t('seeding')
+                  : finished
+                    ? t('progressFinished', { sent, total })
+                    : t('progress', { sent, total })}
+              </span>
+              <span className="h-1.5 w-full overflow-hidden rounded-full bg-amber-200 dark:bg-amber-800">
+                <span
+                  className="block h-full rounded-full bg-amber-600 transition-all duration-500"
+                  style={{ width: total > 0 ? `${(sent / total) * 100}%` : '0%' }}
+                />
+              </span>
+            </div>
             {state?.status === 'running' ? (
               <Button
                 size="sm"
@@ -111,101 +128,44 @@ export function DemoPanel() {
                 disabled={busy}
                 onClick={() => run(simulatorApi.pause)}
               >
-                {t('pause')}
-              </Button>
-            ) : state?.status === 'paused' ? (
-              <Button size="sm" disabled={busy} onClick={() => run(simulatorApi.resume)}>
-                {t('resume')}
+                <Pause className="size-3.5" /> {t('pause')}
               </Button>
             ) : (
               <Button
                 size="sm"
-                disabled={busy || state?.seeding !== 'done'}
-                onClick={() => run(simulatorApi.start)}
+                disabled={busy || !ready || finished}
+                onClick={() =>
+                  run(state?.status === 'paused' ? simulatorApi.resume : simulatorApi.start)
+                }
               >
-                {t('start')}
+                <Play className="size-3.5" /> {t(state?.status === 'paused' ? 'resume' : 'play')}
               </Button>
             )}
             <Button
               size="sm"
               variant="outline"
-              disabled={busy || state?.seeding !== 'done'}
+              disabled={busy || !ready || finished}
+              title={state?.next ? t('nextHint', { subject: state.next.subject }) : undefined}
               onClick={() => run(simulatorApi.sendOne)}
             >
-              {t('sendOne')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              title={t('showcaseHint')}
-              disabled={busy || state?.seeding !== 'done'}
-              onClick={() => run(simulatorApi.sendShowcase)}
-            >
-              ★ {t('showcase')}
+              <Send className="size-3.5" /> {t('sendOne')}
             </Button>
             <label className="flex items-center gap-1">
-              <span>{t('speed')}</span>
+              <span>{t('interval')}</span>
               <select
                 className="h-7 rounded border border-amber-300 bg-background px-1"
-                value={state?.emailsPerMinute ?? 4}
+                value={state?.intervalSeconds ?? 20}
                 onChange={(event) => run(() => simulatorApi.speed(Number(event.target.value)))}
               >
-                {[...new Set([...SPEEDS, state?.emailsPerMinute ?? 4])]
+                {[...new Set([...INTERVALS, state?.intervalSeconds ?? 20])]
                   .sort((a, b) => a - b)
-                  .map((speed) => (
-                    <option key={speed} value={speed}>
-                      {speed}
+                  .map((seconds) => (
+                    <option key={seconds} value={seconds}>
+                      {t('seconds', { seconds })}
                     </option>
                   ))}
               </select>
             </label>
-            <label className="flex items-center gap-1">
-              <span>{t('languageMix')}</span>
-              <select
-                className="h-7 rounded border border-amber-300 bg-background px-1"
-                value={state?.englishShare ?? 0.3}
-                onChange={(event) =>
-                  run(() => simulatorApi.languageMix(Number(event.target.value)))
-                }
-              >
-                {[...new Set([...ENGLISH_SHARES, state?.englishShare ?? 0.3])]
-                  .sort((a, b) => a - b)
-                  .map((share) => (
-                    <option key={share} value={share}>
-                      {format.number(share, { style: 'percent' })}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2">
-              <Switch
-                checked={state?.autoValidation.enabled ?? false}
-                onCheckedChange={(enabled: boolean) =>
-                  run(() => simulatorApi.autoValidation({ enabled }))
-                }
-              />
-              <span>{t('autoValidation')}</span>
-              {state?.autoValidation.enabled && (
-                <span className="text-xs opacity-75">
-                  {t('rejectionRate', {
-                    rate: format.number(state.autoValidation.rejectionRate, { style: 'percent' }),
-                  })}
-                </span>
-              )}
-            </label>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={busy || state?.seeding !== 'done'}
-              onClick={() => run(() => simulatorApi.burst(1_000))}
-            >
-              {t('burst')}
-            </Button>
-            {state?.burst?.startedAt && !state.burst.finishedAt && (
-              <span className="text-xs">
-                {t('burstProgress', { sent: state.burst.sent, requested: state.burst.requested })}
-              </span>
-            )}
             <Button
               size="sm"
               variant="destructive"
@@ -213,6 +173,15 @@ export function DemoPanel() {
               onClick={() => run(simulatorApi.reset)}
             >
               {busy ? t('resetting') : t('reset')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-expanded={open}
+              onClick={() => setOpen((value) => !value)}
+            >
+              {t('script')}
+              {open ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
             </Button>
           </>
         )}
@@ -227,9 +196,45 @@ export function DemoPanel() {
               })}
             </span>
           ))}
+          {metrics && metrics.closedLastMinute > 0 && (
+            <span className="tabular-nums text-xs opacity-75">
+              {t('throughput', { count: metrics.closedLastMinute })}
+            </span>
+          )}
         </div>
       </div>
+      {open && state && <ScriptList items={state.script} next={state.next?.index ?? null} />}
     </div>
+  );
+}
+
+/** The demo script: what was sent, what comes next. */
+function ScriptList({ items, next }: { items: ScriptItem[]; next: number | null }) {
+  const t = useTranslations('demo');
+  return (
+    <ol className="mx-auto grid max-w-7xl gap-x-6 gap-y-1 px-4 pb-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <li
+          key={item.index}
+          className={cn(
+            'flex items-center gap-2 rounded px-1.5 py-0.5',
+            item.index === next && 'bg-amber-200/70 font-medium dark:bg-amber-800',
+            item.sent && 'opacity-60',
+          )}
+        >
+          <span className="w-5 text-right tabular-nums">{item.index}</span>
+          {item.sent ? (
+            <Check className="size-3 text-emerald-700" />
+          ) : (
+            <span className="size-3 rounded-full border border-current opacity-40" />
+          )}
+          <span className="truncate">
+            {t(`scenario.${item.scenario === 'non_claim' ? item.requestType : item.scenario}`)}
+          </span>
+          <span className="rounded border px-1 text-[10px] uppercase">{item.language}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 

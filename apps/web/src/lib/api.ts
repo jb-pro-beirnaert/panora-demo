@@ -53,16 +53,30 @@ export const coreApi = {
     }),
 };
 
+/** The real file of an attachment (V14), served by Core. */
+export function attachmentUrl(caseId: string, attachmentId: string): string {
+  return new URL(`/cases/${caseId}/attachments/${attachmentId}/file`, CORE_API_URL).toString();
+}
+
+/** One e-mail of the demo script (V14). */
+export interface ScriptItem {
+  index: number;
+  scenario: string;
+  requestType: string;
+  language: 'fr' | 'en';
+  subject: string;
+  sent: boolean;
+}
+
 export interface SimulatorState {
-  status: 'ready' | 'running' | 'paused';
-  emailsPerMinute: number;
+  status: 'ready' | 'running' | 'paused' | 'finished';
   sent: number;
+  total: number;
   errors: number;
-  poolSize: number;
-  englishShare: number;
+  intervalSeconds: number;
+  next: ScriptItem | null;
+  script: ScriptItem[];
   seeding: 'pending' | 'done';
-  autoValidation: { enabled: boolean; delayMs: number; rejectionRate: number };
-  burst: { requested: number; sent: number; finishedAt: string | null; startedAt: string | null };
 }
 
 const post = (path: string, body?: unknown) =>
@@ -78,10 +92,5 @@ export const simulatorApi = {
   resume: () => post('/resume'),
   reset: () => post('/reset'),
   sendOne: () => post('/send-one'),
-  sendShowcase: () => post('/send-showcase'),
-  speed: (emailsPerMinute: number) => post('/speed', { emailsPerMinute }),
-  languageMix: (en: number) => post('/language-mix', { en }),
-  burst: (count: number) => post('/burst', { count }),
-  autoValidation: (settings: Partial<SimulatorState['autoValidation']>) =>
-    post('/auto-validation', settings),
+  speed: (intervalSeconds: number) => post('/speed', { intervalSeconds }),
 };

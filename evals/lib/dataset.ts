@@ -7,6 +7,10 @@ export const EVAL_WORLD_MIX = { en: 0.4 };
 
 export const EvalCaseSchema = z.object({
   id: z.string(),
+  /**
+   * The generated e-mail, attachments as page text. The runner lays them out as real PDFs before
+   * sending (V14), so the dataset stays readable and small.
+   */
   email: InboundEmailInputSchema,
   groundTruth: GroundTruthSchema,
 });

@@ -2,7 +2,7 @@
 
 import type { AgentEventView, AgentStepView, CaseDetail, ProposedActionView } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
-import { Bot, Cpu, ExternalLink, Loader2 } from 'lucide-react';
+import { Bot, Cpu, ExternalLink, FileText, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertBadges, LanguageBadge, StatusBadge, VerdictBadge } from '@/components/case-badges';
 import { PipelineStepper } from '@/components/pipeline';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from '@/i18n/navigation';
-import { ApiError, coreApi } from '@/lib/api';
+import { ApiError, attachmentUrl, coreApi } from '@/lib/api';
 import { useRealtime } from '@/lib/realtime';
 import { studioRunUrl, traceUrl } from '@/lib/config';
 import { isRunning, type PipelineStep } from '@/lib/stage';
@@ -205,20 +205,58 @@ function EmailCard({ kase }: { kase: CaseDetail }) {
           {email.attachments.length === 0 ? (
             <p className="text-muted-foreground">{t('noAttachment')}</p>
           ) : (
-            email.attachments.map((attachment) => (
-              <details key={attachment.fileName} className="rounded border p-2">
-                <summary className="cursor-pointer font-mono text-xs">
-                  {attachment.fileName}
-                </summary>
-                <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap text-xs">
-                  {attachment.extractedText}
-                </pre>
-              </details>
-            ))
+            <div className="space-y-1">
+              {email.attachments.map((attachment) => (
+                <AttachmentRow key={attachment.id} caseId={kase.id} attachment={attachment} />
+              ))}
+            </div>
           )}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * A real file (V14): open it in a new tab; the text the agents got from it unfolds below.
+ */
+function AttachmentRow({
+  caseId,
+  attachment,
+}: {
+  caseId: string;
+  attachment: CaseDetail['email']['attachments'][number];
+}) {
+  const t = useTranslations('case');
+  const format = useFormatter();
+  const details = [
+    attachment.pageCount !== null ? t('pages', { count: attachment.pageCount }) : null,
+    format.number(attachment.sizeBytes / 1024, { maximumFractionDigits: 0 }) + ' Ko',
+  ].filter(Boolean);
+  return (
+    <details className="rounded border p-2">
+      <summary className="flex cursor-pointer items-center gap-2 text-xs">
+        <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="font-mono">{attachment.fileName}</span>
+        <span className="text-muted-foreground">{details.join(' · ')}</span>
+        {attachment.extractionStatus === 'failed' && (
+          <Badge variant="destructive">{t('extractionFailed')}</Badge>
+        )}
+        <a
+          href={attachmentUrl(caseId, attachment.id)}
+          target="_blank"
+          rel="noreferrer"
+          className="ml-auto inline-flex items-center gap-1 text-blue-700 hover:underline"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {t('openFile')} <ExternalLink className="size-3" />
+        </a>
+      </summary>
+      <div className="mt-2 text-xs text-muted-foreground">{t('extractedText')}</div>
+      <pre className="mt-1 max-h-72 overflow-auto whitespace-pre-wrap text-xs">
+        {attachment.extractedText}
+      </pre>
+    </details>
   );
 }
 
@@ -385,13 +423,6 @@ function Proposal({
   };
 
   const filing = action.claimFiling as { amount?: number; date?: string } | null;
-  // Decided by the simulated broker (auto-validation): marked in the audit.
-  const auto = kase.auditLogs.some(
-    (log) =>
-      (log.action === 'action_approved' || log.action === 'action_rejected') &&
-      log.params.revision === action.revision &&
-      log.params.auto === true,
-  );
   return (
     <div
       className={cn(
@@ -437,11 +468,6 @@ function Proposal({
               timeStyle: 'short',
             }),
           })}
-          {auto && (
-            <Badge variant="outline" className="ml-1" title={t('case.autoHint')}>
-              {t('case.auto')}
-            </Badge>
-          )}
           {action.comment && <> — {t('case.comment', { comment: action.comment })}</>}
         </p>
       )}

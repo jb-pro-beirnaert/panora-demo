@@ -117,13 +117,21 @@ model InboundEmail {
 }
 
 model Attachment {
-  id            String       @id @default(uuid())
-  emailId       String
-  email         InboundEmail @relation(fields: [emailId], references: [id], onDelete: Cascade)
-  fileName      String
-  type          String
-  extractedText String
-  position      Int
+  id               String       @id @default(uuid())
+  emailId          String
+  email            InboundEmail @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  fileName         String
+  type             String
+  /// V14: the real file (PDF or image). Emptied by the retention purge.
+  content          Bytes
+  sizeBytes        Int
+  /// Pages of a PDF; null for an image.
+  pageCount        Int?
+  /// `ok`, `failed` (PDF without extractable text) or `not_applicable` (image).
+  extractionStatus String
+  /// What the agents get: the text extracted from the PDF, or a mention for an image.
+  extractedText    String
+  position         Int
 }
 
 model Case {

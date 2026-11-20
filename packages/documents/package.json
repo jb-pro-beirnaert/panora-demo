@@ -1,0 +1,31 @@
+{
+  "name": "@demo/documents",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test 'src/**/*.test.ts'"
+  },
+  "devDependencies": {
+    "@demo/eslint-config": "^0.0.0",
+    "@demo/tsconfig": "^0.0.0"
+  },
+  "dependencies": {
+    "@demo/shared": "^0.0.0",
+    "pdfmake": "^0.3.14",
+    "unpdf": "^2.2.1"
+  }
+}

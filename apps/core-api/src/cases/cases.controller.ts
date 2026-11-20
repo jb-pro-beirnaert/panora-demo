@@ -8,10 +8,8 @@ import {
   type CaseSummary,
   type DecisionRequest,
 } from '@demo/shared';
-import { Body, Controller, Get, HttpCode, Inject, Param, Post, Req } from '@nestjs/common';
-import type { Request } from 'express';
-import { hasBearer } from '../auth/bearer-token.guard.js';
-import { ENV, type Env } from '../env.js';
+import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { CasesService } from './cases.service.js';
 
 /**
@@ -20,10 +18,7 @@ import { CasesService } from './cases.service.js';
  */
 @Controller()
 export class CasesController {
-  constructor(
-    private readonly cases: CasesService,
-    @Inject(ENV) private readonly env: Env,
-  ) {}
+  constructor(private readonly cases: CasesService) {}
 
   /** The demo's broker, shown in the UI header. */
   @Get('broker')
@@ -69,17 +64,24 @@ export class CasesController {
   @HttpCode(202)
   async decide(
     @Param('id') id: string,
-    @Req() http: Request,
     @Body({ schema: DecisionRequestSchema }) request: DecisionRequest,
   ): Promise<{ status: 'accepted' }> {
-    await this.cases.decide(id, request, { auto: this.isSimulator(http) });
+    await this.cases.decide(id, request);
     return { status: 'accepted' };
   }
 
-  /** The simulated broker (auto-validation) calls with the demo admin token. */
-  private isSimulator(http: Request): boolean {
-    return Boolean(
-      this.env.DEMO_MODE && this.env.ADMIN_TOKEN && hasBearer(http, this.env.ADMIN_TOKEN),
-    );
+  /** The real file of an attachment (V14): a PDF opens in the browser. */
+  @Get('cases/:id/attachments/:attachmentId/file')
+  async attachmentFile(
+    @Param('id') id: string,
+    @Param('attachmentId') attachmentId: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const file = await this.cases.attachmentFile(id, attachmentId);
+    response
+      .type(file.type)
+      .set('Content-Disposition', `inline; filename="${encodeURIComponent(file.fileName)}"`)
+      .set('X-Content-Type-Options', 'nosniff')
+      .send(Buffer.from(file.content));
   }
 }

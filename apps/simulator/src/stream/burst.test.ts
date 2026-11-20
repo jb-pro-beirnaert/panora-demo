@@ -1,9 +1,9 @@
-import type { InboundEmailInput } from '@demo/shared';
+import type { RawEmailInput } from '@demo/shared';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Burst } from './burst.js';
 
-const email = (n: number): InboundEmailInput => ({
+const email = (n: number): RawEmailInput => ({
   messageId: `<demo-42-${n}@simulator.local>`,
   from: 'a@b.fr',
   to: 'c@d.fr',

@@ -7,6 +7,7 @@ import {
   type ExtranetClause,
   type RunOptions,
 } from '@demo/shared';
+import { toRawEmail } from '@demo/documents';
 import { toCoreSeed, toExtranetSeed } from '@demo/world-generator';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
@@ -116,8 +117,10 @@ async function runCase(
     const email = config.tag
       ? { ...evalCase.email, messageId: evalCase.email.messageId.replace('@', `.${config.tag}@`) }
       : evalCase.email;
+    // V14: the e-mail goes to Core with real PDFs, so the agents get the text Core extracts from
+    // them, exactly as in the demo.
     const { caseId } = (await post(CORE, '/emails', {
-      ...email,
+      ...(await toRawEmail(email)),
       ...(config.runOptions && Object.keys(config.runOptions).length
         ? { runOptions: config.runOptions }
         : {}),

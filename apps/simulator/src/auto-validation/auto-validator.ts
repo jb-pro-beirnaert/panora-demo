@@ -58,8 +58,9 @@ export async function* readSse(
 }
 
 /**
- * Simulated broker: listens to Core's realtime stream and decides each proposed action after a
- * delay, approving most of them and rejecting some with a comment.
+ * Simulated broker of the load test (V9; since V14 it is no longer part of the demo): listens to
+ * Core's realtime stream and decides each proposed action after a delay, approving most of them
+ * and rejecting some with a comment.
  */
 export class AutoValidator {
   settings: AutoValidationSettings = { enabled: false, delayMs: 5_000, rejectionRate: 0.2 };
@@ -69,10 +70,7 @@ export class AutoValidator {
 
   constructor(
     private readonly coreUrl: string,
-    /**
-     * The simulated broker calls Core with the demo admin token: Core records the decision under
-     * the demo's broker and marks it as automatic (V12).
-     */
+    /** Demo admin token (Core's metrics and admin routes). */
     private readonly adminToken: string,
     private readonly random: () => number = Math.random,
   ) {}

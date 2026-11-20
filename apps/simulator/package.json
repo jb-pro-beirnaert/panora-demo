@@ -18,6 +18,7 @@
     "@types/express": "^5.0.6"
   },
   "dependencies": {
+    "@demo/documents": "^0.0.0",
     "@demo/shared": "^0.0.0",
     "@demo/world-generator": "^0.0.0",
     "express": "^5.3.0",

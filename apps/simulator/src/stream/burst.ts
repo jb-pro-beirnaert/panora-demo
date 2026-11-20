@@ -1,5 +1,12 @@
-import type { InboundEmailInput } from '@demo/shared';
-import { withMessageIdSuffix } from './email-stream.js';
+import type { RawEmailInput } from '@demo/shared';
+
+/** `<demo-42-0001@simulator.local>` → `<demo-42-0001.b1-1@simulator.local>`. */
+export function withMessageIdSuffix(email: RawEmailInput, suffix: string): RawEmailInput {
+  const messageId = email.messageId.includes('@')
+    ? email.messageId.replace('@', `.${suffix}@`)
+    : `${email.messageId}.${suffix}`;
+  return { ...email, messageId };
+}
 
 export interface BurstState {
   requested: number;
@@ -14,7 +21,7 @@ export interface BurstState {
 export const DUPLICATE_SHARE = 0.05;
 
 /**
- * Burst mode (V9): `count` e-mails sent as fast as Core accepts them, each one unique, plus ~5 %
+ * Burst used by the load test (V9; since V14 only from `npm run load-test`, not from the demo): `count` e-mails sent as fast as Core accepts them, each one unique, plus ~5 %
  * duplicates of e-mails already sent to prove the deduplication.
  */
 export class Burst {
@@ -29,17 +36,17 @@ export class Burst {
   private run = 0;
 
   constructor(
-    private readonly pool: readonly InboundEmailInput[],
-    private readonly deliver: (email: InboundEmailInput) => Promise<void>,
+    private readonly pool: readonly RawEmailInput[],
+    private readonly deliver: (email: RawEmailInput) => Promise<void>,
     private readonly random: () => number = Math.random,
   ) {}
 
   /** The e-mails of a burst, duplicates included, in sending order. */
-  plan(count: number, run: number): { email: InboundEmailInput; duplicate: boolean }[] {
+  plan(count: number, run: number): { email: RawEmailInput; duplicate: boolean }[] {
     const unique = Array.from({ length: count }, (_, index) =>
       withMessageIdSuffix(this.pool[index % this.pool.length]!, `b${run}-${index + 1}`),
     );
-    const plan: { email: InboundEmailInput; duplicate: boolean }[] = [];
+    const plan: { email: RawEmailInput; duplicate: boolean }[] = [];
     for (const [index, email] of unique.entries()) {
       plan.push({ email, duplicate: false });
       if (index > 0 && this.random() < DUPLICATE_SHARE) {

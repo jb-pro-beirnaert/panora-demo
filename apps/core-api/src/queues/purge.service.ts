@@ -42,6 +42,11 @@ export class PurgeService {
       where: { id: { in: cases.map((kase) => kase.id) } },
       data: { purgedAt: now },
     });
+    // V14: the files themselves go too; their extracted text stays readable in the case.
+    await this.prisma.attachment.updateMany({
+      where: { email: { case: { id: { in: cases.map((kase) => kase.id) } } } },
+      data: { content: new Uint8Array() },
+    });
     for (const kase of cases) {
       await this.audit.record({
         caseId: kase.id,

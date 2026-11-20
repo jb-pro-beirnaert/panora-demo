@@ -10,11 +10,9 @@ const EnvSchema = z.object({
     .string()
     .min(16, 'INBOUND_EMAIL_TOKEN (16+ characters) is required (see .env.example)'),
   WORLD_SEED: z.coerce.number().int().default(42),
-  /** Size of the generated e-mail pool the stream goes through (and cycles over). */
-  SIMULATOR_EMAIL_COUNT: z.coerce.number().int().positive().max(1_000).default(40),
-  /** Default pace of the stream. */
-  SIMULATOR_EMAILS_PER_MINUTE: z.coerce.number().positive().max(600).default(4),
-  /** Share of English-speaking clients in the world and of English e-mails in the stream. */
+  /** Seconds between two e-mails of the demo script while playing (V14). */
+  SIMULATOR_INTERVAL_SECONDS: z.coerce.number().int().min(3).max(600).default(20),
+  /** Share of English-speaking clients in the generated world. */
   SIMULATOR_ENGLISH_SHARE: z.coerce.number().min(0).max(1).default(0.3),
   /** Origin of the web UI allowed by CORS (demo panel). */
   WEB_ORIGIN: z.string().default('http://localhost:3000'),

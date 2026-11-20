@@ -253,14 +253,9 @@ export class CasesService {
 
   /**
    * The broker approves or rejects the pending proposal. The workflow is resumed by the
-   * `resume-workflow` worker; a rejection comment goes back to `draftingAgent`. `auto`: decided
-   * by the simulated broker (auto-validation), shown as such in the audit.
+   * `resume-workflow` worker; a rejection comment goes back to `draftingAgent`.
    */
-  async decide(
-    caseId: string,
-    request: DecisionRequest,
-    { auto = false }: { auto?: boolean } = {},
-  ): Promise<void> {
+  async decide(caseId: string, request: DecisionRequest): Promise<void> {
     const broker = await this.currentBroker();
     const kase = await this.prisma.case.findUnique({
       where: { id: caseId },
@@ -298,7 +293,6 @@ export class CasesService {
             revision: action.revision,
             actionType: action.actionType,
             ...(request.comment ? { comment: request.comment } : {}),
-            ...(auto ? { auto: true } : {}),
           },
         },
         tx,
@@ -321,5 +315,20 @@ export class CasesService {
       { jobId: `${caseId}-r${action.revision}` },
     );
     this.realtime.publish('case.updated', caseId, { status: 'processing' }, kase.brokerageId);
+  }
+
+  /** The file of an attachment (V14), served inline so the UI can open the PDF. */
+  async attachmentFile(
+    caseId: string,
+    attachmentId: string,
+  ): Promise<{ fileName: string; type: string; content: Uint8Array }> {
+    const attachment = await this.prisma.attachment.findFirst({
+      where: { id: attachmentId, email: { case: { id: caseId } } },
+      select: { fileName: true, type: true, content: true },
+    });
+    if (!attachment || attachment.content.length === 0) {
+      throw new NotFoundException('This attachment has no file (unknown, or purged).');
+    }
+    return attachment;
   }
 }

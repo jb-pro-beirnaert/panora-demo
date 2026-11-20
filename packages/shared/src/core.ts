@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { AlertTypeSchema, LocaleSchema, PolicyStatusSchema, VerdictSchema } from './domain.js';
 import { ProposedActionSchema } from './drafting.js';
 import { ProcessEmailResultSchema, RunOptionsSchema } from './process-email.js';
-import { InboundEmailInputSchema } from './inbound-email.js';
+import { RawEmailInputSchema } from './inbound-email.js';
 
 /**
  * Contracts of the Core API (apps/core-api): seed payload, Mastra → Core callbacks, public API
@@ -196,8 +196,8 @@ export const DecisionRequestSchema = z.object({
 });
 export type DecisionRequest = z.infer<typeof DecisionRequestSchema>;
 
-/** Body of `POST /emails`: the e-mail, plus run options for evals (demo mode only). */
-export const ReceiveEmailRequestSchema = InboundEmailInputSchema.extend({
+/** Body of `POST /emails`: the e-mail with its files, plus run options for evals (demo mode only). */
+export const ReceiveEmailRequestSchema = RawEmailInputSchema.extend({
   runOptions: RunOptionsSchema.optional(),
 });
 export type ReceiveEmailRequest = z.infer<typeof ReceiveEmailRequestSchema>;
@@ -459,7 +459,16 @@ export const CaseDetailSchema = CaseSummarySchema.extend({
     receivedAt: z.string(),
     language: LocaleSchema,
     attachments: z.array(
-      z.object({ fileName: z.string(), type: z.string(), extractedText: z.string() }),
+      z.object({
+        id: z.string(),
+        fileName: z.string(),
+        type: z.string(),
+        extractedText: z.string(),
+        /** V14: size of the file, pages of a PDF, and whether its text could be extracted. */
+        sizeBytes: z.number().int(),
+        pageCount: z.number().int().nullable(),
+        extractionStatus: z.enum(['ok', 'failed', 'not_applicable']),
+      }),
     ),
   }),
   steps: z.array(AgentStepViewSchema),

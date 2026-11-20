@@ -123,8 +123,10 @@ Postgres and Redis (empty), a self-hosted Langfuse, the five apps in watch mode,
 fictional world.
 
 Open http://localhost:3000 — no sign-in: the demo has one brokerage (Delorme Courtage) and one
-broker (Sophie Marchal), and every e-mail lands in her inbox. Press **Start** (or **Flagship
-scenario** for the terminated-policy case) in the demo panel: each e-mail pops in with a toast,
+broker (Sophie Marchal), and every e-mail lands in her inbox. The demo is a fixed script of 14
+e-mails covering every case of the catalog (the terminated-policy case comes second), with real PDF
+attachments: press **Play** (one e-mail every 20 s) or **Send 1 e-mail** in the demo panel, which
+shows "Demo · 7/14 e-mails sent". Each e-mail pops in with a toast,
 its row shows a live pipeline (Triage → Coverage → Drafting → Approval → Execution) with the agent
 at work and the MCP tool it is calling, the "Live agents" panel shows what each Mastra agent is
 doing, and a list/board toggle shows cases moving between columns. Approve or reject the
@@ -223,9 +225,10 @@ confirms them.
 
 ## Scale and resilience
 
-`npm run load-test -w apps/simulator -- --count 1000` resets the demo, turns the simulated broker on
-(immediate approval), sends a burst through the simulator (`POST /burst`, with ~5 % duplicate
-e-mails) and follows Core's `/cases/metrics` until every case is closed.
+`npm run load-test -w apps/simulator -- --count 1000` resets the demo, starts a simulated broker
+(immediate approval), sends a burst of generated e-mails with their PDFs straight to Core (~5 %
+duplicate e-mails) and follows Core's `/cases/metrics` until every case is closed. (Since V14 the
+load test is self-contained: the demo panel no longer has a burst button.)
 
 **Setup of the reference run** (results in [`docs/load-tests/`](docs/load-tests/)): two Mastra
 instances sharing their storage (Core round-robins and fails over between them), the extranet in

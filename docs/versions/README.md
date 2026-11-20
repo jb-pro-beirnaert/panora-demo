@@ -18,3 +18,4 @@ comment, ce qui a été vérifié (tests, exécutions réelles) et les écarts a
 | V11     | `v11-finishing`           | [Finitions](v11-finishing.md)                                                  |
 | V12     | `v12-single-broker`       | [Un seul courtier, Langfuse local](v12-single-broker.md)                       |
 | V13     | `v13-live-inbox`          | [Boîte de réception vivante](v13-live-inbox.md)                                |
+| V14     | `v14-scripted-demo`       | [Démo scénarisée et vrais PDF](v14-scripted-demo.md)                           |

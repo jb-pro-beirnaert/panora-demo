@@ -1,10 +1,10 @@
 import { detectLanguage, GroundTruthSchema, InboundEmailInputSchema } from '@demo/shared';
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import { SCENARIO_ORDER, generateEmails } from './emails.js';
+import { describe, it, test } from 'node:test';
+import { DEMO_SCRIPT, SCENARIO_ORDER, generateDemoScript, generateEmails } from './emails.js';
 import { toCoreSeed } from './core.js';
 import { toExtranetSeed } from './extranet.js';
-import { WORLD_SIZE, generateWorld } from './world.js';
+import { SHOWCASE, WORLD_SIZE, generateWorld } from './world.js';
 
 const world = generateWorld({ seed: 42, locale: 'fr' });
 const emails = generateEmails(world, { seed: 42, count: 60 });
@@ -202,4 +202,25 @@ describe('multilingual world (V4)', () => {
       ),
     );
   });
+});
+
+test('the demo script covers every scenario once, in order, reproducibly (V14)', () => {
+  const world = generateWorld({ seed: 42, locales: ['fr', 'en'], mix: { en: 0.25 } });
+  const script = generateDemoScript(world, 42);
+  assert.equal(script.length, DEMO_SCRIPT.length);
+  assert.deepEqual(
+    script.map(({ groundTruth }) => groundTruth.scenario),
+    DEMO_SCRIPT.map((entry) => (entry.crossLanguage ? 'covered' : entry.scenario)),
+  );
+  assert.deepEqual(
+    script.map(({ groundTruth }) => groundTruth.emailLanguage),
+    DEMO_SCRIPT.map((entry) => entry.language),
+  );
+  assert.equal(script[1]!.groundTruth.policyNumber, SHOWCASE.terminatedPolicy);
+  const kinds = script.flatMap(({ groundTruth }) =>
+    groundTruth.scenario === 'non_claim' ? [groundTruth.requestType] : [],
+  );
+  assert.deepEqual(kinds, ['cancellation', 'quote_request']);
+  assert.equal(new Set(script.map(({ email }) => email.messageId)).size, script.length);
+  assert.deepEqual(generateDemoScript(world, 42), script);
 });

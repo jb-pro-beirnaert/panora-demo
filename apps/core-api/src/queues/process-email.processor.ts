@@ -31,7 +31,9 @@ export class ProcessEmailProcessor extends WorkerHost {
       where: { id: job.data.caseId },
       include: {
         brokerage: true,
-        email: { include: { attachments: { orderBy: { position: 'asc' } } } },
+        email: {
+          include: { attachments: { orderBy: { position: 'asc' }, omit: { content: true } } },
+        },
       },
     });
     if (!kase) {

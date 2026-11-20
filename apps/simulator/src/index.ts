@@ -1,29 +1,35 @@
-import type { InboundEmailInput, ProcessEmailInput } from '@demo/shared';
-import { generateEmails, generateWorld, SHOWCASE } from '@demo/world-generator';
+import { extractEmail, toRawEmail } from '@demo/documents';
+import {
+  CaseStatsSchema,
+  type InboundEmailInput,
+  type ProcessEmailInput,
+  type RawEmailInput,
+} from '@demo/shared';
+import { generateDemoScript, generateWorld } from '@demo/world-generator';
 import express, { type ErrorRequestHandler } from 'express';
-import { AutoValidator } from './auto-validation/auto-validator.js';
 import { controlRouter } from './control/routes.js';
 import { loadEnv } from './env.js';
 import { resetAll, seedAll, type SeedTargets } from './seeding/seeder.js';
-import { Burst } from './stream/burst.js';
-import { EmailStream } from './stream/email-stream.js';
+import { DemoPlayer, type ScriptEmail } from './stream/demo-player.js';
 
 const env = loadEnv();
 
-// Same seed → same world and same e-mails on every start.
+// Same seed → same world, same demo script and same PDFs on every start.
 const world = generateWorld({
   seed: env.WORLD_SEED,
   locales: ['fr', 'en'],
   mix: { en: env.SIMULATOR_ENGLISH_SHARE },
 });
-const emails = generateEmails(world, { seed: env.WORLD_SEED, count: env.SIMULATOR_EMAIL_COUNT });
-// Scenario 2, the flagship case: the "Scénario phare" button of the demo panel sends it.
-const showcase = emails.find(
-  ({ groundTruth }) =>
-    groundTruth.scenario === 'policy_terminated' &&
-    groundTruth.policyNumber === SHOWCASE.terminatedPolicy,
-)?.email;
-if (!showcase) throw new Error('The generated e-mails lack the scenario 2 showcase.');
+const generated = generateDemoScript(world, env.WORLD_SEED);
+// V14: the e-mails carry real files; the PDFs are laid out once, at startup.
+const script: ScriptEmail[] = await Promise.all(
+  generated.map(async ({ email, groundTruth }) => ({
+    email: await toRawEmail(email),
+    scenario: groundTruth.scenario,
+    requestType: groundTruth.requestType,
+    language: groundTruth.emailLanguage,
+  })),
+);
 const targets: SeedTargets = {
   coreUrl: env.CORE_API_URL,
   extranetUrl: env.MCP_EXTRANET_URL,
@@ -38,7 +44,7 @@ function workflowInput(email: InboundEmailInput): ProcessEmailInput {
   return { email, brokerage: { brokerCode: brokerage.brokerCode, locale: brokerage.locale } };
 }
 
-async function deliver(email: InboundEmailInput): Promise<void> {
+async function deliver(email: RawEmailInput): Promise<void> {
   const response = await fetch(new URL('/emails', env.CORE_API_URL), {
     method: 'POST',
     headers: {
@@ -46,23 +52,14 @@ async function deliver(email: InboundEmailInput): Promise<void> {
       authorization: `Bearer ${env.INBOUND_EMAIL_TOKEN}`,
     },
     body: JSON.stringify(email),
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) {
     throw new Error(`POST /emails failed (${response.status}): ${await response.text()}`);
   }
 }
 
-const stream = new EmailStream(
-  emails.map(({ email, groundTruth }) => ({ email, language: groundTruth.emailLanguage })),
-  deliver,
-  { emailsPerMinute: env.SIMULATOR_EMAILS_PER_MINUTE, englishShare: env.SIMULATOR_ENGLISH_SHARE },
-);
-const burst = new Burst(
-  emails.map(({ email }) => email),
-  deliver,
-);
-const autoValidator = new AutoValidator(env.CORE_API_URL, env.ADMIN_TOKEN);
+const player = new DemoPlayer(script, deliver, env.SIMULATOR_INTERVAL_SECONDS);
 
 const app = express();
 app.use(express.json());
@@ -85,39 +82,38 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'simulator', seed: env.WORLD_SEED, seeding });
 });
 
-/** Every generated e-mail with its ground truth. `index` is 1-based. */
+/** The demo script with its ground truth. `index` is 1-based. */
 app.get('/emails', (_req, res) => {
   res.json(
-    emails.map(({ email, groundTruth }, index) => ({
+    generated.map(({ email, groundTruth }, index) => ({
       index: index + 1,
       scenario: groundTruth.scenario,
       language: groundTruth.emailLanguage,
       subject: email.subject,
       from: email.from,
-      input: workflowInput(email),
       groundTruth,
     })),
   );
 });
 
-/** A single e-mail, shaped as the input of the `process-email` workflow (paste it into Mastra Studio). */
-app.get('/emails/:index', (req, res) => {
-  const generated = emails[Number(req.params.index) - 1];
-  if (!generated) {
+/**
+ * A single e-mail of the script, shaped as the input of the `process-email` workflow (paste it
+ * into Mastra Studio): its PDFs are extracted exactly as Core does it.
+ */
+app.get('/emails/:index', async (req, res) => {
+  const item = script[Number(req.params.index) - 1];
+  if (!item) {
     res
       .status(404)
-      .json({ error: `No e-mail ${req.params.index}: valid indexes are 1 to ${emails.length}.` });
+      .json({ error: `No e-mail ${req.params.index}: valid indexes are 1 to ${script.length}.` });
     return;
   }
-  res.json(workflowInput(generated.email));
+  res.json(workflowInput(await extractEmail(item.email)));
 });
 
 app.use(
   controlRouter({
-    stream,
-    burst,
-    autoValidator,
-    showcase,
+    player,
     seeding: () => seeding,
     reset: async () => {
       seeding = 'pending';
@@ -135,11 +131,17 @@ app.use(errorHandler);
 
 app.listen(env.SIMULATOR_PORT, '0.0.0.0', () => {
   console.log(
-    `simulator listening on http://localhost:${env.SIMULATOR_PORT} (seed ${env.WORLD_SEED}, ${emails.length} e-mails)`,
+    `simulator listening on http://localhost:${env.SIMULATOR_PORT} (seed ${env.WORLD_SEED}, demo script of ${script.length} e-mails)`,
   );
 });
 
-autoValidator.listen();
-void seedAll(world, targets).then(() => {
+void seedAll(world, targets).then(async () => {
   seeding = 'done';
+  // Restarted without a reset (e.g. watch mode): do not send the e-mails Core already has again.
+  try {
+    const response = await fetch(new URL('/cases/stats', env.CORE_API_URL));
+    if (response.ok) player.resumeFrom(CaseStatsSchema.parse(await response.json()).total);
+  } catch {
+    // Core not reachable: start from 0/X.
+  }
 });
