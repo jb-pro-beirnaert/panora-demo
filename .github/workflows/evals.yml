@@ -1,13 +1,9 @@
 name: Evals
 
-# Runs the agents on the generated dataset when a PR touches the agents (prompts, models, workflow)
+# Runs the agents on the generated dataset (prompts, models, workflow)
 # and fails if a score falls under its threshold or drops by more than 2 points against main.
+# Manual only: no automatic runs on pull request.
 on:
-  pull_request:
-    paths:
-      - 'apps/agents/**'
-      - 'evals/**'
-      - 'packages/shared/**'
   workflow_dispatch:
     inputs:
       limit:
