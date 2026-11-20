@@ -1,6 +1,6 @@
 # Démo agents IA courtage (Panora) — Vue d'ensemble
 
-> Résumé global du projet. Le détail de chaque version est dans `v01-…md` à `v17-…md` ; les données et scénarios de la démo sont dans `00-demo-data-and-scenarios.md`.
+> Résumé global du projet. Le détail de chaque version est dans `v01-…md` à `v18-…md` ; les données et scénarios de la démo sont dans `00-demo-data-and-scenarios.md`.
 > Les specs sont rédigées en français ; **tout le code est en anglais** (identifiants, routes, tables, outils MCP, événements, commits).
 
 ## 1. Objectif
@@ -268,6 +268,7 @@ Next.js bilingue FR / EN dès V3 (next-intl, préfixe `/fr` et `/en`, sélecteur
 | V15 | Toutes les demandes : résiliation, information, relances, réponse au client, « à traiter par vous » | `v15-requests-and-replies.md` |
 | V16 | Pièces jointes réalistes (factures, constats, récépissés, rapports) | `v16-realistic-documents.md` |
 | V17 | Onglets « Extranet assureur » et « Clients », sources cliquables et « ce que l'agent a vu » | `v17-sources-and-portals.md` |
+| V18 | PDF piégé : détection d'injection de prompt, alerte, validation humaine renforcée | `v18-prompt-injection.md` |
 
 ### Minimum pour postuler
 
