@@ -32,6 +32,10 @@ const EnvSchema = z
           .filter(Boolean),
       )
       .pipe(z.array(z.url()).min(1)),
+    /** V17: the insurer's extranet, read for the broker's UI (`/insurer/*`). */
+    MCP_EXTRANET_URL: z.url().default('http://localhost:3002'),
+    /** V17: secret of the extranet tokens; Core only ever issues `read` tokens with it. */
+    MCP_TOKEN_SECRET: z.string().min(32).optional(),
     /** BullMQ workers (V9): jobs in parallel, and rate limit aligned with the LLM API quota. */
     WORKER_CONCURRENCY: z.coerce.number().int().positive().default(10),
     /** Max workflow starts per WORKER_RATE_DURATION_MS (0 = no limit). */

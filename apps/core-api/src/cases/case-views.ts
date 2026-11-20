@@ -148,6 +148,7 @@ export function toCaseDetail(
     agent: event.agent as AgentEventView['agent'],
     eventType: event.eventType as AgentEventView['eventType'],
     params: event.params as AgentEventView['params'],
+    ...(event.result !== null ? { result: event.result } : {}),
     createdAt: event.createdAt.toISOString(),
   }));
   const proposedActions: ProposedActionView[] = kase.proposedActions.map((action) => ({

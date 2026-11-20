@@ -11,7 +11,9 @@
     "brokerName": "{name} — {brokerage}",
     "soundOn": "Sound on",
     "soundOff": "Sound off",
-    "soundHint": "A sound when a case waits for your approval"
+    "soundHint": "A sound when a case waits for your approval",
+    "insurer": "Insurer extranet",
+    "clients": "Clients"
   },
   "locale": {
     "fr": "Français",
@@ -184,7 +186,8 @@
     },
     "standaloneReply": "Reply to the client",
     "cancellationFiling": "Cancellation to record: policy {policyNumber}, effective {date}",
-    "finalDraft": "Final reply, ready to send"
+    "finalDraft": "Final reply, ready to send",
+    "openSource": "Open the data the agent consulted"
   },
   "status": {
     "received": "Received",
@@ -435,5 +438,90 @@
     "follow_up_unmatched": "Follow-up without a known case",
     "unclassified": "Unclassified request",
     "workflow_failed": "Processing failed"
+  },
+  "portal": {
+    "loading": "Loading…",
+    "empty": "No result.",
+    "insurer": {
+      "title": "Insurer extranet",
+      "subtitle": "The brokerage’s policies as the insurers see them: the same source as the agents, read-only.",
+      "search": "Search a policy or a holder",
+      "back": "Back to the extranet"
+    },
+    "policy": {
+      "number": "Policy",
+      "holder": "Holder",
+      "insurer": "Insurer",
+      "product": "Product",
+      "status": "Status",
+      "start": "Start",
+      "renewal": "Renewal",
+      "end": "End",
+      "cancellationRequested": "Cancellation requested on",
+      "mismatch": "Mismatch: the brokerage believes this policy is {known}, the insurer says {actual}. Client:",
+      "match": "The brokerage and the insurer agree: {actual}. Client:",
+      "coverages": "Coverages",
+      "coverage": "Coverage",
+      "limit": "Limit",
+      "deductible": "Deductible",
+      "exclusions": "Exclusions",
+      "clause": "Clause",
+      "conditions": "Applicable general conditions",
+      "claims": "Claims",
+      "noClaim": "No claim declared.",
+      "claimNumber": "Claim no.",
+      "date": "Date",
+      "nature": "Nature",
+      "amount": "Amount",
+      "filedBy": "Filed by",
+      "filedByBrokerage": "the brokerage ({code}) through the connector"
+    },
+    "endReason": {
+      "non_payment": "non-payment",
+      "client_request": "client request",
+      "insurer_termination": "terminated by the insurer",
+      "unknown": "unknown reason"
+    },
+    "claimStatus": {
+      "open": "open",
+      "settled": "settled",
+      "rejected": "rejected"
+    },
+    "policyStatusShort": {
+      "active": "active",
+      "suspended": "suspended",
+      "terminated": "terminated"
+    },
+    "conditions": {
+      "title": "General conditions — {insurer}",
+      "subtitle": "Full text, in the insurer’s language. The clause consulted is framed, the excerpt cited highlighted.",
+      "general": "general"
+    },
+    "clients": {
+      "title": "Clients",
+      "subtitle": "The brokerage’s client base: what the triage agent looks up with find_client.",
+      "search": "Search a client (name, e-mail, SIREN)",
+      "back": "Back to clients",
+      "company": "Company",
+      "contact": "Contact",
+      "email": "E-mail",
+      "policies": "Policies",
+      "cases": "Cases",
+      "policiesTitle": "Policies managed by the brokerage",
+      "knownStatus": "Status known to the brokerage",
+      "knownStatusHint": "The status known to the brokerage may differ from the insurer’s: open the policy to compare.",
+      "cancellation": "Cancellation recorded (effective)",
+      "casesTitle": "Cases",
+      "noCase": "No case."
+    },
+    "saw": {
+      "title": "What {agent} received on {date} ({reference})",
+      "fromCase": "Opened from case {reference}",
+      "backToCase": "Back to case {reference}",
+      "noResult": "The result of this call was not recorded (case from before V17).",
+      "changed": "The data has changed since:",
+      "change": "{field}: “{before}” → “{after}”",
+      "unchanged": "The data is the same today."
+    }
   }
 }

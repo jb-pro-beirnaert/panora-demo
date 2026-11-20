@@ -130,7 +130,13 @@ export class InternalService {
     const brokerageId = await this.brokerageOf(caseId);
     if (!brokerageId) return IGNORED;
     const row = await this.prisma.agentEvent.create({
-      data: { caseId, agent: event.agent, eventType: event.eventType, params: event.params },
+      data: {
+        caseId,
+        agent: event.agent,
+        eventType: event.eventType,
+        params: event.params,
+        ...(event.result !== undefined ? { result: event.result as Prisma.InputJsonValue } : {}),
+      },
     });
     // V13 live stage: the step running now and the tool its agent called last.
     if (event.eventType === 'step_started' && event.params.step) {

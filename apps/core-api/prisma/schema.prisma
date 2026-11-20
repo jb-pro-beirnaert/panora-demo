@@ -239,6 +239,8 @@ model AgentEvent {
   agent     String
   eventType String
   params    Json
+  /// V17: what the tool returned to the agent ("what the agent saw").
+  result    Json?
   createdAt DateTime @default(now())
 
   @@index([caseId, createdAt])

@@ -105,6 +105,7 @@ services:
       CORE_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/core
       REDIS_URL: redis://redis:6379
       MASTRA_URL: http://agents:4111
+      MCP_EXTRANET_URL: http://mcp-extranet:3002
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
     ports:
       - '${CORE_API_PORT:-3001}:3001'

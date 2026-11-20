@@ -240,7 +240,21 @@ const matchFollowUp = createStep({
         agent: 'triage',
         stepType: 'triage.follow_up_matched',
         params: { reference: match.reference },
-        sources: [{ kind: 'core', ref: 'find_client_cases' }],
+        sources: [
+          {
+            kind: 'core',
+            ref: 'find_client_cases',
+            ...(inputData.client
+              ? {
+                  link: {
+                    type: 'client' as const,
+                    clientId: inputData.client.client.id,
+                    section: 'cases' as const,
+                  },
+                }
+              : {}),
+          },
+        ],
       });
       return { outcome: 'merged', targetCaseId: match.caseId };
     }
@@ -248,7 +262,21 @@ const matchFollowUp = createStep({
       agent: 'triage',
       stepType: 'triage.follow_up_unmatched',
       params: { cases: cases.length },
-      sources: [{ kind: 'core', ref: 'find_client_cases' }],
+      sources: [
+        {
+          kind: 'core',
+          ref: 'find_client_cases',
+          ...(inputData.client
+            ? {
+                link: {
+                  type: 'client' as const,
+                  clientId: inputData.client.client.id,
+                  section: 'cases' as const,
+                },
+              }
+            : {}),
+        },
+      ],
     });
     await handOver({
       request: inputData,

@@ -11,5 +11,6 @@ export * from './process-email.js';
 export * from './ground-truth.js';
 export * from './extranet-seed.js';
 export * from './core.js';
+export * from './portal.js';
 export * from './language.js';
 export * from './evals.js';

@@ -627,6 +627,43 @@ describe('case lifecycle (Postgres + Redis)', () => {
     );
   });
 
+  // --- V17: clients, and what the agent saw ---
+
+  it("V17: lists the brokerage's clients and opens a client's file", async () => {
+    const clients = (await http.get('/clients').query({ q: 'Boulangerie' }).expect(200)).body as {
+      id: string;
+      companyName: string;
+      cases: number;
+    }[];
+    const bakery = clients.find((client) => client.companyName === 'Boulangerie Martin SARL')!;
+    expect(bakery.cases).toBeGreaterThan(0);
+    const detail = (await http.get(`/clients/${bakery.id}`).expect(200)).body as {
+      policies: { number: string }[];
+      cases: { id: string }[];
+    };
+    expect(detail.policies.length).toBeGreaterThan(0);
+    expect(detail.cases.map((kase) => kase.id)).toContain(caseId);
+    await http.get('/clients/nobody').expect(404);
+  });
+
+  it('V17: keeps what a tool returned to the agent on its event', async () => {
+    await http
+      .post(`/internal/cases/${caseId}/agent-events`)
+      .set(service)
+      .send({
+        agent: 'coverage',
+        eventType: 'tool_call',
+        params: { tool: 'get_policy', number: 'C-48213' },
+        result: { number: 'C-48213', status: 'terminated' },
+      })
+      .expect(200);
+    const event = (await detail(caseId)).agentEvents.at(-1)!;
+    expect(event).toMatchObject({
+      params: { tool: 'get_policy' },
+      result: { number: 'C-48213', status: 'terminated' },
+    });
+  });
+
   it('ignores callbacks for a case that no longer exists', async () => {
     await http
       .post('/internal/cases/00000000-0000-0000-0000-000000000000/steps')

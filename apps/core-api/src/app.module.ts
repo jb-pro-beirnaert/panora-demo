@@ -11,6 +11,8 @@ import { HealthController } from './health.controller.js';
 import { InfraModule } from './infra.module.js';
 import { InternalController } from './internal/internal.controller.js';
 import { InternalService } from './internal/internal.service.js';
+import { PortalController } from './portal/portal.controller.js';
+import { PortalService } from './portal/portal.service.js';
 import { ServiceTokenGuard } from './internal/service-token.guard.js';
 import { MaintenanceProcessor } from './queues/maintenance.processor.js';
 import { ProcessEmailProcessor } from './queues/process-email.processor.js';
@@ -50,11 +52,13 @@ export class AppModule {
         CasesController,
         InternalController,
         RealtimeController,
+        PortalController,
       ],
       providers: [
         EmailsService,
         CasesService,
         InternalService,
+        PortalService,
         ServiceTokenGuard,
         InboundTokenGuard,
         WatchdogService,

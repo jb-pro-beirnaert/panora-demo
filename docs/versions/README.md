@@ -21,3 +21,4 @@ comment, ce qui a été vérifié (tests, exécutions réelles) et les écarts a
 | V14     | `v14-scripted-demo`        | [Démo scénarisée et vrais PDF](v14-scripted-demo.md)                           |
 | V15     | `v15-requests-and-replies` | [Toutes les demandes, réponse au client](v15-requests-and-replies.md)          |
 | V16     | `v16-realistic-documents`  | [Pièces jointes réalistes](v16-realistic-documents.md)                         |
+| V17     | `v17-sources-and-portals`  | [Sources cliquables, extranet et clients](v17-sources-and-portals.md)          |

@@ -7,6 +7,7 @@ import { chaosEnabled, chaosMiddleware, type ChaosConfig } from './chaos/chaos.j
 import type { Db } from './db.js';
 import type { Env } from './env.js';
 import { createMcpServer } from './mcp-server.js';
+import { portalRouter } from './portal/routes.js';
 import { logCall } from './tools/define-tool.js';
 
 /** The HTTP app of the MCP extranet server (separate from `listen` so tests can start it). */
@@ -89,6 +90,9 @@ export function createApp(db: Db, env: Env): Express {
         id: null,
       });
   });
+
+  // V17: read-only views of the extranet for the broker's UI (called by Core with a read token).
+  app.use('/portal', portalRouter(db, env.MCP_TOKEN_SECRET));
 
   if (env.DEMO_MODE && env.ADMIN_TOKEN) {
     app.use('/admin', adminRouter(db, env.ADMIN_TOKEN));

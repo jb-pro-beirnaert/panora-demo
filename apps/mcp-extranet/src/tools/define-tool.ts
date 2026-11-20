@@ -11,6 +11,8 @@ export interface ToolContext {
   /** Brokerage of the calling token: tools only expose this brokerage's policies. */
   brokerCode: string;
   scope: McpTokenScope;
+  /** V17: who calls — the agents over MCP (default) or the broker's UI through Core. */
+  channel?: 'mcp' | 'portal';
 }
 
 /** A tool either returns data, or an error message written for an LLM (what to try next). */
@@ -44,6 +46,7 @@ export async function logCall(
     await ctx.db.callLog.create({
       data: {
         brokerCode: ctx.brokerCode,
+        channel: ctx.channel ?? 'mcp',
         tool,
         params: params as Prisma.InputJsonValue,
         result: ('data' in outcome

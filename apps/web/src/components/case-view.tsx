@@ -22,6 +22,7 @@ import {
   type Formatters,
   type Translate,
 } from '@/lib/render';
+import { attachmentAnchor, eventLink, linkHref, sourceEvent } from '@/lib/source-links';
 import { cn } from '@/lib/utils';
 
 function useFormatters(): Formatters {
@@ -281,11 +282,26 @@ function CaseHeader({ kase }: { kase: CaseDetail }) {
         </span>
         <span className="text-sm">
           <span className="text-muted-foreground">{t('client')} </span>
-          {kase.client?.companyName ?? '—'}
+          {kase.client ? (
+            <Link href={`/clients/${kase.client.id}`} className="text-blue-700 hover:underline">
+              {kase.client.companyName}
+            </Link>
+          ) : (
+            '—'
+          )}
         </span>
         <span className="text-sm">
           <span className="text-muted-foreground">{t('policy')} </span>
-          {kase.policyNumber ?? '—'}
+          {kase.policyNumber ? (
+            <Link
+              href={`/insurer/policies/${kase.policyNumber}`}
+              className="font-mono text-blue-700 hover:underline"
+            >
+              {kase.policyNumber}
+            </Link>
+          ) : (
+            '—'
+          )}
         </span>
       </CardContent>
     </Card>
@@ -350,7 +366,7 @@ function AttachmentRow({
     format.number(attachment.sizeBytes / 1024, { maximumFractionDigits: 0 }) + ' Ko',
   ].filter(Boolean);
   return (
-    <details className="rounded border p-2">
+    <details id={attachmentAnchor(attachment.fileName)} className="scroll-mt-24 rounded border p-2">
       <summary className="flex cursor-pointer items-center gap-2 text-xs">
         <FileText className="size-3.5 shrink-0 text-muted-foreground" />
         <span className="font-mono">{attachment.fileName}</span>
@@ -413,10 +429,10 @@ function TimelineCard({ kase }: { kase: CaseDetail }) {
                     <span className="font-mono">
                       {format.dateTime(new Date(item.at), { timeStyle: 'medium' })}
                     </span>
-                    <span>{renderAgentEvent(item.event, t as Translate)}</span>
+                    <EventText kase={kase} event={item.event} />
                   </li>
                 ) : (
-                  <StepItem key={item.step.id} step={item.step} />
+                  <StepItem key={item.step.id} step={item.step} kase={kase} />
                 ),
               )}
           </ol>
@@ -427,7 +443,23 @@ function TimelineCard({ kase }: { kase: CaseDetail }) {
   );
 }
 
-function StepItem({ step }: { step: AgentStepView }) {
+/** V17: a tool call of the live timeline, as a link to what the agent consulted. */
+function EventText({ kase, event }: { kase: CaseDetail; event: AgentEventView }) {
+  const t = useTranslations();
+  const text = renderAgentEvent(event, t as Translate);
+  const link = eventLink(event, kase.client?.id ?? null);
+  if (!link) return <span>{text}</span>;
+  return (
+    <Link
+      href={linkHref(link, { caseId: kase.id, eventId: event.id })}
+      className="underline-offset-2 hover:text-blue-700 hover:underline"
+    >
+      {text}
+    </Link>
+  );
+}
+
+function StepItem({ step, kase }: { step: AgentStepView; kase: CaseDetail }) {
   const t = useTranslations();
   const format = useFormatter();
   const formatters = useFormatters();
@@ -456,15 +488,35 @@ function StepItem({ step }: { step: AgentStepView }) {
       {step.sources.length > 0 && (
         <div className="mt-1 space-y-1 text-xs text-muted-foreground">
           <span>{t('case.sources')} </span>
-          {step.sources.map((source, index) => (
-            <div key={`${source.ref}-${index}`}>
+          {step.sources.map((source, index) => {
+            const label = (
               <span className="font-mono">
                 {source.ref}
                 {source.page ? ` p.${source.page}` : ''}
               </span>
-              {source.excerpt && <q className="ml-1 italic">{source.excerpt}</q>}
-            </div>
-          ))}
+            );
+            const event = sourceEvent(step, source, kase.agentEvents);
+            return (
+              <div key={`${source.ref}-${index}`}>
+                {source.link ? (
+                  <Link
+                    href={linkHref(source.link, {
+                      caseId: kase.id,
+                      eventId: event?.id,
+                      excerpt: source.excerpt,
+                    })}
+                    title={t('case.openSource')}
+                    className="text-blue-700 underline-offset-2 hover:underline"
+                  >
+                    {label} ↗
+                  </Link>
+                ) : (
+                  label
+                )}
+                {source.excerpt && <q className="ml-1 italic">{source.excerpt}</q>}
+              </div>
+            );
+          })}
         </div>
       )}
     </li>

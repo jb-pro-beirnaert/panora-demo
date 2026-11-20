@@ -139,6 +139,28 @@ export const StepParamsSchema = z.record(
 );
 export type StepParams = z.infer<typeof StepParamsSchema>;
 
+/** V17: a page of the UI where a source can be opened. */
+export const SourceLinkSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('policy'),
+    policyNumber: z.string(),
+    section: z.enum(['coverages', 'claims']).optional(),
+  }),
+  z.object({ type: z.literal('clause'), clauseRef: z.string() }),
+  z.object({
+    type: z.literal('client'),
+    clientId: z.string(),
+    section: z.enum(['policies', 'cases']).optional(),
+  }),
+  z.object({ type: z.literal('policy_search'), query: z.string() }),
+  z.object({
+    type: z.literal('attachment'),
+    fileName: z.string(),
+    page: z.number().int().optional(),
+  }),
+]);
+export type SourceLink = z.infer<typeof SourceLinkSchema>;
+
 /** Where a step read its facts: an e-mail section, an attachment page, an MCP tool, a clause. */
 export const StepSourceSchema = z.object({
   kind: z.enum(['email', 'attachment', 'mcp_tool', 'clause', 'core']),
@@ -147,6 +169,11 @@ export const StepSourceSchema = z.object({
   page: z.number().int().nullable().optional(),
   /** Verbatim excerpt (clauses: original language). */
   excerpt: z.string().optional(),
+  /**
+   * V17: where the broker can open this source in the UI. Built by code from what the step
+   * knows, never by the LLM.
+   */
+  link: SourceLinkSchema.optional(),
 });
 export type StepSource = z.infer<typeof StepSourceSchema>;
 
@@ -427,6 +454,8 @@ export const AgentEventCallbackSchema = z.object({
   eventType: AgentEventTypeSchema,
   /** `tool` plus the few arguments worth showing (policy number, clause ref…). */
   params: z.record(z.string(), z.string()),
+  /** V17: what the tool returned to the agent ("what the agent saw"), cut at 8 KB. */
+  result: z.unknown().optional(),
 });
 export type AgentEventCallback = z.infer<typeof AgentEventCallbackSchema>;
 

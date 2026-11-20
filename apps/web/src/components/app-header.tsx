@@ -29,6 +29,12 @@ export function AppHeader() {
           <Link href="/" className="hover:underline">
             {t('header.inbox')}
           </Link>
+          <Link href="/insurer" className="hover:underline">
+            {t('header.insurer')}
+          </Link>
+          <Link href="/clients" className="hover:underline">
+            {t('header.clients')}
+          </Link>
           <Link href="/evals" className="hover:underline">
             {t('header.evals')}
           </Link>

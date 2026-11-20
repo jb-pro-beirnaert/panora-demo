@@ -1,4 +1,9 @@
 import type {
+  ClientDetail,
+  ClientSummary,
+  InsurerClauses,
+  InsurerPolicySummary,
+  InsurerPolicyView,
   AgentsActivity,
   BrokerView,
   CaseDetail,
@@ -46,6 +51,19 @@ export const coreApi = {
   retry: (id: string) =>
     request<{ status: string }>(CORE_API_URL, `/cases/${id}/retry`, { method: 'POST' }),
   case: (id: string) => request<CaseDetail>(CORE_API_URL, `/cases/${id}`),
+  // V17: the insurer's extranet and the brokerage's clients (read-only).
+  insurerPolicies: (q?: string) =>
+    request<InsurerPolicySummary[]>(
+      CORE_API_URL,
+      `/insurer/policies${q ? `?q=${encodeURIComponent(q)}` : ''}`,
+    ),
+  insurerPolicy: (number: string) =>
+    request<InsurerPolicyView>(CORE_API_URL, `/insurer/policies/${encodeURIComponent(number)}`),
+  conditions: (ref: string) =>
+    request<InsurerClauses>(CORE_API_URL, `/insurer/clauses/${encodeURIComponent(ref)}`),
+  clients: (q?: string) =>
+    request<ClientSummary[]>(CORE_API_URL, `/clients${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  client: (id: string) => request<ClientDetail>(CORE_API_URL, `/clients/${encodeURIComponent(id)}`),
   /** V15 "Marquer comme traité". */
   handled: (id: string, comment?: string) =>
     request<{ status: string }>(CORE_API_URL, `/cases/${id}/handled`, {

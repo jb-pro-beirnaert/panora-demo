@@ -56,7 +56,13 @@ function serviceReports(analysis: ServiceAnalysis, timing: Timing): AgentStepCal
         status: analysis.policyStatus,
         renewalDate: analysis.renewalDate,
       },
-      sources: [{ kind: 'mcp_tool', ref: 'get_policy' }],
+      sources: [
+        {
+          kind: 'mcp_tool',
+          ref: 'get_policy',
+          link: { type: 'policy', policyNumber: analysis.policyNumber },
+        },
+      ],
     });
   }
   reports.push({
@@ -73,6 +79,7 @@ function serviceReports(analysis: ServiceAnalysis, timing: Timing): AgentStepCal
       kind: 'clause',
       ref: citation.clauseRef,
       excerpt: citation.excerpt,
+      link: { type: 'clause', clauseRef: citation.clauseRef },
     })),
     model: timing.model,
     durationMs: timing.durationMs,

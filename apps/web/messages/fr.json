@@ -11,7 +11,9 @@
     "brokerName": "{name} — {brokerage}",
     "soundOn": "Son activé",
     "soundOff": "Son coupé",
-    "soundHint": "Un son quand un dossier attend votre validation"
+    "soundHint": "Un son quand un dossier attend votre validation",
+    "insurer": "Extranet assureur",
+    "clients": "Clients"
   },
   "locale": {
     "fr": "Français",
@@ -184,7 +186,8 @@
     },
     "standaloneReply": "Réponse au client",
     "cancellationFiling": "Résiliation à enregistrer : contrat {policyNumber}, effet le {date}",
-    "finalDraft": "Réponse finale, prête à envoyer"
+    "finalDraft": "Réponse finale, prête à envoyer",
+    "openSource": "Ouvrir la donnée consultée par l'agent"
   },
   "status": {
     "received": "Reçu",
@@ -435,5 +438,90 @@
     "follow_up_unmatched": "Relance sans dossier identifié",
     "unclassified": "Demande non classée",
     "workflow_failed": "Échec du traitement"
+  },
+  "portal": {
+    "loading": "Chargement…",
+    "empty": "Aucun résultat.",
+    "insurer": {
+      "title": "Extranet assureur",
+      "subtitle": "Les contrats du cabinet tels que les assureurs les voient : la même source que les agents, en lecture seule.",
+      "search": "Rechercher un contrat ou un assuré",
+      "back": "Retour à l'extranet"
+    },
+    "policy": {
+      "number": "Contrat",
+      "holder": "Assuré",
+      "insurer": "Assureur",
+      "product": "Produit",
+      "status": "Statut",
+      "start": "Début",
+      "renewal": "Échéance",
+      "end": "Fin",
+      "cancellationRequested": "Résiliation demandée le",
+      "mismatch": "Écart : le cabinet croit ce contrat {known}, l'assureur le déclare {actual}. Client :",
+      "match": "Le cabinet et l’assureur sont d’accord : {actual}. Client :",
+      "coverages": "Garanties",
+      "coverage": "Garantie",
+      "limit": "Plafond",
+      "deductible": "Franchise",
+      "exclusions": "Exclusions",
+      "clause": "Clause",
+      "conditions": "Conditions générales applicables",
+      "claims": "Sinistres",
+      "noClaim": "Aucun sinistre déclaré.",
+      "claimNumber": "N° de sinistre",
+      "date": "Date",
+      "nature": "Nature",
+      "amount": "Montant",
+      "filedBy": "Déclaré par",
+      "filedByBrokerage": "le cabinet ({code}) via le connecteur"
+    },
+    "endReason": {
+      "non_payment": "non-paiement",
+      "client_request": "demande du client",
+      "insurer_termination": "résiliation par l'assureur",
+      "unknown": "motif inconnu"
+    },
+    "claimStatus": {
+      "open": "ouvert",
+      "settled": "réglé",
+      "rejected": "refusé"
+    },
+    "policyStatusShort": {
+      "active": "actif",
+      "suspended": "suspendu",
+      "terminated": "résilié"
+    },
+    "conditions": {
+      "title": "Conditions générales — {insurer}",
+      "subtitle": "Texte intégral, dans la langue de l'assureur. La clause consultée est encadrée, l'extrait cité surligné.",
+      "general": "générale"
+    },
+    "clients": {
+      "title": "Clients",
+      "subtitle": "La base clients du cabinet : celle que l'agent de tri consulte avec find_client.",
+      "search": "Rechercher un client (nom, e-mail, SIREN)",
+      "back": "Retour aux clients",
+      "company": "Raison sociale",
+      "contact": "Contact",
+      "email": "E-mail",
+      "policies": "Contrats",
+      "cases": "Dossiers",
+      "policiesTitle": "Contrats gérés par le cabinet",
+      "knownStatus": "Statut connu du cabinet",
+      "knownStatusHint": "Le statut connu du cabinet peut différer de celui de l'assureur : ouvrez le contrat pour comparer.",
+      "cancellation": "Résiliation enregistrée (effet)",
+      "casesTitle": "Dossiers",
+      "noCase": "Aucun dossier."
+    },
+    "saw": {
+      "title": "Ce que {agent} a reçu le {date} ({reference})",
+      "fromCase": "Ouvert depuis le dossier {reference}",
+      "backToCase": "Retour au dossier {reference}",
+      "noResult": "Le résultat de cet appel n'a pas été enregistré (dossier antérieur à V17).",
+      "changed": "La donnée a changé depuis :",
+      "change": "{field} : « {before} » → « {after} »",
+      "unchanged": "La donnée est la même aujourd’hui."
+    }
   }
 }

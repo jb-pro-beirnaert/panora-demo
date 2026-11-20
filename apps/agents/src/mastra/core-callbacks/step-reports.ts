@@ -41,7 +41,12 @@ function metrics(timing: Timing) {
 function documentSource(document: string, page: number | null): StepSource {
   return document === 'email_body' || document === 'email_subject'
     ? { kind: 'email', ref: document }
-    : { kind: 'attachment', ref: document, page };
+    : {
+        kind: 'attachment',
+        ref: document,
+        page,
+        link: { type: 'attachment', fileName: document, ...(page ? { page } : {}) },
+      };
 }
 
 export function triageReport(triage: TriageResult, timing: Timing): AgentStepCallback {
@@ -97,7 +102,13 @@ export function coverageReports(coverage: CoverageVerdict, timing: Timing): Agen
       agent: 'coverage',
       stepType: 'coverage.policy_checked',
       params: { policyNumber: coverage.policyNumber, status: coverage.policyStatus },
-      sources: [{ kind: 'mcp_tool', ref: 'get_policy' }],
+      sources: [
+        {
+          kind: 'mcp_tool',
+          ref: 'get_policy',
+          link: { type: 'policy', policyNumber: coverage.policyNumber },
+        },
+      ],
     });
   }
   reports.push({
@@ -113,11 +124,28 @@ export function coverageReports(coverage: CoverageVerdict, timing: Timing): Agen
       claimedAmount: coverage.claimedAmount,
       estimatedPayout: coverage.estimatedPayout,
     },
-    sources: coverage.citations.map((citation) => ({
-      kind: 'clause',
-      ref: citation.clauseRef,
-      excerpt: citation.excerpt,
-    })),
+    sources: [
+      ...coverage.citations.map((citation): StepSource => ({
+        kind: 'clause',
+        ref: citation.clauseRef,
+        excerpt: citation.excerpt,
+        link: { type: 'clause', clauseRef: citation.clauseRef },
+      })),
+      // V17: the limit and deductible come from the policy's coverages.
+      ...(coverage.policyNumber && coverage.coverage
+        ? [
+            {
+              kind: 'mcp_tool' as const,
+              ref: 'list_coverages',
+              link: {
+                type: 'policy' as const,
+                policyNumber: coverage.policyNumber,
+                section: 'coverages' as const,
+              },
+            },
+          ]
+        : []),
+    ],
     ...metrics(timing),
   });
   return reports;

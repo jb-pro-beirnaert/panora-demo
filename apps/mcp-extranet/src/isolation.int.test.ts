@@ -226,3 +226,51 @@ describe('request_cancellation (V15)', () => {
     await mcp.close();
   });
 });
+
+describe('broker portal (V17)', () => {
+  const get = (path: string, token: string | null) =>
+    fetch(new URL(`/portal${path}`, baseUrl), {
+      headers: token ? { authorization: `Bearer ${token}` } : {},
+    });
+  const read = issueMcpToken({ scope: 'read', brokerCode: 'DLM-075' }, SECRET);
+  const other = issueMcpToken({ scope: 'read', brokerCode: OTHER_BROKER_CODE }, SECRET);
+
+  it("lists only the calling brokerage's policies, and refuses a missing token", async () => {
+    const own = (await (await get('/policies', read)).json()) as { number: string }[];
+    assert.ok(own.some((policy) => policy.number === delormePolicy));
+    const none = (await (await get('/policies', other)).json()) as unknown[];
+    assert.equal(none.length, 0);
+    assert.equal((await get('/policies', null)).status, 401);
+  });
+
+  it('opens a policy with its coverages, clauses and claims; another brokerage gets 403', async () => {
+    const response = await get(`/policies/${delormePolicy}`, read);
+    assert.equal(response.status, 200);
+    const policy = (await response.json()) as {
+      coverages: unknown[];
+      generalClauses: { ref: string }[];
+      claims: unknown[];
+    };
+    assert.ok(policy.coverages.length > 0);
+    assert.ok(policy.generalClauses.length >= 4);
+    assert.equal((await get(`/policies/${delormePolicy}`, other)).status, 403);
+  });
+
+  it('serves the full general conditions of a clause’s insurer, and logs portal calls', async () => {
+    const policy = (await (await get(`/policies/${delormePolicy}`, read)).json()) as {
+      generalClauses: { ref: string }[];
+    };
+    const ref = policy.generalClauses[0]!.ref;
+    const conditions = (await (await get(`/clauses/${ref}`, read)).json()) as {
+      clauses: { ref: string; text: string }[];
+    };
+    assert.ok(conditions.clauses.some((clause) => clause.ref === ref && clause.text.length > 20));
+    const db = new pg.Client({ connectionString: DATABASE_URL });
+    await db.connect();
+    const logged = await db.query(
+      `SELECT count(*)::int AS n FROM "CallLog" WHERE channel = 'portal' AND tool = 'portal:read_conditions'`,
+    );
+    await db.end();
+    assert.ok(logged.rows[0].n >= 1);
+  });
+});

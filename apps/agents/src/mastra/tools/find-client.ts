@@ -28,7 +28,13 @@ export async function lookupClient(
             companyName: result.client.companyName,
             policyCount: result.policies.length,
           },
-          sources: [{ kind: 'core', ref: 'find_client' }],
+          sources: [
+            {
+              kind: 'core',
+              ref: 'find_client',
+              link: { type: 'client', clientId: result.client.id },
+            },
+          ],
         }
       : {
           agent: 'triage',

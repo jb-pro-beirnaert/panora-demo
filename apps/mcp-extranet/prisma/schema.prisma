@@ -97,6 +97,8 @@ model CallLog {
   id         Int      @id @default(autoincrement())
   /// Brokerage of the calling token.
   brokerCode String
+  /// V17: `mcp` (agents) or `portal` (the broker's UI, through Core).
+  channel    String   @default("mcp")
   tool       String
   params     Json
   result     Json
