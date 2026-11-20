@@ -1,6 +1,6 @@
 # Démo agents IA courtage (Panora) — Vue d'ensemble
 
-> Résumé global du projet. Le détail de chaque version est dans `v01-…md` à `v13-…md` ; les données et scénarios de la démo sont dans `00-demo-data-and-scenarios.md`.
+> Résumé global du projet. Le détail de chaque version est dans `v01-…md` à `v15-…md` ; les données et scénarios de la démo sont dans `00-demo-data-and-scenarios.md`.
 > Les specs sont rédigées en français ; **tout le code est en anglais** (identifiants, routes, tables, outils MCP, événements, commits).
 
 ## 1. Objectif
@@ -222,11 +222,10 @@ panora-demo/
 Outil de démo, hors produit : il joue le monde extérieur.
 
 - **Seed** au démarrage et à chaque reset.
-- **Flux d'e-mails** vers `POST /emails` de Core, à cadence réglable.
-- **États** : `ready`, `running`, `paused`.
-- **API de pilotage** pour le panneau de démo : `GET /state`, `POST /start`, `/pause`, `/resume`, `/speed`, `/send-one`, `/burst`, `/reset`, `/auto-validation`.
-- **Reset** : arrête le flux, vide Core (tables + files BullMQ) et l'extranet, refait le seed.
-- **Validation automatique** (option) : un courtier simulé décide après un délai, avec un taux de refus réglable.
+- **Flux d'e-mails** vers `POST /emails` de Core, à cadence réglable. Depuis V14, le flux suit un **script de démo** fini (X e-mails dans un ordre fixe, compteur n/X) au lieu d'un tirage sans fin.
+- **États** : `ready`, `running`, `paused`, `finished` (V14).
+- **API de pilotage** pour le panneau de démo : `GET /state`, `POST /start`, `/pause`, `/resume`, `/speed`, `/send-one`, `/reset`. La rafale et la validation automatique sont retirées en V14 ; le test de charge (`npm run load-test`) envoie lui-même ses e-mails.
+- **Reset** : arrête le flux, vide Core (tables + files BullMQ) et l'extranet, refait le seed, remet le compteur à 0/X.
 - Routes `/admin/*` de Core et du MCP actives seulement avec `DEMO_MODE=true` + jeton d'administration.
 
 ## 7. Langues
@@ -265,6 +264,8 @@ Next.js bilingue FR / EN dès V3 (next-intl, préfixe `/fr` et `/en`, sélecteur
 | V11 | Finitions pour la candidature | `v11-finishing.md` |
 | V12 | Un seul courtier, sans connexion ; Langfuse local par défaut | `v12-single-broker.md` |
 | V13 | Boîte de réception vivante : statuts des agents en direct | `v13-live-inbox.md` |
+| V14 | Démo scénarisée (n/X e-mails) et vrais PDF | `v14-scripted-demo.md` |
+| V15 | Toutes les demandes : résiliation, information, relances, réponse au client, « à traiter par vous » | `v15-requests-and-replies.md` |
 
 ### Minimum pour postuler
 

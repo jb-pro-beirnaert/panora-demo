@@ -60,7 +60,11 @@ Chaque e-mail du flux est tiré dans ce catalogue. Le générateur fixe à l'ava
 | 13 | Langues croisées | e-mail en anglais, clauses en français (ou l'inverse) | selon le cas | brouillon dans la langue de l'e-mail, citations dans leur langue | V4 |
 | 14 | Cabinet francophone, client anglophone | `Brokerage.locale = fr`, e-mail en anglais | selon le cas | brouillon en anglais, note interne en français | V4 |
 
-Répartition par défaut du flux : environ 35 % de cas simples (1, 5), 50 % de pièges (2, 3, 4, 6, 7, 9, 10, 11), 15 % hors sinistre (8).
+**V15** ajoute les pièces partielles, la résiliation traitée (recevable, déjà résiliée, hors préavis), la question sur une garantie, l'attestation, le devis « à traiter par vous », les e-mails sans rapport (spam, newsletter, facture fournisseur), les relances et les doublons envoyés pendant la démo. Leur résultat attendu est dans `v15-requests-and-replies.md` §9 ; ce catalogue sera complété en V15.
+
+Depuis V14, la démo envoie un **script fini** (un e-mail par cas, voir `v14-scripted-demo.md` §1) ; le tirage pondéré ci-dessous ne sert plus qu'aux evals et au test de charge.
+
+Répartition par défaut du tirage : environ 35 % de cas simples (1, 5), 50 % de pièges (2, 3, 4, 6, 7, 9, 10, 11), 15 % hors sinistre (8).
 
 ## 3. Déroulé détaillé de quatre scénarios
 
