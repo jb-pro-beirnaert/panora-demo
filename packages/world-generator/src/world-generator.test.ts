@@ -242,6 +242,8 @@ test('the demo script covers every scenario once, in order, reproducibly (V14, V
   );
   assert.equal(script[1]!.groundTruth.policyNumber, SHOWCASE.terminatedPolicy);
   assert.equal(new Set(script.map(({ email }) => email.messageId)).size, script.length);
+  // About 15 % of the script is in English.
+  assert.equal(script.filter(({ groundTruth }) => groundTruth.emailLanguage === 'en').length, 4);
   // Follow-ups and the resent claim refer to the right e-mails.
   const byScenario = (scenario: string) =>
     script.find(({ groundTruth }) => groundTruth.scenario === scenario)!;

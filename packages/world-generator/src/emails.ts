@@ -1221,6 +1221,7 @@ export interface DemoScriptEntry {
  * story. The flagship case (terminated policy) comes second; follow-ups come after the e-mails
  * they refer to.
  */
+// About 15 % of the script is in English (4 e-mails out of 26).
 export const DEMO_SCRIPT: DemoScriptEntry[] = [
   { scenario: 'covered', language: 'fr' },
   { scenario: 'policy_terminated', language: 'fr' },
@@ -1229,19 +1230,19 @@ export const DEMO_SCRIPT: DemoScriptEntry[] = [
   { scenario: 'missing_document', language: 'fr' },
   { scenario: 'partial_documents', language: 'fr' },
   { scenario: 'exclusion', language: 'fr' },
-  { scenario: 'limit_exceeded', language: 'fr' },
+  { scenario: 'limit_exceeded', language: 'en' },
   { scenario: 'deductible', language: 'fr' },
   { scenario: 'duplicate_claim', language: 'fr' },
   { scenario: 'unreadable_field', language: 'fr' },
   { scenario: 'late_declaration', language: 'fr' },
   { scenario: 'unknown_client', language: 'fr' },
-  { scenario: 'cancellation', language: 'fr' },
+  { scenario: 'cancellation', language: 'en' },
   { scenario: 'cancellation_already_terminated', language: 'fr' },
   { scenario: 'cancellation_late_notice', language: 'fr' },
   { scenario: 'cancellation_already_requested', language: 'fr' },
   { scenario: 'coverage_question', language: 'fr' },
   { scenario: 'certificate_request', language: 'fr' },
-  { scenario: 'quote_request', language: 'fr' },
+  { scenario: 'quote_request', language: 'en' },
   { scenario: 'spam', language: 'fr' },
   { scenario: 'newsletter', language: 'fr' },
   { scenario: 'supplier_invoice', language: 'fr' },
