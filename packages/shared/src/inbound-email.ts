@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DocumentModelSchema } from './documents.js';
 
 /**
  * An attachment as the agents see it: the text extracted from the file (V14: by Core, from the
@@ -8,6 +9,11 @@ export const AttachmentInputSchema = z.object({
   fileName: z.string().min(1),
   contentType: z.string().min(1),
   extractedText: z.string(),
+  /**
+   * V16, generated e-mails only: the document behind the PDF. `@demo/documents` lays it out; Core
+   * never receives it (it extracts the text from the real file).
+   */
+  document: DocumentModelSchema.optional(),
 });
 export type AttachmentInput = z.infer<typeof AttachmentInputSchema>;
 

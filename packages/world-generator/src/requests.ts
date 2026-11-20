@@ -1,3 +1,4 @@
+import { documentText, type InvoiceDocument } from '@demo/shared';
 import type {
   ClaimGroundTruth,
   ExtranetPolicy,
@@ -370,10 +371,34 @@ function writeUnrelated(
     const amount = roundTo(int(factory.faker, 180, 900), 10);
     const net = Math.round((amount / 1.2) * 100) / 100;
     const brokerage = factory.world.brokerages[0]!;
+    const number = `FA-${received.slice(0, 4)}-${int(factory.faker, 1000, 1999)}`;
+    const document: InvoiceDocument = {
+      kind: 'invoice',
+      language: 'fr',
+      issuer: {
+        name: supplier.name,
+        address: ['12 rue de l’Industrie', '93100 Montreuil'],
+        phone: '01 48 70 12 34',
+        email: supplier.email,
+        siret: '81234567800021',
+        vatNumber: 'FR45812345678',
+        color: '#475569',
+      },
+      client: { name: brokerage.name, address: ['18 rue de la Paix', '75002 Paris'] },
+      number,
+      date: received,
+      validUntil: null,
+      subject: `${supplier.item} — ${received.slice(5, 7)}/${received.slice(0, 4)}`,
+      lines: [{ label: supplier.item, quantity: 1, unitPrice: net }],
+      vatRate: 0.2,
+      totals: { net, vat: Math.round((amount - net) * 100) / 100, gross: amount },
+      iban: 'FR76 3000 4000 0312 3456 7890 143',
+    };
     const invoice = {
       fileName: `facture_${supplier.name.toLowerCase().replace(/[^a-z]+/g, '_')}.pdf`,
       contentType: 'application/pdf',
-      extractedText: `--- page 1 ---\n${supplier.name.toUpperCase()}\nFACTURE N° FA-${received.slice(0, 4)}-${int(factory.faker, 1000, 1999)}\nDate : ${frDate(received)}\nClient : ${brokerage.name}\nObjet : ${supplier.item} — ${received.slice(5, 7)}/${received.slice(0, 4)}\nTotal HT : ${net.toFixed(2).replace('.', ',')} €\nTotal TTC : ${amount.toFixed(2).replace('.', ',')} €\nÀ régler sous 30 jours par virement.`,
+      extractedText: documentText(document),
+      document,
     };
     content = {
       from: supplier.email,

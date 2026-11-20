@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { extractAttachment, extractEmail, extractText, renderPdf, toRawEmail } from './index.js';
+import type { DocumentModel } from '@demo/shared';
+import { generateDemoScript, generateEmails, generateWorld } from '@demo/world-generator';
+import {
+  extractAttachment,
+  extractEmail,
+  extractText,
+  renderDocument,
+  renderPdf,
+  toRawEmail,
+} from './index.js';
 
 const TEXT = [
   '--- page 1 ---',
@@ -57,4 +66,89 @@ test('round trip: generated e-mail → files → text for the agents', async () 
   const extracted = await extractEmail(raw);
   assert.match(extracted.attachments[0]!.extractedText, /Boulangerie Martin/);
   assert.equal(extracted.attachments[1]!.extractedText, '[image not analyzed: photos.jpg]');
+});
+
+// --- V16: real-looking documents ---
+
+/** One generated document of each kind and language (and an unreadable invoice). */
+function sampleDocuments(): Map<string, DocumentModel> {
+  const world = generateWorld({ seed: 42, locales: ['fr', 'en'], mix: { en: 0.3 } });
+  const emails = [
+    ...generateDemoScript(world, 42),
+    ...generateEmails(world, { seed: 7, count: 60 }),
+  ];
+  const samples = new Map<string, DocumentModel>();
+  for (const { email } of emails) {
+    for (const attachment of email.attachments) {
+      const model = attachment.document;
+      if (!model) continue;
+      const variant = model.kind === 'incident_report' ? model.variant : '';
+      const unreadable = 'totals' in model && model.totals === null ? 'unreadable' : '';
+      samples.set(`${model.kind}/${variant}/${model.language}/${unreadable}`, model);
+    }
+  }
+  return samples;
+}
+
+test('every document kind is laid out and its facts can be read back, in order', async () => {
+  const samples = sampleDocuments();
+  for (const key of [
+    'invoice//fr/',
+    'quote//en/',
+    'incident_report/vehicle/fr/',
+    'incident_report/water/en/',
+    'police_report//fr/',
+    'fire_report//en/',
+  ]) {
+    assert.ok(samples.has(key), `a sample for ${key}`);
+  }
+  for (const [key, model] of samples) {
+    const pdf = await renderDocument('doc.pdf', model);
+    assert.equal(
+      Buffer.compare(pdf, await renderDocument('doc.pdf', model)),
+      0,
+      `${key}: reproducible`,
+    );
+    const { text, status } = await extractText(pdf);
+    assert.equal(status, 'ok', key);
+    const facts: string[] = [];
+    switch (model.kind) {
+      case 'invoice':
+      case 'quote':
+        facts.push(model.number, model.client.name);
+        if (model.totals) {
+          facts.push(model.language === 'fr' ? 'Total TTC' : 'Total incl. VAT');
+          const gross = model.totals.gross.toFixed(2);
+          facts.push(
+            model.language === 'fr'
+              ? gross.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/, ' ')
+              : gross.replace(/\B(?=(\d{3})+(?!\d))/, ','),
+          );
+        } else {
+          assert.match(text, /zone illisible|unreadable area/, key);
+        }
+        break;
+      case 'incident_report':
+        facts.push(model.insured.name, model.signedBy);
+        if (model.insured.policyNumber) facts.push(model.insured.policyNumber);
+        if (model.vehicle) facts.push(model.vehicle.plate);
+        break;
+      case 'police_report':
+        facts.push(model.procedureNumber, model.company);
+        break;
+      case 'fire_report':
+        facts.push(model.interventionNumber, model.times.arrival);
+        break;
+    }
+    for (const fact of facts) assert.ok(text.includes(fact), `${key}: "${fact}" in\n${text}`);
+  }
+});
+
+test('a form reads label and value on the same line', async () => {
+  const model = [...sampleDocuments().values()].find(
+    (candidate) =>
+      candidate.kind === 'incident_report' && candidate.language === 'fr' && candidate.date,
+  )!;
+  const { text } = await extractText(await renderDocument('constat.pdf', model));
+  assert.match(text, /Date du sinistre : \d{2}\/\d{2}\/\d{4}/);
 });

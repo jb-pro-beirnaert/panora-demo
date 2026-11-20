@@ -1,5 +1,6 @@
 // Zod schemas shared across services. Every payload crossing a service boundary is validated here.
 export * from './domain.js';
+export * from './documents.js';
 export * from './inbound-email.js';
 export * from './triage.js';
 export * from './coverage.js';

@@ -1,24 +1,24 @@
 {
-  "runId": "2026-11-20T05-42-18-141Z",
-  "startedAt": "2026-11-20T05:42:18.141Z",
-  "finishedAt": "2026-11-20T05:48:32.906Z",
+  "runId": "2026-11-20T06-10-19-134Z",
+  "startedAt": "2026-11-20T06:10:19.134Z",
+  "finishedAt": "2026-11-20T06:17:07.549Z",
   "dataset": {
     "name": "seed-7",
     "seed": 7,
-    "size": 21
+    "size": 11
   },
   "models": {
     "triage": "openai/gpt-5-nano",
     "coverage": "openai/gpt-6-luna",
     "drafting": "openai/gpt-6-luna"
   },
-  "judge": "gpt-5-nano",
+  "judge": null,
   "aggregates": [
     {
       "agent": "triage",
       "scorer": "request_type",
       "mean": 1,
-      "count": 21,
+      "count": 11,
       "byLanguage": {
         "fr": 1,
         "en": null
@@ -28,7 +28,7 @@
       "agent": "triage",
       "scorer": "email_language",
       "mean": 1,
-      "count": 21,
+      "count": 11,
       "byLanguage": {
         "fr": 1,
         "en": null
@@ -47,20 +47,20 @@
     {
       "agent": "coverage",
       "scorer": "verdict",
-      "mean": 0.9090909090909091,
+      "mean": 1,
       "count": 11,
       "byLanguage": {
-        "fr": 0.9090909090909091,
+        "fr": 1,
         "en": null
       }
     },
     {
       "agent": "coverage",
       "scorer": "alerts",
-      "mean": 0.8636363636363636,
+      "mean": 1,
       "count": 11,
       "byLanguage": {
-        "fr": 0.8636363636363636,
+        "fr": 1,
         "en": null
       }
     },
@@ -87,10 +87,10 @@
     {
       "agent": "drafting",
       "scorer": "action_type",
-      "mean": 0.9523809523809523,
-      "count": 21,
+      "mean": 1,
+      "count": 11,
       "byLanguage": {
-        "fr": 0.9523809523809523,
+        "fr": 1,
         "en": null
       }
     },
@@ -108,7 +108,7 @@
       "agent": "drafting",
       "scorer": "languages",
       "mean": 1,
-      "count": 18,
+      "count": 11,
       "byLanguage": {
         "fr": 1,
         "en": null
@@ -117,60 +117,40 @@
     {
       "agent": "workflow",
       "scorer": "outcome",
-      "mean": 1,
-      "count": 10,
+      "mean": null,
+      "count": 0,
       "byLanguage": {
-        "fr": 1,
+        "fr": null,
         "en": null
       }
     },
     {
       "agent": "workflow",
       "scorer": "handover_reason",
-      "mean": 1,
-      "count": 2,
+      "mean": null,
+      "count": 0,
       "byLanguage": {
-        "fr": 1,
+        "fr": null,
         "en": null
       }
     },
     {
       "agent": "workflow",
       "scorer": "effective_date",
-      "mean": 1,
-      "count": 4,
+      "mean": null,
+      "count": 0,
       "byLanguage": {
-        "fr": 1,
-        "en": null
-      }
-    },
-    {
-      "agent": "drafting",
-      "scorer": "tone_completeness_judge",
-      "mean": 0.6666666666666666,
-      "count": 18,
-      "byLanguage": {
-        "fr": 0.6666666666666666,
-        "en": null
-      }
-    },
-    {
-      "agent": "coverage",
-      "scorer": "citations_judge",
-      "mean": 0.5882352941176471,
-      "count": 17,
-      "byLanguage": {
-        "fr": 0.5882352941176471,
+        "fr": null,
         "en": null
       }
     },
     {
       "agent": "workflow",
       "scorer": "case_correct",
-      "mean": 0.9523809523809523,
-      "count": 21,
+      "mean": 1,
+      "count": 11,
       "byLanguage": {
-        "fr": 0.9523809523809523,
+        "fr": 1,
         "en": null
       }
     }
@@ -180,8 +160,8 @@
       "id": "eval-7-001",
       "scenario": "covered",
       "language": "fr",
-      "caseId": "01067cf3-0d8c-4050-a19f-0f990e3f3584",
-      "traceId": "01067cf30d8c4050a19f0f990e3f3584",
+      "caseId": "7463e52b-6f50-46e0-a3e9-7913619019b5",
+      "traceId": "7463e52b6f5046e0a3e97913619019b5",
       "error": null,
       "scores": [
         {
@@ -204,14 +184,14 @@
         {
           "agent": "coverage",
           "scorer": "verdict",
-          "value": 0,
-          "comment": "expected covered, got uncertain"
+          "value": 1,
+          "comment": "expected covered, got covered"
         },
         {
           "agent": "coverage",
           "scorer": "alerts",
-          "value": 0,
-          "comment": "expected [], got [missing_document]"
+          "value": 1,
+          "comment": "expected [], got []"
         },
         {
           "agent": "coverage",
@@ -228,8 +208,8 @@
         {
           "agent": "drafting",
           "scorer": "action_type",
-          "value": 0,
-          "comment": "expected file_claim, got request_documents"
+          "value": 1,
+          "comment": "expected file_claim, got file_claim"
         },
         {
           "agent": "drafting",
@@ -259,22 +239,10 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "CG-AT-3.2 supports that the insurer cannot decide without the required documents, and CG-AT-7.1 confirms coverage up to the limit. The email politely flags the missing document, cites the clause, and requests the invoice to proceed, without promising payment."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "CG-AT-3.2 supports that the insurer cannot decide without the required documents, and CG-AT-7.1 confirms coverage up to the limit. The email politely flags the missing document, cites the clause, and requests the invoice to proceed, without promising payment."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
-          "value": 0,
-          "comment": "failed: coverage/verdict, drafting/action_type"
+          "value": 1,
+          "comment": "ok"
         }
       ]
     },
@@ -282,8 +250,8 @@
       "id": "eval-7-002",
       "scenario": "policy_terminated",
       "language": "fr",
-      "caseId": "d0818174-ced5-480c-8c21-724e626d942d",
-      "traceId": "d0818174ced5480c8c21724e626d942d",
+      "caseId": "8eee0836-0ce1-499c-b16e-68f50e61bc15",
+      "traceId": "8eee08360ce1499cb16e68f50e61bc15",
       "error": null,
       "scores": [
         {
@@ -361,18 +329,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 0,
-          "comment": "CG-HZ-12.1 supports the denial by stating guarantees cease after termination and claims after that date aren’t covered, which justifies not_covered. The email is courteous but omits required details like deductible, limit, and a clear list of documents for denial, reducing completeness."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "CG-HZ-12.1 supports the denial by stating guarantees cease after termination and claims after that date aren’t covered, which justifies not_covered. The email is courteous but omits required details like deductible, limit, and a clear list of documents for denial, reducing completeness."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -384,8 +340,8 @@
       "id": "eval-7-003",
       "scenario": "missing_document",
       "language": "fr",
-      "caseId": "b3702c54-5689-46c7-bda0-e23b8e7e1126",
-      "traceId": "b3702c54568946c7bda0e23b8e7e1126",
+      "caseId": "95b5ac11-4de7-4aee-985e-d08e6d5088a1",
+      "traceId": "95b5ac114de74aee985ed08e6d5088a1",
       "error": null,
       "scores": [
         {
@@ -463,18 +419,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "CG-BO-3.2 justifies delaying a decision until the required documents are provided, matching the missing_document alert. The draft email correctly cites this clause, requests the specific documents, states the policy limit and deductible, and uses a courteous, non-promissory tone."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "CG-BO-3.2 justifies delaying a decision until the required documents are provided, matching the missing_document alert. The draft email correctly cites this clause, requests the specific documents, states the policy limit and deductible, and uses a courteous, non-promissory tone."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -486,8 +430,8 @@
       "id": "eval-7-004",
       "scenario": "exclusion",
       "language": "fr",
-      "caseId": "22643a21-42a6-42c2-90e6-56a1b1995b48",
-      "traceId": "22643a2142a642c290e656a1b1995b48",
+      "caseId": "a1e27dcc-93e2-4563-88ad-8b13c2b54da1",
+      "traceId": "a1e27dcc93e2456388ad8b13c2b54da1",
       "error": null,
       "scores": [
         {
@@ -565,18 +509,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 0,
-          "comment": "The cited clause CG-HZ-7.1 excludes simple scratches, which justifies denying coverage for a scratched glass claim. The email draft is courteous but incomplete: it does not state the deductible and limit, nor provide a list of documents to submit."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "The cited clause CG-HZ-7.1 excludes simple scratches, which justifies denying coverage for a scratched glass claim. The email draft is courteous but incomplete: it does not state the deductible and limit, nor provide a list of documents to submit."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -588,8 +520,8 @@
       "id": "eval-7-005",
       "scenario": "limit_exceeded",
       "language": "fr",
-      "caseId": "2d41a4cb-1423-40d1-8e87-50e0c2c69b7d",
-      "traceId": "2d41a4cb142340d18e8750e0c2c69b7d",
+      "caseId": "71a00d29-0b7c-4710-b5fa-ae32800a6887",
+      "traceId": "71a00d290b7c4710b5faae32800a6887",
       "error": null,
       "scores": [
         {
@@ -667,18 +599,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "The CG-AT-7.2 clauses show damages are indemnified up to the policy limit with the deductible, which supports a 'covered' verdict and the payout calculation. The email draft is courteous and factual, states the claim amount, the limit, the deductible, and the estimated payout, and does not promise payment."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "The CG-AT-7.2 clauses show damages are indemnified up to the policy limit with the deductible, which supports a 'covered' verdict and the payout calculation. The email draft is courteous and factual, states the claim amount, the limit, the deductible, and the estimated payout, and does not promise payment."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -690,8 +610,8 @@
       "id": "eval-7-006",
       "scenario": "deductible",
       "language": "fr",
-      "caseId": "590d008f-3f0d-4a61-8925-9cd911745e63",
-      "traceId": "590d008f3f0d4a6189259cd911745e63",
+      "caseId": "a056de47-601f-46d7-8ad2-86324f0c27ae",
+      "traceId": "a056de47601f46d78ad286324f0c27ae",
       "error": null,
       "scores": [
         {
@@ -769,18 +689,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "CG-BO-4.1 directly confirms coverage for fire-related damages up to the policy limit with the deductible, supporting the 'covered' verdict. CG-BO-3.1 concerns timely declaration and the draft email communicates the declaration plan with deductible and estimated payout in a courteous, factual manner."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "CG-BO-4.1 directly confirms coverage for fire-related damages up to the policy limit with the deductible, supporting the 'covered' verdict. CG-BO-3.1 concerns timely declaration and the draft email communicates the declaration plan with deductible and estimated payout in a courteous, factual manner."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -792,8 +700,8 @@
       "id": "eval-7-007",
       "scenario": "duplicate_claim",
       "language": "fr",
-      "caseId": "86ab83b7-00f1-488b-a79f-aa4fcf37a160",
-      "traceId": "86ab83b700f1488ba79faa4fcf37a160",
+      "caseId": "fe489ab6-5ce3-4ffb-bd96-06751facb1d8",
+      "traceId": "fe489ab65ce34ffbbd9606751facb1d8",
       "error": null,
       "scores": [
         {
@@ -871,18 +779,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 0,
-          "comment": "The cited clause does not address the duplicate claim issue used to justify an uncertain verdict. The email asks for confirmation of a potentially duplicate claim but fails to request the necessary documents or clearly state the deductible and limit per the clause."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "The cited clause does not address the duplicate claim issue used to justify an uncertain verdict. The email asks for confirmation of a potentially duplicate claim but fails to request the necessary documents or clearly state the deductible and limit per the clause."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -894,8 +790,8 @@
       "id": "eval-7-008",
       "scenario": "unreadable_field",
       "language": "fr",
-      "caseId": "26169b39-4b57-4233-94d2-7f9bbfabda2d",
-      "traceId": "26169b394b57423394d27f9bbfabda2d",
+      "caseId": "3ad109a5-d112-421d-8c74-0c741fefc436",
+      "traceId": "3ad109a5d112421d8c740c741fefc436",
       "error": null,
       "scores": [
         {
@@ -931,7 +827,7 @@
           "agent": "coverage",
           "scorer": "limit_deductible",
           "value": 1,
-          "comment": "limit 300000/300000, deductible 1500/1500"
+          "comment": "limit 300000/300000, deductible 1000/1000"
         },
         {
           "agent": "coverage",
@@ -973,18 +869,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 0,
-          "comment": "The clauses CG-AT-3.1 and CG-AT-4.1 are directly relevant to whether the declaration was timely and what is covered, which justifies focusing on the declaration date in the verdict. However, the email, while courteous, fails to provide a complete action request: it does not itemize the required documents to submit or explicitly confirm the deductible and limit, which are needed to move from uncertain to a clear action."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "The clauses CG-AT-3.1 and CG-AT-4.1 are directly relevant to whether the declaration was timely and what is covered, which justifies focusing on the declaration date in the verdict. However, the email, while courteous, fails to provide a complete action request: it does not itemize the required documents to submit or explicitly confirm the deductible and limit, which are needed to move from uncertain to a clear action."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -996,8 +880,8 @@
       "id": "eval-7-009",
       "scenario": "late_declaration",
       "language": "fr",
-      "caseId": "c70587b3-316b-447e-8b85-5bc043b88981",
-      "traceId": "c70587b3316b447e8b855bc043b88981",
+      "caseId": "8f107148-4777-444d-ac90-405e4fe8652e",
+      "traceId": "8f1071484777444dac90405e4fe8652e",
       "error": null,
       "scores": [
         {
@@ -1033,7 +917,7 @@
           "agent": "coverage",
           "scorer": "limit_deductible",
           "value": 1,
-          "comment": "limit 5000/5000, deductible 150/150"
+          "comment": "limit 150000/150000, deductible 1000/1000"
         },
         {
           "agent": "coverage",
@@ -1075,18 +959,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 0,
-          "comment": "Les clauses CG-BO-3.1 et CG-BO-7.1 sont pertinentes: 3.1 prévoit que la garantie peut être déchue en cas de retard s'il existe un préjudice, et 7.1 précise que le bris de glace est couvert dans une limite avec franchise. Le brouillon est poli et factuel mais incomplet: il évoque le retard et une possible déchéance et demande la date, mais il ne fournit pas au client les documents à envoyer ni les détails du plafond et de la franchise de manière clairement actionnable."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "Les clauses CG-BO-3.1 et CG-BO-7.1 sont pertinentes: 3.1 prévoit que la garantie peut être déchue en cas de retard s'il existe un préjudice, et 7.1 précise que le bris de glace est couvert dans une limite avec franchise. Le brouillon est poli et factuel mais incomplet: il évoque le retard et une possible déchéance et demande la date, mais il ne fournit pas au client les documents à envoyer ni les détails du plafond et de la franchise de manière clairement actionnable."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -1098,8 +970,8 @@
       "id": "eval-7-010",
       "scenario": "unknown_client",
       "language": "fr",
-      "caseId": "a8ef3c53-e0fa-4cdd-8b3c-78afeee1b8c4",
-      "traceId": "a8ef3c53e0fa4cdd8b3c78afeee1b8c4",
+      "caseId": "4e5dcd31-f796-4707-a5ed-1c01679f203a",
+      "traceId": "4e5dcd31f7964707a5ed1c01679f203a",
       "error": null,
       "scores": [
         {
@@ -1128,8 +1000,8 @@
         {
           "agent": "coverage",
           "scorer": "alerts",
-          "value": 0.5,
-          "comment": "expected [unknown_client], got [unknown_client, missing_document]"
+          "value": 1,
+          "comment": "expected [unknown_client], got [unknown_client]"
         },
         {
           "agent": "coverage",
@@ -1175,12 +1047,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "No clauses are cited to justify the verdict, so citationsSupportVerdict is 0. The email is courteous and clearly requests the required documents to proceed, aligning with the expected action of requesting documents (without promising payment)."
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -1192,8 +1058,8 @@
       "id": "eval-7-011",
       "scenario": "partial_documents",
       "language": "fr",
-      "caseId": "264e663d-6fec-4676-b1db-6faa980e0a43",
-      "traceId": "264e663d6fec4676b1db6faa980e0a43",
+      "caseId": "160529a5-a32d-4b18-851b-cab31de043f7",
+      "traceId": "160529a5a32d4b18851bcab31de043f7",
       "error": null,
       "scores": [
         {
@@ -1229,7 +1095,7 @@
           "agent": "coverage",
           "scorer": "limit_deductible",
           "value": 1,
-          "comment": "limit 15000/15000, deductible 500/500"
+          "comment": "limit 50000/50000, deductible 500/500"
         },
         {
           "agent": "coverage",
@@ -1271,979 +1137,6 @@
           "value": null
         },
         {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "CG-AT-3.2 justifies that the insurer cannot decide without the requested documents, matching the 'uncertain' verdict and missing_document alert. The draft is courteous, asks for the police report (the needed document), and does not promise payment."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "CG-AT-3.2 justifies that the insurer cannot decide without the requested documents, matching the 'uncertain' verdict and missing_document alert. The draft is courteous, asks for the police report (the needed document), and does not promise payment."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-012",
-      "scenario": "cancellation",
-      "language": "fr",
-      "caseId": "b09eaef6-5038-4ceb-bfad-0935a4f7c7a7",
-      "traceId": "b09eaef650384cebbfad0935a4f7c7a7",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected cancellation, got cancellation"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected cancel_policy, got cancel_policy"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected action, got action (status awaiting_approval)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": 1,
-          "comment": "expected 2027-02-15, got 2027-02-15"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "Le courriel est poli et factuel, n’en promet pas de paiement et indique clairement que la résiliation est en cours avec une date effective et que le contrat reste en vigueur jusqu’à cette date. Il manque toutefois des détails opérationnels post-résiliation (décompte final, éventuels remboursements ou obligations) pour que le client dispose de toutes les informations nécessaires."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "Le courriel est poli et factuel, n’en promet pas de paiement et indique clairement que la résiliation est en cours avec une date effective et que le contrat reste en vigueur jusqu’à cette date. Il manque toutefois des détails opérationnels post-résiliation (décompte final, éventuels remboursements ou obligations) pour que le client dispose de toutes les informations nécessaires."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-013",
-      "scenario": "cancellation_already_terminated",
-      "language": "fr",
-      "caseId": "6c344ab8-ed7c-4913-84df-04b5d25c8adb",
-      "traceId": "6c344ab8ed7c491384df04b5d25c8adb",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected cancellation, got cancellation"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected send_status, got send_status"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected action, got action (status awaiting_approval)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": 1,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "No citations are provided, so citationsSupportVerdict = 0. The email is courteous and factual and includes the contract termination status; it could be improved by adding explicit next steps if the client disputes the status."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "No citations are provided, so citationsSupportVerdict = 0. The email is courteous and factual and includes the contract termination status; it could be improved by adding explicit next steps if the client disputes the status."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-014",
-      "scenario": "cancellation_already_requested",
-      "language": "fr",
-      "caseId": "8ce8282a-b19e-4787-aa7c-a81ace167b82",
-      "traceId": "8ce8282ab19e4787aa7ca81ace167b82",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected cancellation, got cancellation"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected send_status, got send_status"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected action, got action (status awaiting_approval)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": 1,
-          "comment": "expected 2027-06-30, got 2027-06-30"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "There are no cited clauses to support a verdict, so citationsSupportVerdict is 0. The email is courteous and factual, clearly states the cancellation request and its expected effective date, and does not promise payment or omit essential details."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "There are no cited clauses to support a verdict, so citationsSupportVerdict is 0. The email is courteous and factual, clearly states the cancellation request and its expected effective date, and does not promise payment or omit essential details."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-015",
-      "scenario": "cancellation_late_notice",
-      "language": "fr",
-      "caseId": "af4948b9-aa9c-4a79-b39f-b75f6f1e9bb1",
-      "traceId": "af4948b9aa9c4a79b39fb75f6f1e9bb1",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected cancellation, got cancellation"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected cancel_policy, got cancel_policy"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected action, got action (status awaiting_approval)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": 1,
-          "comment": "expected 2027-12-17, got 2027-12-17"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 0,
-          "comment": "Le courrier est poli et clair, explique le motif de résiliation et cite la clause CG-BO-12.3. Cependant le volet {{effectiveDate}} est un placeholder non remplacé et la date effective réelle n'est pas explicitement indiquée; cela peut prêter à confusion et le message n'est pas prêt à envoyer."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 1,
-          "comment": "Le courrier est poli et clair, explique le motif de résiliation et cite la clause CG-BO-12.3. Cependant le volet {{effectiveDate}} est un placeholder non remplacé et la date effective réelle n'est pas explicitement indiquée; cela peut prêter à confusion et le message n'est pas prêt à envoyer."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-016",
-      "scenario": "coverage_question",
-      "language": "fr",
-      "caseId": "13f85ff1-d64f-4ffa-a8f7-cf7cbc3ad1e5",
-      "traceId": "13f85ff1d64f4ffaa8f7cf7cbc3ad1e5",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected information/coverage_question, got information/coverage_question"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected answer_question, got answer_question"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected action, got action (status awaiting_approval)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "Aucune citation n’est fournie (aucun texte référencé pour motiver une décision). Le courriel est courtois et clair sur le plafond et la franchise et mentionne des exclusions; il manque toutefois des instructions explicites sur les documents à fournir ou les prochaines étapes pour une demande d’indemnisation."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "Aucune citation n’est fournie (aucun texte référencé pour motiver une décision). Le courriel est courtois et clair sur le plafond et la franchise et mentionne des exclusions; il manque toutefois des instructions explicites sur les documents à fournir ou les prochaines étapes pour une demande d’indemnisation."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-017",
-      "scenario": "certificate_request",
-      "language": "fr",
-      "caseId": "b599e288-cc6d-4abe-9236-377dd1b4a6a9",
-      "traceId": "b599e288cc6d4abe9236377dd1b4a6a9",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected information/certificate, got information/certificate"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected acknowledge, got acknowledge"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected needs_broker, got needs_broker (status needs_broker)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": 1,
-          "comment": "expected certificate_request, got certificate_request"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "There are no citations provided to justify any verdict. The email is courteous and confirms receipt of the request, and mentions that the broker will follow up, which satisfies the required acknowledgment without promising payment."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "There are no citations provided to justify any verdict. The email is courteous and confirms receipt of the request, and mentions that the broker will follow up, which satisfies the required acknowledgment without promising payment."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-018",
-      "scenario": "quote_request",
-      "language": "fr",
-      "caseId": "d63ca6d1-3d49-40e4-970b-56cd2fe1c4de",
-      "traceId": "d63ca6d13d4940e4970b56cd2fe1c4de",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected quote_request, got quote_request"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "expected acknowledge, got acknowledge"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": 1,
-          "comment": "draft fr/fr, note fr/fr"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected needs_broker, got needs_broker (status needs_broker)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": 1,
-          "comment": "expected quote_request, got quote_request"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "tone_completeness_judge",
-          "value": 1,
-          "comment": "No citations are provided to justify a verdict. The email is courteous, factual, confirms receipt of the quote request, and states the broker will follow up, which satisfies the acknowledgement action without promising payment."
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations_judge",
-          "value": 0,
-          "comment": "No citations are provided to justify a verdict. The email is courteous, factual, confirms receipt of the quote request, and states the broker will follow up, which satisfies the acknowledgement action without promising payment."
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-019",
-      "scenario": "spam",
-      "language": "fr",
-      "caseId": "77641f18-f132-4890-a850-775d6b91cb58",
-      "traceId": "77641f18f1324890a850775d6b91cb58",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected unrelated/spam, got unrelated/spam"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "ok"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": null
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected classified, got classified (status classified)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-020",
-      "scenario": "newsletter",
-      "language": "fr",
-      "caseId": "9d5577da-85e2-487f-8bb6-364d34852433",
-      "traceId": "9d5577da85e2487f8bb6364d34852433",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected unrelated/newsletter, got unrelated/newsletter"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "ok"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": null
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected classified, got classified (status classified)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "case_correct",
-          "value": 1,
-          "comment": "ok"
-        }
-      ]
-    },
-    {
-      "id": "eval-7-021",
-      "scenario": "supplier_invoice",
-      "language": "fr",
-      "caseId": "69bbf41b-efdc-49f6-80e9-cc449e47d767",
-      "traceId": "69bbf41befdc49f680e9cc449e47d767",
-      "error": null,
-      "scores": [
-        {
-          "agent": "triage",
-          "scorer": "request_type",
-          "value": 1,
-          "comment": "expected unrelated/supplier_invoice, got unrelated/supplier_invoice"
-        },
-        {
-          "agent": "triage",
-          "scorer": "email_language",
-          "value": 1,
-          "comment": "expected fr, got fr"
-        },
-        {
-          "agent": "triage",
-          "scorer": "fields",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "verdict",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "limit_deductible",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "alerts",
-          "value": null
-        },
-        {
-          "agent": "coverage",
-          "scorer": "citations",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "action_type",
-          "value": 1,
-          "comment": "ok"
-        },
-        {
-          "agent": "drafting",
-          "scorer": "amounts",
-          "value": null
-        },
-        {
-          "agent": "drafting",
-          "scorer": "languages",
-          "value": null
-        },
-        {
-          "agent": "workflow",
-          "scorer": "outcome",
-          "value": 1,
-          "comment": "expected classified, got classified (status classified)"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "handover_reason",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
-          "agent": "workflow",
-          "scorer": "effective_date",
-          "value": null,
-          "comment": "expected null, got null"
-        },
-        {
           "agent": "workflow",
           "scorer": "case_correct",
           "value": 1,
@@ -2252,9 +1145,9 @@
       ]
     }
   ],
-  "costPerCaseUsd": 0.002502069760904762,
+  "costPerCaseUsd": 0.003235874089545454,
   "latencyMs": {
-    "p50": 44513,
-    "p95": 58454
+    "p50": 58568,
+    "p95": 246822
   }
 }

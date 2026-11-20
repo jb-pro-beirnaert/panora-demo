@@ -1,4 +1,7 @@
+import type { DocumentModel } from '@demo/shared';
 import pdfmake from 'pdfmake';
+import { documentContent } from './layouts.js';
+import { printable } from './text.js';
 
 /**
  * Real PDF attachments (V14). The world generator writes each document as page text, the text a
@@ -31,17 +34,6 @@ export function splitPages(text: string): string[] {
     .map((page) => page.trim())
     .filter((page) => page.length > 0);
   return pages.length > 0 ? pages : [text.trim()];
-}
-
-/** Characters outside the standard fonts' encoding (WinAnsi) are replaced. */
-function printable(text: string): string {
-  return text
-    .replace(/[▒█■]/g, '#')
-    .replace(/[\u2009\u202f]/g, ' ')
-    .replace(
-      /[^\t\n\u0020-\u007e\u00a0-\u00ff\u20ac\u0152\u0153\u2013\u2014\u2018\u2019\u201c\u201d\u2022\u2026]/g,
-      '?',
-    );
 }
 
 function pageContent(page: string, index: number, last: boolean) {
@@ -80,4 +72,25 @@ export async function renderPdf(title: string, text: string): Promise<Buffer> {
   });
   const buffer: Uint8Array = await document.getBuffer();
   return Buffer.from(buffer);
+}
+
+/**
+ * V16: lays out a structured document (invoice, incident report, police receipt, fire report) as a
+ * real-looking PDF. Same model, same bytes.
+ */
+export async function renderDocument(title: string, model: DocumentModel): Promise<Buffer> {
+  const document = pdfmake.createPdf({
+    info: { title, creationDate: FIXED_DATE, modDate: FIXED_DATE },
+    pageSize: 'A4',
+    pageMargins: [48, 48, 48, 56],
+    defaultStyle: { font: 'Helvetica', fontSize: 10, lineHeight: 1.2 },
+    content: documentContent(model),
+    footer: (current: number, count: number) => ({
+      text: `${current} / ${count}`,
+      alignment: 'center',
+      fontSize: 8,
+      color: '#888888',
+    }),
+  });
+  return Buffer.from(await document.getBuffer());
 }

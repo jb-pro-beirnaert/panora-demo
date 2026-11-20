@@ -1,6 +1,6 @@
 import type { InboundEmailInput, RawAttachment, RawEmailInput } from '@demo/shared';
 import { extractText } from './extract.js';
-import { renderPdf } from './pdf.js';
+import { renderDocument, renderPdf } from './pdf.js';
 import { PHOTO_JPEG_BASE64 } from './photo.js';
 
 export interface ExtractedAttachment {
@@ -24,7 +24,10 @@ export async function toRawEmail(email: InboundEmailInput): Promise<RawEmailInpu
           contentBase64: PHOTO_JPEG_BASE64,
         };
       }
-      const pdf = await renderPdf(attachment.fileName, attachment.extractedText);
+      // V16: a structured document gets its real layout; otherwise the page text is laid out.
+      const pdf = attachment.document
+        ? await renderDocument(attachment.fileName, attachment.document)
+        : await renderPdf(attachment.fileName, attachment.extractedText);
       return {
         fileName: attachment.fileName,
         contentType: 'application/pdf',

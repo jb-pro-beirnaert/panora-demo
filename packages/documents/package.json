@@ -21,7 +21,8 @@
   },
   "devDependencies": {
     "@demo/eslint-config": "^0.0.0",
-    "@demo/tsconfig": "^0.0.0"
+    "@demo/tsconfig": "^0.0.0",
+    "@demo/world-generator": "^0.0.0"
   },
   "dependencies": {
     "@demo/shared": "^0.0.0",
