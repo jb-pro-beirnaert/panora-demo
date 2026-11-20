@@ -1,24 +1,34 @@
 # Claims desk — AI agents for an insurance brokerage (demo)
 
-An e-mail reaches a brokerage: a claim, a cancellation, a coverage question, a quote request, a
-follow-up, spam. AI agents read it and its PDF attachments, check the policy at the insurer through
-an MCP connector, and propose an action with the reply to the client; a broker approves or rejects
-it before anything is declared or sent, and every step is audited. Built as a demo for Panora —
-**all data is fictional**, generated from a fixed seed.
+**English** · [Français](README.fr.md)
 
-> **En bref (FR).** Une démo de bout en bout du métier de Panora : un e-mail arrive dans un cabinet
-> de courtage (sinistre, résiliation, question, devis, relance, spam…), des agents (tri, garanties,
-> gestion de contrat, rédaction) l'analysent avec ses PDF et interrogent l'extranet de l'assureur
-> via un serveur MCP, puis un courtier valide l'action proposée (déclaration du sinistre,
-> résiliation, refus motivé, demande de pièces, réponse au client) avant son exécution, tracée dans
-> un journal d'audit. Ce qui relève du courtier (devis, attestation) lui est remis avec le motif.
-> Interface bilingue FR/EN, données FR/EN, sources cliquables (contrat, clause, pièce, ce que l'agent
-> a reçu), détection d'une injection de prompt cachée dans un PDF, tracing Langfuse, evals par agent
-> et par langue avec non-régression en CI, comparaison chiffrée des modèles (coût, latence), tests
-> de charge (1 000 dossiers, extranet instable, instance tuée en cours de route) et moindre
-> privilège des agents (jetons MCP `read` / `write`) testé en CI. Les specs (en français) sont dans
-> [`specs/`](specs/), le détail de chaque version dans [`docs/versions/`](docs/versions/).
-> **Pour tester : voir [Quick start](#quick-start-5-minutes) ci-dessous.**
+## Why this project
+
+I built this demo for my application to **Panora** (Founding Senior Full Stack Engineer). Rather
+than describe what I can do, I wanted to show it on Panora's own domain: AI agents that handle a
+brokerage's e-mails reliably, with a human in the loop, tracing, evals and an audit trail. It is a
+demonstration, not a product, and **all data is fictional** (generated from a fixed seed).
+
+## What it does
+
+An e-mail reaches an insurance brokerage: a claim, a cancellation, a coverage question, a quote
+request, a follow-up, spam.
+
+- **AI agents** read the e-mail and its PDF attachments, find the client, and sort the request.
+- They **check the policy at the insurer** through an MCP server (read-only): status, coverages,
+  limits, deductibles, exclusions, claim history — and cite the clauses.
+- They **propose an action** (file the claim, cancel, ask for documents, explain a denial) with the
+  reply to the client, in the client's language.
+- **The broker approves or rejects** (with a comment the agent applies). Only then is anything
+  filed at the insurer, with a separate write token. Every step is audited and traced.
+
+Highlights: the insurer's view can contradict the brokerage's (a policy terminated for non-payment
+that the brokerage still believes active), a PDF carrying a hidden prompt injection is detected and
+neutralised, the UI is bilingual FR/EN, agents are scored by evals in CI, and 1,000 cases were run
+with an instance killed mid-run and nothing lost.
+
+Stack: TypeScript, Next.js, NestJS, Prisma/PostgreSQL, BullMQ/Redis, Mastra, MCP (official SDK),
+Langfuse, Docker Compose, GitHub Actions.
 
 ## Quick start (5 minutes)
 
