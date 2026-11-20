@@ -19,6 +19,8 @@ export const InboundEmailInputSchema = z.object({
   subject: z.string(),
   body: z.string(),
   receivedAt: z.iso.datetime(),
+  /** `In-Reply-To` header: the message this e-mail answers (V15 follow-ups). */
+  inReplyTo: z.string().min(1).optional(),
   attachments: z.array(AttachmentInputSchema),
 });
 export type InboundEmailInput = z.infer<typeof InboundEmailInputSchema>;

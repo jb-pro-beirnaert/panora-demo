@@ -19,10 +19,13 @@ const ENUM_NAMESPACES: Record<string, string> = {
   requestType: 'requestType',
   actionType: 'actionType',
   nature: 'peril',
+  subtype: 'requestSubtype',
+  reason: 'handoverReason',
+  handoverReason: 'handoverReason',
 };
 
 const MONEY_KEYS = new Set(['amount', 'limit', 'deductible', 'claimedAmount', 'estimatedPayout']);
-const DATE_KEYS = new Set(['incidentDate', 'date']);
+const DATE_KEYS = new Set(['incidentDate', 'date', 'effectiveDate', 'renewalDate']);
 
 export function formatParams(
   params: StepParams | Record<string, unknown>,
@@ -58,7 +61,14 @@ export function renderStep(
   t: Translate,
   format: Formatters,
 ): string {
-  return t(`steps.${step.stepType}`, formatParams(step.params, t, format));
+  // V15: a request that is not a claim has no claim facts to show.
+  const key =
+    step.stepType === 'triage.completed' &&
+    typeof step.params.requestType === 'string' &&
+    step.params.requestType !== 'claim'
+      ? 'steps.triage.completedRequest'
+      : `steps.${step.stepType}`;
+  return t(key, formatParams(step.params, t, format));
 }
 
 export function renderAudit(
@@ -85,6 +95,7 @@ const KNOWN_TOOLS = new Set([
   'read_clause',
   'get_claim_history',
   'find_client',
+  'find_client_cases',
 ]);
 
 /** "Coverage agent checks policy C-48213 at the insurer", in the UI language. */
@@ -93,7 +104,8 @@ export function renderAgentEvent(
   t: Translate,
 ): string {
   if (event.eventType === 'step_started') {
-    const step = event.params.step ?? 'triage';
+    // V15: the drafting agent applying the broker's approval comment.
+    const step = event.params.polish ? 'polish' : (event.params.step ?? 'triage');
     return t(`events.step_started.${step}`, {
       agent: t(`agent.${event.agent}`),
       model: (event.params.model ?? '—').split('/').at(-1) ?? '—',

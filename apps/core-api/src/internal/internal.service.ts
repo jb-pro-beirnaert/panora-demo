@@ -1,17 +1,23 @@
 import type {
   AgentEventCallback,
   AgentStepCallback,
+  ClientCase,
+  ClientCasesQuery,
   ClientLookupQuery,
   ClientLookupResult,
   ExecutedActionCallback,
   ProposedActionCallback,
   WorkflowFailedCallback,
 } from '@demo/shared';
-import { AgentStepCallbackSchema } from '@demo/shared';
+import { AgentStepCallbackSchema, ProposedActionCallbackSchema } from '@demo/shared';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Queue } from 'bullmq';
 import { AuditService } from '../audit/audit.service.js';
+import { caseReference } from '../cases/case-views.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { PROCESS_EMAIL_QUEUE, type DraftReplyJob } from '../queues/queue-names.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 
 export type CallbackOutcome = { status: 'recorded' } | { status: 'ignored'; reason: string };
@@ -32,6 +38,7 @@ export class InternalService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
+    @InjectQueue(PROCESS_EMAIL_QUEUE) private readonly processEmailQueue: Queue<DraftReplyJob>,
   ) {}
 
   /** The case's brokerage, or null when the case no longer exists. */
@@ -50,7 +57,10 @@ export class InternalService {
     const params = { ...step.params };
 
     // The brokerage's belief next to the insurer's answer: the flagship mismatch (scenario 2).
-    if (step.stepType === 'coverage.policy_checked' && typeof params.policyNumber === 'string') {
+    if (
+      (step.stepType === 'coverage.policy_checked' || step.stepType === 'service.policy_checked') &&
+      typeof params.policyNumber === 'string'
+    ) {
       const policy = await this.prisma.policy.findUnique({
         where: { number: params.policyNumber },
       });
@@ -64,6 +74,10 @@ export class InternalService {
     }
     if (step.stepType === 'triage.client_found' && typeof params.clientId === 'string') {
       caseUpdate.client = { connect: { id: params.clientId } };
+    }
+    if (step.stepType === 'service.analysis' && typeof params.policyNumber === 'string') {
+      caseUpdate.policyNumber = params.policyNumber;
+      if (Array.isArray(params.alerts)) caseUpdate.alerts = params.alerts;
     }
     if (step.stepType === 'coverage.verdict') {
       if (typeof params.verdict === 'string') caseUpdate.verdict = params.verdict;
@@ -146,16 +160,22 @@ export class InternalService {
 
   async recordProposedAction(
     caseId: string,
-    input: ProposedActionCallback,
+    payload: ProposedActionCallback,
   ): Promise<CallbackOutcome> {
     const brokerageId = await this.brokerageOf(caseId);
     if (!brokerageId) return IGNORED;
+    const input = ProposedActionCallbackSchema.parse(payload);
     const { action } = input;
-    // Idempotent: a retried callback for the same revision changes nothing (no second audit row,
-    // no status rollback if the broker already decided).
-    const existing = await this.prisma.proposedAction.findUnique({
-      where: { caseId_revision: { caseId, revision: action.revision } },
-    });
+    const key = {
+      caseId_workflowRunId_revision: {
+        caseId,
+        workflowRunId: input.workflowRunId,
+        revision: action.revision,
+      },
+    };
+    // Idempotent: a retried callback for the same run and revision changes nothing (no second
+    // audit row, no status rollback if the broker already decided).
+    const existing = await this.prisma.proposedAction.findUnique({ where: key });
     if (existing) return { status: 'recorded' };
     await this.prisma.$transaction(async (tx) => {
       const data = {
@@ -167,22 +187,26 @@ export class InternalService {
         internalNote: action.internalNote,
         noteLanguage: input.noteLanguage,
         claimFiling: (action.claimFiling ?? undefined) as Prisma.InputJsonValue | undefined,
+        cancellation: (action.cancellation ?? undefined) as Prisma.InputJsonValue | undefined,
+        awaitsWorkflow: input.awaitsWorkflow,
       };
-      // Idempotent: a retried callback for the same revision does not duplicate the proposal.
       await tx.proposedAction.upsert({
-        where: { caseId_revision: { caseId, revision: action.revision } },
+        where: key,
         create: { caseId, revision: action.revision, ...data },
         update: {},
       });
-      await tx.case.update({
-        where: { id: caseId },
-        data: {
-          status: 'awaiting_approval',
-          workflowRunId: input.workflowRunId,
-          verdict: input.verdict,
-          alerts: input.alerts,
-        },
-      });
+      // A standalone reply (V15) leaves the case's status alone: no workflow waits for it.
+      if (input.awaitsWorkflow) {
+        await tx.case.update({
+          where: { id: caseId },
+          data: {
+            status: 'awaiting_approval',
+            workflowRunId: input.workflowRunId,
+            ...(input.verdict ? { verdict: input.verdict } : {}),
+            alerts: input.alerts,
+          },
+        });
+      }
       await this.audit.record(
         {
           caseId,
@@ -213,25 +237,77 @@ export class InternalService {
     const brokerageId = await this.brokerageOf(caseId);
     if (!brokerageId) return IGNORED;
     const { result } = input;
+    const system = { actor: 'system' as const, actorId: 'system' };
+    let followUp: DraftReplyJob | null = null;
     await this.prisma.$transaction(async (tx) => {
-      if (result.outcome === 'classified') {
-        await tx.case.update({
-          where: { id: caseId },
-          data: { status: 'classified', requestType: result.requestType },
-        });
-        await this.audit.record(
-          {
-            caseId,
-            actor: 'system',
-            actorId: 'system',
-            action: 'case_classified',
-            params: { requestType: result.requestType },
-          },
-          tx,
-        );
-        return;
+      switch (result.outcome) {
+        case 'classified':
+          await tx.case.update({
+            where: { id: caseId },
+            data: { status: 'classified', requestType: result.requestType },
+          });
+          await this.audit.record(
+            {
+              caseId,
+              ...system,
+              action: 'case_classified',
+              params: { requestType: result.requestType, subtype: result.subtype },
+            },
+            tx,
+          );
+          return;
+        case 'handover':
+          await tx.case.update({
+            where: { id: caseId },
+            data: { status: 'needs_broker', handoverReason: result.reason },
+          });
+          await this.audit.record(
+            { caseId, ...system, action: 'handed_over', params: { reason: result.reason } },
+            tx,
+          );
+          return;
+        case 'merged': {
+          // A follow-up without In-Reply-To: its e-mail joins the case it refers to, which gets a
+          // status reply; this case is closed as merged.
+          const source = await tx.case.findUniqueOrThrow({ where: { id: caseId } });
+          const target = await tx.case.findUnique({ where: { id: result.targetCaseId } });
+          if (!target) return;
+          await tx.inboundEmail.update({
+            where: { id: source.emailId },
+            data: { followUpOfCaseId: target.id },
+          });
+          await tx.case.update({
+            where: { id: caseId },
+            data: { status: 'merged', mergedIntoCaseId: target.id, requestType: 'follow_up' },
+          });
+          await this.audit.record(
+            {
+              caseId,
+              ...system,
+              action: 'follow_up_merged',
+              params: { into: caseReference(target.number) },
+            },
+            tx,
+          );
+          await this.audit.record(
+            {
+              caseId: target.id,
+              ...system,
+              action: 'follow_up_received',
+              params: { from: caseReference(source.number) },
+            },
+            tx,
+          );
+          followUp = { caseId: target.id, kind: 'send_status', emailId: source.emailId };
+          return;
+        }
       }
-      const status = result.outcome === 'claim_filed' ? 'claim_filed' : 'ready_to_send';
+      const status =
+        result.outcome === 'claim_filed'
+          ? 'claim_filed'
+          : result.outcome === 'cancellation_filed'
+            ? 'cancellation_filed'
+            : 'ready_to_send';
       await tx.case.update({
         where: { id: caseId },
         data: {
@@ -239,25 +315,60 @@ export class InternalService {
           claimNumber: result.outcome === 'claim_filed' ? result.claimNumber : null,
         },
       });
+      // V15: the reply as it will be sent, on the approved proposal.
+      if (result.finalDraft) {
+        await tx.proposedAction.updateMany({
+          where: {
+            caseId,
+            workflowRunId: input.workflowRunId,
+            revision: result.action.revision,
+          },
+          data: {
+            finalDraftSubject: result.finalDraft.subject,
+            finalDraftBody: result.finalDraft.body,
+          },
+        });
+      }
+      if (result.outcome === 'cancellation_filed' && result.action.cancellation) {
+        await tx.policy.updateMany({
+          where: { number: result.action.cancellation.policyNumber },
+          data: { cancellationEffectiveDate: new Date(`${result.effectiveDate}T00:00:00Z`) },
+        });
+      }
       await this.audit.record(
         {
           caseId,
-          actor: 'system',
-          actorId: 'system',
+          ...system,
           action: status,
           params: {
             actionType: result.action.actionType,
             revision: result.action.revision,
             approvedBy: result.approvedBy,
             ...(result.outcome === 'claim_filed' ? { claimNumber: result.claimNumber } : {}),
+            ...(result.outcome === 'cancellation_filed'
+              ? { effectiveDate: result.effectiveDate }
+              : {}),
           },
-          source: result.outcome === 'claim_filed' ? 'mcp:file_claim' : null,
+          source:
+            result.outcome === 'claim_filed'
+              ? 'mcp:file_claim'
+              : result.outcome === 'cancellation_filed'
+                ? 'mcp:request_cancellation'
+                : null,
         },
         tx,
       );
     });
+    if (followUp) await this.enqueueReply(followUp);
     this.realtime.publish('case.closed', caseId, { outcome: result.outcome }, brokerageId);
     return { status: 'recorded' };
+  }
+
+  /** V15: a standalone reply drafted by the `draft-reply` workflow. */
+  async enqueueReply(job: DraftReplyJob): Promise<void> {
+    await this.processEmailQueue.add('draft-reply', job, {
+      jobId: `reply-${job.caseId}-${job.emailId}-${Date.now()}`,
+    });
   }
 
   async recordFailure(caseId: string, input: WorkflowFailedCallback): Promise<CallbackOutcome> {
@@ -312,5 +423,44 @@ export class InternalService {
         knownStatus: policy.knownStatus,
       })),
     };
+  }
+
+  /**
+   * `find_client_cases` (V15): the brokerage's recent cases for a sender address, newest first —
+   * to spot a claim sent twice, or the case a follow-up refers to.
+   */
+  async findClientCases(query: ClientCasesQuery): Promise<ClientCase[]> {
+    const cases = await this.prisma.case.findMany({
+      where: {
+        email: { from: { equals: query.email, mode: 'insensitive' } },
+        ...(query.excludeCaseId ? { id: { not: query.excludeCaseId } } : {}),
+        status: { not: 'merged' },
+      },
+      include: {
+        email: true,
+        steps: { where: { stepType: 'triage.completed' }, take: 1 },
+        proposedActions: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+    return cases.map((kase) => {
+      const triage = (kase.steps[0]?.params ?? {}) as Record<string, unknown>;
+      const last = kase.proposedActions[0];
+      return {
+        caseId: kase.id,
+        reference: caseReference(kase.number),
+        receivedAt: kase.email.receivedAt.toISOString(),
+        subject: kase.email.subject,
+        requestType: kase.requestType,
+        status: kase.status,
+        policyNumber: kase.policyNumber,
+        incidentDate: typeof triage.incidentDate === 'string' ? triage.incidentDate : null,
+        nature: typeof triage.nature === 'string' ? triage.nature : null,
+        amount: typeof triage.amount === 'number' ? triage.amount : null,
+        claimNumber: kase.claimNumber,
+        lastAction: last ? { actionType: last.actionType, status: last.status } : null,
+      };
+    });
   }
 }

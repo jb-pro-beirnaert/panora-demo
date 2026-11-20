@@ -1,4 +1,5 @@
 import {
+  RequestScenarioIdSchema,
   missingDocuments,
   REQUIRED_DOCUMENTS,
   type ActionType,
@@ -10,10 +11,10 @@ import {
   type ExtranetClaim,
   type ExtranetCoverage,
   type ExtranetPolicy,
-  type NonClaimGroundTruth,
   type UnknownClientGroundTruth,
   type Locale,
   type Peril,
+  type RequestScenarioId,
   type ScenarioId,
   type Verdict,
 } from '@demo/shared';
@@ -44,6 +45,7 @@ import {
 } from './random.js';
 import type { Client, GeneratedEmail, Vehicle, World } from './types.js';
 import { businessOf, SHOWCASE } from './world.js';
+import { writeFollowUp, writeRequest, writeResentClaim } from './requests.js';
 
 export interface GenerateEmailsOptions {
   seed: number;
@@ -71,24 +73,53 @@ export const SCENARIO_ORDER: ScenarioId[] = [
   'duplicate_claim',
   'unreadable_field',
   'late_declaration',
-  'non_claim',
   'unknown_client',
+  // V15
+  'partial_documents',
+  'cancellation',
+  'cancellation_already_terminated',
+  'cancellation_already_requested',
+  'cancellation_late_notice',
+  'coverage_question',
+  'certificate_request',
+  'quote_request',
+  'spam',
+  'newsletter',
+  'supplier_invoice',
 ];
 
-/** About 35 % simple cases (covered, deductible), 50 % traps, 15 % e-mails that are not claims. */
+/**
+ * About 30 % simple claims, 45 % claim traps, 25 % other requests (V15). Follow-ups and resent
+ * claims refer to an earlier e-mail: demo script only, never drawn.
+ */
 export const SCENARIO_WEIGHTS: Record<ScenarioId, number> = {
-  covered: 25,
-  deductible: 10,
-  policy_terminated: 7,
-  exclusion: 7,
-  limit_exceeded: 7,
-  missing_document: 7,
-  duplicate_claim: 7,
-  unreadable_field: 7,
-  late_declaration: 5,
+  covered: 20,
+  deductible: 8,
+  policy_terminated: 6,
+  exclusion: 6,
+  limit_exceeded: 6,
+  missing_document: 5,
+  partial_documents: 5,
+  duplicate_claim: 6,
+  unreadable_field: 6,
+  late_declaration: 4,
   unknown_client: 3,
-  non_claim: 15,
+  resent_claim: 0,
+  cancellation: 4,
+  cancellation_already_terminated: 2,
+  cancellation_already_requested: 1,
+  cancellation_late_notice: 2,
+  coverage_question: 4,
+  certificate_request: 2,
+  quote_request: 3,
+  spam: 2,
+  newsletter: 1,
+  supplier_invoice: 2,
+  follow_up: 0,
+  follow_up_no_header: 0,
 };
+
+const REQUEST_SCENARIOS = new Set<ScenarioId>(RequestScenarioIdSchema.options);
 
 /** The action `draftingAgent` should propose for each claim scenario. */
 const EXPECTED_ACTION: Record<ClaimScenarioId, ActionType> = {
@@ -101,9 +132,11 @@ const EXPECTED_ACTION: Record<ClaimScenarioId, ActionType> = {
   duplicate_claim: 'request_documents',
   unreadable_field: 'request_documents',
   late_declaration: 'request_documents',
+  partial_documents: 'request_documents',
+  resent_claim: 'request_documents',
 };
 
-interface Target {
+export interface Target {
   policy: ExtranetPolicy;
   coverage: ExtranetCoverage;
   client: Client;
@@ -129,16 +162,16 @@ interface ClaimDraft {
   clauseRef: string;
 }
 
-class EmailFactory {
+export class EmailFactory {
   private readonly usage = new Map<string, number>();
   /** Language of the client the next e-mail is written by; null accepts any client. */
   private language: Locale | null = null;
-  private readonly recentOpenClaims: ExtranetClaim[];
+  readonly recentOpenClaims: ExtranetClaim[];
 
   constructor(
-    private readonly world: World,
-    private readonly faker: Faker,
-    private readonly seed: number,
+    readonly world: World,
+    readonly faker: Faker,
+    readonly seed: number,
   ) {
     const recentLimit = addDays(world.referenceDate, -10);
     this.recentOpenClaims = world.claims.filter(
@@ -148,7 +181,7 @@ class EmailFactory {
 
   // --- Target selection ---
 
-  private target(policy: ExtranetPolicy, peril: Peril): Target {
+  target(policy: ExtranetPolicy, peril: Peril): Target {
     const client = this.world.clients.find(
       (candidate) => candidate.companyName === policy.holderName,
     )!;
@@ -201,11 +234,11 @@ class EmailFactory {
 
   // --- Dates and amounts ---
 
-  private receivedDate(): string {
+  receivedDate(): string {
     return addDays(this.world.referenceDate, -int(this.faker, 0, 2));
   }
 
-  private receivedAt(date: string): string {
+  receivedAt(date: string): string {
     return isoDateTime(date, int(this.faker, 7, 18), int(this.faker, 0, 59));
   }
 
@@ -398,6 +431,27 @@ class EmailFactory {
           clauseRef: coverageClause(target),
         };
       }
+      case 'partial_documents': {
+        // V15: the invoice or quote only; the incident report (or police / fire report) is missing.
+        const target = this.pickTarget(
+          (_policy, coverage) => coverage.peril !== 'glass_breakage',
+          this.isActiveWithoutOpenClaim,
+        );
+        const amount = this.typicalAmount(target.coverage);
+        return {
+          ...base,
+          policyNumberInEmail: false,
+          target,
+          incidentDate: recentIncident,
+          amount,
+          documents: [amount > 3_000 ? 'quote' : 'invoice'],
+          verdict: 'uncertain',
+          alerts: ['missing_document'],
+          clauseRef: generalClause(target, GENERAL_CLAUSES.supportingDocuments),
+        };
+      }
+      case 'resent_claim':
+        throw new Error('resent_claim copies an earlier e-mail: see generateDemoScript');
       case 'late_declaration': {
         const target = this.pickTarget(() => true, this.isActiveWithoutOpenClaim);
         const amount = this.typicalAmount(target.coverage);
@@ -485,18 +539,18 @@ class EmailFactory {
     }
   }
 
-  private signature(client: Client): string {
+  signature(client: Client): string {
     const company = this.faker.datatype.boolean(0.5) ? client.companyName : client.tradeName;
     return `${pick(this.faker, ['Cordialement,', 'Bien cordialement,', 'Merci par avance,'])}\n${client.contactName}\n${company}\n${client.phone}`;
   }
 
-  private greeting(brokerageId: string): string {
+  greeting(brokerageId: string): string {
     const brokers = this.world.brokers.filter((broker) => broker.brokerageId === brokerageId);
     const firstName = pick(this.faker, brokers).name.split(' ')[0];
     return pick(this.faker, ['Bonjour,', 'Bonjour Madame, Monsieur,', `Bonjour ${firstName},`]);
   }
 
-  private location(target: Target): string {
+  location(target: Target): string {
     if (target.vehicle) return pick(this.faker, ROADS);
     const { street, postalCode, city } = target.client.address;
     return `${street}, ${postalCode} ${city}`;
@@ -762,92 +816,6 @@ class EmailFactory {
     return undefined;
   }
 
-  // --- Not a claim (scenario 8): a quote request or a cancellation ---
-
-  writeNonClaim(
-    index: number,
-    language: Locale | null = null,
-    kind: 'cancellation' | 'quote_request' | null = null,
-  ): GeneratedEmail {
-    const speakers = this.world.clients.filter((client) => client.language === language);
-    const client = pick(
-      this.faker,
-      language && speakers.length > 0 ? speakers : this.world.clients,
-    );
-    const brokerage = this.world.brokerages.find(
-      (candidate) => candidate.id === client.brokerageId,
-    )!;
-    const business = businessOf(client);
-    const policies = this.world.brokeragePolicies.filter(
-      (policy) => policy.clientId === client.id && policy.knownStatus === 'active',
-    );
-    const cancellation =
-      policies.length > 0 &&
-      (kind === null ? this.faker.datatype.boolean(0.5) : kind === 'cancellation');
-    const policy = cancellation ? pick(this.faker, policies) : undefined;
-    const received = this.receivedDate();
-    const english = client.language === 'en';
-
-    let subject: string;
-    let request: string;
-    if (english) {
-      subject = policy
-        ? pick(this.faker, [
-            `Cancellation of policy ${policy.number}`,
-            'Policy cancellation request',
-            `Cancellation - ${client.tradeName}`,
-          ])
-        : pick(this.faker, [
-            'Quote request for a second office',
-            'Insurance quote request',
-            `Quote - ${client.tradeName}`,
-          ]);
-      request = policy
-        ? `We would like to cancel our policy ${policy.number} (${policy.product}) at its next renewal date, ${enDate(policy.renewalDate)}. ${pick(this.faker, ['We have found an offer that better suits our business.', 'We are closing this activity at the end of the year.', 'Could you confirm the next steps?'])}`
-        : `${pick(this.faker, ['We are opening a second site', 'We are moving to larger premises', 'We are taking over another business'])} ${pick(this.faker, ['next month', 'early next year', 'in a few weeks'])}. Could you send us a quote for a commercial multi-risk policy covering ${business.area} and the equipment?`;
-    } else {
-      subject = policy
-        ? pick(this.faker, [
-            `Résiliation du contrat ${policy.number}`,
-            'Demande de résiliation',
-            `Résiliation - ${client.tradeName}`,
-          ])
-        : pick(this.faker, [
-            "Demande de devis pour l'ouverture d'un second local",
-            'Demande de devis assurance',
-            `Devis - ${client.tradeName}`,
-          ]);
-      request = policy
-        ? `Nous souhaitons résilier notre contrat ${policy.number} (${policy.product}) à sa prochaine échéance, le ${frDate(policy.renewalDate)}. ${pick(this.faker, ['Nous avons trouvé une offre plus adaptée à notre activité.', 'Nous cessons cette activité à la fin de l’année.', 'Merci de nous confirmer la démarche à suivre.'])}`
-        : `${pick(this.faker, ['Nous ouvrons un second établissement', 'Nous allons agrandir nos locaux', 'Nous reprenons un fonds de commerce'])} ${pick(this.faker, ['le mois prochain', 'au début de l’année prochaine', 'dans quelques semaines'])}. Pourriez-vous nous faire parvenir un devis pour une assurance multirisque professionnelle couvrant ${business.area} et le matériel ?`;
-    }
-    const body = english
-      ? [this.greetingEn(brokerage.id), request, this.signatureEn(client)].join('\n\n')
-      : [this.greeting(brokerage.id), request, this.signature(client)].join('\n\n');
-
-    const groundTruth: NonClaimGroundTruth = {
-      scenario: 'non_claim',
-      requestType: policy ? 'cancellation' : 'quote_request',
-      brokerCode: brokerage.brokerCode,
-      ...this.languages(client.language, brokerage.brokerCode),
-      holderName: client.companyName,
-      policyNumber: policy?.number ?? null,
-      policyNumberInEmail: policy !== undefined,
-    };
-    return {
-      email: {
-        messageId: this.messageId(index),
-        receivedAt: this.receivedAt(received),
-        from: client.email,
-        to: brokerage.inboxEmail,
-        subject,
-        body,
-        attachments: [],
-      },
-      groundTruth,
-    };
-  }
-
   // --- Unknown client (scenario 10): a claim from a company the brokerage does not know ---
 
   writeUnknownClient(index: number, language: Locale | null = null): GeneratedEmail {
@@ -954,13 +922,13 @@ class EmailFactory {
         ]);
   }
 
-  private greetingEn(brokerageId: string): string {
+  greetingEn(brokerageId: string): string {
     const brokers = this.world.brokers.filter((broker) => broker.brokerageId === brokerageId);
     const firstName = pick(this.faker, brokers).name.split(' ')[0];
     return pick(this.faker, ['Hello,', 'Dear Sir or Madam,', `Hello ${firstName},`]);
   }
 
-  private signatureEn(client: Client): string {
+  signatureEn(client: Client): string {
     return `${pick(this.faker, ['Kind regards,', 'Best regards,', 'Thanks in advance,'])}\n${client.contactName}\n${client.companyName}\n${client.phone}`;
   }
 
@@ -1100,7 +1068,7 @@ class EmailFactory {
   }
 
   /** Expected languages: the draft follows the e-mail, the note follows the brokerage. */
-  private languages(emailLanguage: Locale, brokerCode: string) {
+  languages(emailLanguage: Locale, brokerCode: string) {
     const brokerage = this.world.brokerages.find((b) => b.brokerCode === brokerCode)!;
     return {
       emailLanguage,
@@ -1109,11 +1077,11 @@ class EmailFactory {
     };
   }
 
-  private messageId(index: number): string {
+  messageId(index: number): string {
     return `<demo-${this.seed}-${String(index + 1).padStart(4, '0')}@simulator.local>`;
   }
 
-  private inboxOf(client: Client): string {
+  inboxOf(client: Client): string {
     return this.world.brokerages.find((brokerage) => brokerage.id === client.brokerageId)!
       .inboxEmail;
   }
@@ -1146,45 +1114,62 @@ export function generateEmails(world: World, options: GenerateEmailsOptions): Ge
       const showcase = factory.showcaseCrossLanguage(index);
       if (showcase) return showcase;
     }
-    if (scenario === 'non_claim') return factory.writeNonClaim(index, language);
+    if (REQUEST_SCENARIOS.has(scenario)) {
+      return writeRequest(factory, index, scenario as RequestOnly, language ?? 'fr');
+    }
     if (scenario === 'unknown_client') return factory.writeUnknownClient(index, language);
-    if (!showcased.has(scenario)) {
-      showcased.add(scenario);
-      const showcase = factory.showcase(scenario, index);
+    const claim = scenario as ClaimScenarioId;
+    if (!showcased.has(claim)) {
+      showcased.add(claim);
+      const showcase = factory.showcase(claim, index);
       if (showcase) return showcase;
     }
-    return factory.write(factory.draft(scenario, language), index);
+    return factory.write(factory.draft(claim, language), index);
   });
 }
+
+type RequestOnly = Exclude<RequestScenarioId, 'follow_up' | 'follow_up_no_header'>;
 
 /** One e-mail of the demo script (V14): a scenario, in a language. */
 export interface DemoScriptEntry {
   scenario: ScenarioId;
   language: Locale;
-  /** For `non_claim`: which kind of request. */
-  kind?: 'cancellation' | 'quote_request';
   /** Scenario 13: an English e-mail about a policy whose clauses are in French. */
   crossLanguage?: boolean;
+  /** Follow-ups and resent claims: the (1-based) script e-mail they refer to. */
+  of?: number;
 }
 
 /**
- * The demo script (V14): every case of the catalog once, in an order that tells a story. The
- * flagship case (terminated policy) comes second.
+ * The demo script (V15: 25 e-mails): every case of the catalog once, in an order that tells a
+ * story. The flagship case (terminated policy) comes second; follow-ups come after the e-mails
+ * they refer to.
  */
 export const DEMO_SCRIPT: DemoScriptEntry[] = [
   { scenario: 'covered', language: 'fr' },
   { scenario: 'policy_terminated', language: 'fr' },
   { scenario: 'missing_document', language: 'fr' },
+  { scenario: 'partial_documents', language: 'fr' },
   { scenario: 'exclusion', language: 'fr' },
   { scenario: 'limit_exceeded', language: 'fr' },
   { scenario: 'deductible', language: 'fr' },
   { scenario: 'duplicate_claim', language: 'fr' },
   { scenario: 'unreadable_field', language: 'fr' },
   { scenario: 'late_declaration', language: 'fr' },
-  { scenario: 'non_claim', language: 'fr', kind: 'cancellation' },
-  { scenario: 'non_claim', language: 'fr', kind: 'quote_request' },
   { scenario: 'unknown_client', language: 'fr' },
-  { scenario: 'covered', language: 'en' },
+  { scenario: 'cancellation', language: 'fr' },
+  { scenario: 'cancellation_already_terminated', language: 'fr' },
+  { scenario: 'cancellation_late_notice', language: 'fr' },
+  { scenario: 'cancellation_already_requested', language: 'fr' },
+  { scenario: 'coverage_question', language: 'fr' },
+  { scenario: 'certificate_request', language: 'fr' },
+  { scenario: 'quote_request', language: 'fr' },
+  { scenario: 'spam', language: 'fr' },
+  { scenario: 'newsletter', language: 'fr' },
+  { scenario: 'supplier_invoice', language: 'fr' },
+  { scenario: 'follow_up', language: 'fr', of: 3 },
+  { scenario: 'follow_up_no_header', language: 'fr', of: 1 },
+  { scenario: 'resent_claim', language: 'fr', of: 7 },
   { scenario: 'covered', language: 'en', crossLanguage: true },
 ];
 
@@ -1200,21 +1185,39 @@ export function generateDemoScript(
   const faker = createRandom(seed);
   const factory = new EmailFactory(world, faker, seed);
   const showcased = new Set<ScenarioId>();
-  return script.map((entry, index) => {
-    if (entry.crossLanguage) {
-      const showcase = factory.showcaseCrossLanguage(index);
-      if (showcase) return showcase;
-    }
-    if (entry.scenario === 'non_claim') {
-      return factory.writeNonClaim(index, entry.language, entry.kind ?? null);
-    }
-    if (entry.scenario === 'unknown_client')
-      return factory.writeUnknownClient(index, entry.language);
-    if (entry.language === 'fr' && !showcased.has(entry.scenario)) {
-      showcased.add(entry.scenario);
-      const showcase = factory.showcase(entry.scenario, index);
-      if (showcase) return showcase;
-    }
-    return factory.write(factory.draft(entry.scenario, entry.language), index);
+  const results: GeneratedEmail[] = [];
+  script.forEach((entry, index) => {
+    const original = entry.of ? results[entry.of - 1] : undefined;
+    if (entry.of && !original) throw new Error(`script e-mail ${index + 1} refers to a later one`);
+    results.push(writeEntry(factory, entry, index, original, showcased));
   });
+  return results;
+}
+
+function writeEntry(
+  factory: EmailFactory,
+  entry: DemoScriptEntry,
+  index: number,
+  original: GeneratedEmail | undefined,
+  showcased: Set<ScenarioId>,
+): GeneratedEmail {
+  if (entry.crossLanguage) {
+    const showcase = factory.showcaseCrossLanguage(index);
+    if (showcase) return showcase;
+  }
+  if (entry.scenario === 'follow_up' || entry.scenario === 'follow_up_no_header') {
+    return writeFollowUp(factory, index, original!, entry.scenario === 'follow_up');
+  }
+  if (entry.scenario === 'resent_claim') return writeResentClaim(factory, index, original!);
+  if (REQUEST_SCENARIOS.has(entry.scenario)) {
+    return writeRequest(factory, index, entry.scenario as RequestOnly, entry.language);
+  }
+  if (entry.scenario === 'unknown_client') return factory.writeUnknownClient(index, entry.language);
+  const scenario = entry.scenario as ClaimScenarioId;
+  if (entry.language === 'fr' && !showcased.has(scenario)) {
+    showcased.add(scenario);
+    const showcase = factory.showcase(scenario, index);
+    if (showcase) return showcase;
+  }
+  return factory.write(factory.draft(scenario, entry.language), index);
 }

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { coverageInstructions } from './coverage.js';
 import { draftingInstructions } from './drafting.js';
+import { policyServiceInstructions } from './policy-service.js';
 import { singleAgentInstructions } from './single.js';
 import { triageInstructions } from './triage.js';
 
@@ -11,5 +12,6 @@ export const PROMPT_VERSIONS = {
   triage: version(triageInstructions),
   coverage: version(coverageInstructions),
   drafting: version(draftingInstructions),
+  service: version(policyServiceInstructions),
   single: version(singleAgentInstructions),
 } as const;

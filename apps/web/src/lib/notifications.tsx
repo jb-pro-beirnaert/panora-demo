@@ -93,10 +93,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         .stats()
         .then((stats) => {
           baseTitle.current ??= document.title.replace(/^\(\d+\)\s*/, '');
-          document.title =
-            stats.awaitingApproval > 0
-              ? `(${stats.awaitingApproval}) ${baseTitle.current}`
-              : baseTitle.current;
+          // V15: cases to approve and cases left to the broker.
+          const waiting = stats.awaitingApproval + stats.needsBroker;
+          document.title = waiting > 0 ? `(${waiting}) ${baseTitle.current}` : baseTitle.current;
         })
         .catch(() => undefined);
     }, 800);

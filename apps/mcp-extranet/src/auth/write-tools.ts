@@ -1,5 +1,5 @@
 /** Tools that change the insurer's data: registered only for `write` tokens. */
-export const WRITE_TOOLS = new Set(['file_claim']);
+export const WRITE_TOOLS = new Set(['file_claim', 'request_cancellation']);
 
 interface JsonRpcMessage {
   id?: string | number | null;

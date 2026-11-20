@@ -18,11 +18,16 @@ export function scoreTriage(truth: GroundTruth, observed: Observed): EvalScore[]
       score('email_language', 0, 'no triage step'),
     ];
   }
+  // V15: for information and unrelated e-mails, the subtype must match too.
+  const expectedSubtype = truth.requestType === 'claim' ? null : truth.subtype;
+  const typeOk =
+    triage.requestType === truth.requestType &&
+    (expectedSubtype === null || triage.subtype === expectedSubtype);
   const scores = [
     score(
       'request_type',
-      triage.requestType === truth.requestType ? 1 : 0,
-      `expected ${truth.requestType}, got ${String(triage.requestType)}`,
+      typeOk ? 1 : 0,
+      `expected ${truth.requestType}${expectedSubtype ? `/${expectedSubtype}` : ''}, got ${String(triage.requestType)}${triage.subtype ? `/${String(triage.subtype)}` : ''}`,
     ),
     score(
       'email_language',
@@ -30,7 +35,7 @@ export function scoreTriage(truth: GroundTruth, observed: Observed): EvalScore[]
       `expected ${truth.emailLanguage}, got ${String(triage.emailLanguage)}`,
     ),
   ];
-  if (truth.scenario === 'non_claim') return [...scores, score('fields', null)];
+  if (truth.requestType !== 'claim') return [...scores, score('fields', null)];
 
   // Expected extraction: a value only when it can be read in the e-mail.
   const checks: [string, unknown, unknown][] = [

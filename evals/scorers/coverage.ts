@@ -55,7 +55,7 @@ export function scoreCoverage(
   observed: Observed,
   clauses: ReadonlyMap<string, ExtranetClause>,
 ): EvalScore[] {
-  if (truth.scenario === 'non_claim') {
+  if (truth.requestType !== 'claim') {
     return ['verdict', 'limit_deductible', 'alerts', 'citations'].map((name) => score(name, null));
   }
   const coverage = observed.coverage;

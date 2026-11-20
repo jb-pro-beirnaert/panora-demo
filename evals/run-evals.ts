@@ -25,6 +25,7 @@ import { observe } from './lib/observed.js';
 import { aggregate, toMarkdown, withWorkflowScore } from './lib/report.js';
 import { scoreCoverage } from './scorers/coverage.js';
 import { scoreDrafting } from './scorers/drafting.js';
+import { scoreOutcome } from './scorers/outcome.js';
 import { judge } from './scorers/judge.js';
 import { scoreTriage } from './scorers/triage.js';
 
@@ -81,7 +82,16 @@ async function post(base: string, path: string, body: unknown, admin = false): P
   return response.json();
 }
 
-const DONE = new Set(['awaiting_approval', 'classified', 'ready_to_send', 'claim_filed', 'failed']);
+const DONE = new Set([
+  'awaiting_approval',
+  'classified',
+  'ready_to_send',
+  'claim_filed',
+  'failed',
+  // V15
+  'needs_broker',
+  'cancellation_filed',
+]);
 
 async function waitForCase(caseId: string, timeoutMs: number): Promise<CaseDetail> {
   const deadline = Date.now() + timeoutMs;
@@ -139,6 +149,7 @@ async function runCase(
       ...scoreTriage(truth, observed),
       ...scoreCoverage(truth, observed, clauses),
       ...scoreDrafting(truth, observed),
+      ...scoreOutcome(truth, observed),
     ];
     if (config.judge && process.env.OPENAI_API_KEY) {
       scores.push(

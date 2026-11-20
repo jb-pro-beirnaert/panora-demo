@@ -48,6 +48,10 @@ export const ExtranetPolicySchema = z.object({
   startDate: IsoDateSchema,
   endDate: IsoDateSchema.nullable(),
   endReason: PolicyEndReasonSchema.nullable(),
+  /** V15: next renewal date (a cancellation by the client takes effect on a renewal). */
+  renewalDate: IsoDateSchema,
+  /** V15: when the client's cancellation was recorded (the policy stays active until `endDate`). */
+  cancellationRequestedAt: IsoDateSchema.nullable().default(null),
   coverages: z.array(ExtranetCoverageSchema),
 });
 export type ExtranetPolicy = z.infer<typeof ExtranetPolicySchema>;

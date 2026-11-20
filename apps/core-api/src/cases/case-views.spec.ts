@@ -30,6 +30,9 @@ describe('toCaseSummary', () => {
       failureReason: null,
       currentStep: 'drafting',
       currentTool: null,
+      handoverReason: null,
+      handoverParams: null,
+      mergedIntoCaseId: null,
       createdAt: now,
       updatedAt: now,
       brokerage: {
@@ -49,8 +52,11 @@ describe('toCaseSummary', () => {
         body: '…',
         receivedAt: now,
         language: 'fr',
+        inReplyTo: null,
+        followUpOfCaseId: null,
       },
-      _count: { proposedActions: 1 },
+      _count: { proposedActions: 1, followUps: 0 },
+      proposedActions: [{ id: 'a1' }],
     });
     expect(CaseSummarySchema.parse(summary)).toEqual(summary);
     expect(summary.reference).toBe('CASE-0003');
@@ -71,5 +77,11 @@ describe('caseStage', () => {
     expect(caseStage({ status: 'claim_filed', currentStep: 'execute' })).toBe('done');
     expect(caseStage({ status: 'classified', currentStep: 'triage' })).toBe('done');
     expect(caseStage({ status: 'failed', currentStep: 'coverage' })).toBe('failed');
+    // V15
+    expect(caseStage({ status: 'processing', currentStep: 'service' })).toBe('coverage');
+    expect(caseStage({ status: 'needs_broker', currentStep: null })).toBe('needs_broker');
+    expect(caseStage({ status: 'claim_filed', currentStep: null, pendingProposals: 1 })).toBe(
+      'awaiting_approval',
+    );
   });
 });

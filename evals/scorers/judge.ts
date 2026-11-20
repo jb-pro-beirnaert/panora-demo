@@ -35,7 +35,7 @@ export function judgePrompt(
     '{"citationsSupportVerdict": 0..1, "draftToneAndCompleteness": 0..1, "reasons": "one or two sentences"}',
     '- citationsSupportVerdict: 1 if the cited clauses really say what is needed to justify the verdict, 0 if they are irrelevant or contradict it.',
     '- draftToneAndCompleteness: 1 if the e-mail to the client is courteous, factual, does not promise a payment, and contains what the client needs for this action (reason of a denial with the clause, list of documents to send, or confirmation of the declaration with deductible and limit). 0 if rude, misleading or missing the essentials.',
-    `Expected verdict: ${truth.scenario === 'non_claim' ? 'n/a' : truth.verdict}; expected action: ${truth.scenario === 'non_claim' ? 'n/a' : truth.expectedAction}.`,
+    `Expected verdict: ${truth.requestType === 'claim' ? truth.verdict : 'n/a (not a claim)'}; expected action: ${truth.expectedAction ?? 'none'}.`,
     `Verdict given: ${JSON.stringify(observed.coverage?.params ?? null)}`,
     `Citations:\n${cited || '(none)'}`,
     `E-mail draft to the client:\nSubject: ${observed.proposal?.draftSubject ?? ''}\n${observed.proposal?.draftBody ?? '(none)'}`,
@@ -48,7 +48,7 @@ export async function judge(
   clauses: ReadonlyMap<string, ExtranetClause>,
   options: JudgeOptions,
 ): Promise<EvalScore[]> {
-  if (truth.scenario === 'non_claim' || !observed.proposal) return [];
+  if (!observed.proposal) return [];
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

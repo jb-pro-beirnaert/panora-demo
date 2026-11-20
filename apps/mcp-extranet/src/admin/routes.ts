@@ -27,6 +27,10 @@ async function seed(db: Db, world: ExtranetSeed): Promise<void> {
         holderNameSearch: normalizeName(policy.holderName),
         startDate: fromIsoDate(policy.startDate),
         endDate: policy.endDate ? fromIsoDate(policy.endDate) : null,
+        renewalDate: fromIsoDate(policy.renewalDate),
+        cancellationRequestedAt: policy.cancellationRequestedAt
+          ? fromIsoDate(policy.cancellationRequestedAt)
+          : null,
       })),
     }),
     db.coverage.createMany({

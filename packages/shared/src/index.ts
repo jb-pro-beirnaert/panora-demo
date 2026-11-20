@@ -5,6 +5,7 @@ export * from './triage.js';
 export * from './coverage.js';
 export * from './extranet-tools.js';
 export * from './drafting.js';
+export * from './service.js';
 export * from './process-email.js';
 export * from './ground-truth.js';
 export * from './extranet-seed.js';

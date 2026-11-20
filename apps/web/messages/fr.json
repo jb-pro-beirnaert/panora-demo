@@ -37,7 +37,8 @@
       "inProgress": "En cours",
       "awaitingApproval": "À valider",
       "closed": "Traités",
-      "failed": "En erreur"
+      "failed": "En erreur",
+      "needsBroker": "À traiter par vous"
     },
     "counter": "{label} : <strong>{value}</strong>",
     "throughput": "{count} traités / min",
@@ -46,16 +47,27 @@
       "covered": "Sinistre couvert",
       "policy_terminated": "Contrat résilié ★",
       "missing_document": "Pièce manquante",
+      "partial_documents": "Pièces partielles",
       "exclusion": "Exclusion",
       "limit_exceeded": "Plafond dépassé",
       "deductible": "Franchise",
-      "duplicate_claim": "Doublon",
+      "duplicate_claim": "Doublon chez l’assureur",
       "unreadable_field": "Champ illisible",
       "late_declaration": "Déclaration tardive",
       "unknown_client": "Client inconnu",
-      "cancellation": "Demande de résiliation",
+      "cancellation": "Résiliation",
+      "cancellation_already_terminated": "Résiliation d’un contrat déjà résilié",
+      "cancellation_late_notice": "Résiliation hors préavis",
+      "cancellation_already_requested": "Résiliation déjà demandée",
+      "coverage_question": "Question sur une garantie",
+      "certificate_request": "Demande d’attestation",
       "quote_request": "Demande de devis",
-      "other": "Autre demande"
+      "spam": "Spam",
+      "newsletter": "Newsletter",
+      "supplier_invoice": "Facture fournisseur",
+      "follow_up": "Relance avec les pièces",
+      "follow_up_no_header": "Relance « où en est mon dossier ? »",
+      "resent_claim": "Sinistre renvoyé (doublon)"
     }
   },
   "inbox": {
@@ -85,8 +97,8 @@
       "all": "Tous",
       "inProgress": "En cours",
       "toApprove": "À valider",
-      "done": "Traités",
-      "failed": "En erreur"
+      "needsBroker": "À traiter par vous",
+      "done": "Traités"
     },
     "view": {
       "table": "Liste",
@@ -96,9 +108,10 @@
       "queued": "File",
       "agents": "Agents",
       "toApprove": "À valider",
-      "done": "Traités",
-      "failed": "En erreur"
-    }
+      "needsBroker": "À traiter par vous",
+      "done": "Traités"
+    },
+    "followUp": "{count, plural, one {relance} other {# relances}}"
   },
   "case": {
     "back": "Retour à la boîte de réception",
@@ -147,7 +160,31 @@
     "openFile": "Ouvrir",
     "pages": "{count, plural, one {# page} other {# pages}}",
     "extractedText": "Texte extrait transmis aux agents",
-    "extractionFailed": "illisible"
+    "extractionFailed": "illisible",
+    "mergedInto": "Cette relance a été rattachée au dossier <link>{reference}</link>.",
+    "handover": {
+      "title": "À traiter par vous",
+      "markHandled": "Marquer comme traité",
+      "commentPlaceholder": "Ce que vous avez fait (facultatif)",
+      "hint": {
+        "certificate_request": "Aucun outil ne permet aux agents de produire une attestation : établissez-la depuis l'extranet de l'assureur, puis envoyez-la au client.",
+        "quote_request": "La tarification n'est pas confiée aux agents : préparez le devis avec l'assureur.",
+        "policy_not_found": "Le contrat cité n'existe ni chez le cabinet ni chez l'assureur : vérifiez le numéro avec le client.",
+        "policy_of_other_client": "Le contrat cité n'appartient pas à l'expéditeur : vérifiez son identité avant toute action.",
+        "question_not_answerable": "Aucune clause ne répond à la question : répondez au client après avoir consulté l'assureur.",
+        "follow_up_unmatched": "Les agents n'ont pas retrouvé le dossier auquel cette relance fait référence : retrouvez-le et répondez au client.",
+        "unclassified": "Les agents n'ont pas su classer cette demande : lisez l'e-mail et traitez-la.",
+        "workflow_failed": "Le traitement automatique a échoué : relancez-le ou traitez la demande vous-même."
+      }
+    },
+    "followUps": {
+      "title": "{count, plural, one {Relance reçue} other {# relances reçues}}",
+      "newDocuments": "La relance apporte de nouvelles pièces : relancez l’analyse pour en tenir compte.",
+      "reanalyze": "Relancer l'analyse"
+    },
+    "standaloneReply": "Réponse au client",
+    "cancellationFiling": "Résiliation à enregistrer : contrat {policyNumber}, effet le {date}",
+    "finalDraft": "Réponse finale, prête à envoyer"
   },
   "status": {
     "received": "Reçu",
@@ -156,7 +193,11 @@
     "classified": "Classé",
     "claim_filed": "Sinistre déclaré",
     "ready_to_send": "Prêt à envoyer",
-    "failed": "En erreur"
+    "failed": "En erreur",
+    "needs_broker": "À traiter par vous",
+    "handled_manually": "Traité par le courtier",
+    "cancellation_filed": "Résiliation enregistrée",
+    "merged": "Rattaché à un dossier"
   },
   "verdict": {
     "covered": "Couvert",
@@ -170,18 +211,27 @@
     "late_declaration": "Déclaration tardive",
     "missing_document": "Pièce manquante",
     "duplicate_claim": "Doublon",
-    "unknown_client": "Client inconnu"
+    "unknown_client": "Client inconnu",
+    "already_terminated": "Contrat déjà résilié",
+    "cancellation_already_requested": "Résiliation déjà demandée",
+    "notice_period_not_met": "Préavis non respecté"
   },
   "actionType": {
     "request_documents": "Demander des pièces",
     "file_claim": "Déclarer le sinistre",
-    "notify_denial": "Notifier le refus"
+    "notify_denial": "Notifier le refus",
+    "cancel_policy": "Résilier le contrat",
+    "answer_question": "Répondre à la question",
+    "send_status": "Donner l'état du dossier",
+    "acknowledge": "Accusé de réception"
   },
   "requestType": {
     "claim": "Sinistre",
-    "quote_request": "Demande de devis",
     "cancellation": "Résiliation",
-    "other": "Autre"
+    "information": "Demande d'information",
+    "quote_request": "Demande de devis",
+    "follow_up": "Relance",
+    "unrelated": "Sans rapport"
   },
   "proposalStatus": {
     "pending": "En attente",
@@ -205,7 +255,8 @@
     "triage": "Agent Tri",
     "coverage": "Agent Garanties",
     "drafting": "Agent Rédaction",
-    "workflow": "Workflow"
+    "workflow": "Workflow",
+    "service": "Agent Contrats"
   },
   "actor": {
     "system": "Système",
@@ -220,18 +271,31 @@
       "client_found": "Expéditeur identifié : {companyName} ({policyCount} contrats)",
       "client_not_found": "L'expéditeur {email} n'est pas un client connu",
       "completed": "E-mail analysé : {requestType}, {nature}, montant {amount}, survenu le {incidentDate}",
-      "classified": "Hors sinistre : classé comme {requestType}"
+      "classified": "Sans rapport : classé ({subtype})",
+      "completedRequest": "E-mail analysé : {requestType}",
+      "follow_up_matched": "Relance rattachée au dossier {reference}",
+      "follow_up_unmatched": "Relance : aucun dossier correspondant parmi {cases} dossiers récents"
     },
     "coverage": {
       "policy_checked": "Contrat {policyNumber} consulté chez l'assureur : {status}",
       "verdict": "Verdict : {verdict} ({coverage}), alertes : {alerts}"
     },
     "drafting": {
-      "proposed": "Proposition {revision} : {actionType}"
+      "proposed": "Proposition {revision} : {actionType}",
+      "polished": "Réponse retouchée selon le commentaire : « {comment} »"
     },
     "execute": {
       "claim_filed": "Sinistre {claimNumber} déclaré chez l'assureur",
-      "ready_to_send": "E-mail prêt à envoyer ({actionType})"
+      "ready_to_send": "E-mail prêt à envoyer ({actionType})",
+      "cancellation_filed": "Résiliation du contrat {policyNumber} enregistrée chez l'assureur, effet le {effectiveDate}"
+    },
+    "service": {
+      "policy_checked": "Contrat {policyNumber} consulté chez l'assureur : {status}, échéance le {renewalDate}",
+      "analysis": "Analyse : contrat {policyNumber}, date d'effet {effectiveDate}, alertes : {alerts}"
+    },
+    "handover": "À traiter par le courtier : {reason}",
+    "follow_up": {
+      "received": "Relance reçue"
     }
   },
   "audit": {
@@ -248,7 +312,14 @@
     "workflow_failed": "Le traitement a échoué",
     "workflow_restarted": "Traitement relancé après une interruption (tentative {attempt})",
     "workflow_retried": "Dossier relancé par le courtier",
-    "data_purged": "Snapshot du workflow et trace supprimés (conservation : {retentionDays} jours)"
+    "data_purged": "Snapshot du workflow et trace supprimés (conservation : {retentionDays} jours)",
+    "handed_over": "À traiter par le courtier : {reason}",
+    "case_handled_manually": "Marqué comme traité par le courtier",
+    "cancellation_filed": "Résiliation enregistrée chez l'assureur (effet le {effectiveDate})",
+    "follow_up_received": "Relance reçue",
+    "follow_up_merged": "Relance rattachée au dossier {into}",
+    "reply_ready": "Réponse prête à envoyer ({actionType})",
+    "analysis_restarted": "Nouvelle analyse demandée par le courtier"
   },
   "common": {
     "none": "aucune",
@@ -263,13 +334,16 @@
       "read_clause": "{agent} lit la clause {ref}",
       "get_claim_history": "{agent} consulte l'historique des sinistres du contrat {policyNumber}",
       "find_client": "{agent} cherche l'expéditeur {email} dans les fichiers du cabinet",
-      "other": "{agent} appelle {tool}"
+      "other": "{agent} appelle {tool}",
+      "find_client_cases": "{agent} consulte les dossiers récents de {email} au cabinet"
     },
     "step_started": {
       "triage": "{agent} démarre (modèle {model})",
       "coverage": "{agent} démarre (modèle {model})",
       "drafting": "{agent} rédige la proposition {revision} (modèle {model})",
-      "execute": "Exécution de l'action validée : {actionType}"
+      "execute": "Exécution de l'action validée : {actionType}",
+      "service": "{agent} démarre (modèle {model})",
+      "polish": "{agent} applique le commentaire du courtier (modèle {model})"
     }
   },
   "evals": {
@@ -305,7 +379,7 @@
   },
   "pipeline": {
     "triage": "Tri",
-    "coverage": "Garanties",
+    "coverage": "Analyse",
     "drafting": "Rédaction",
     "approval": "Validation",
     "execute": "Exécution",
@@ -315,7 +389,8 @@
       "done": "fait",
       "waiting": "attend le courtier",
       "failed": "échec",
-      "skipped": "sans objet"
+      "skipped": "sans objet",
+      "you": "à traiter par vous"
     }
   },
   "stage": {
@@ -327,7 +402,8 @@
     "execute": "Déclaration chez l'assureur",
     "done": "Terminé",
     "failed": "En erreur",
-    "revision": "proposition {revision}"
+    "revision": "proposition {revision}",
+    "needs_broker": "À traiter par vous"
   },
   "agents": {
     "running": "{count} en cours",
@@ -342,5 +418,22 @@
   "notify": {
     "newEmail": "Nouvel e-mail de {from}",
     "close": "Fermer"
+  },
+  "requestSubtype": {
+    "coverage_question": "question sur une garantie",
+    "certificate": "attestation",
+    "spam": "spam",
+    "newsletter": "newsletter",
+    "supplier_invoice": "facture fournisseur"
+  },
+  "handoverReason": {
+    "certificate_request": "Demande d'attestation",
+    "quote_request": "Demande de devis",
+    "policy_not_found": "Contrat introuvable",
+    "policy_of_other_client": "Contrat d'un autre client",
+    "question_not_answerable": "Question sans réponse dans le contrat",
+    "follow_up_unmatched": "Relance sans dossier identifié",
+    "unclassified": "Demande non classée",
+    "workflow_failed": "Échec du traitement"
   }
 }

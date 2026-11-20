@@ -1,12 +1,15 @@
 import {
   AgentEventCallbackSchema,
   AgentStepCallbackSchema,
+  ClientCasesQuerySchema,
   ClientLookupQuerySchema,
   ExecutedActionCallbackSchema,
   ProposedActionCallbackSchema,
   WorkflowFailedCallbackSchema,
   type AgentEventCallback,
   type AgentStepCallback,
+  type ClientCase,
+  type ClientCasesQuery,
   type ClientLookupQuery,
   type ClientLookupResult,
   type ExecutedActionCallback,
@@ -66,6 +69,14 @@ export class InternalController {
     @Body({ schema: WorkflowFailedCallbackSchema }) body: WorkflowFailedCallback,
   ): Promise<CallbackOutcome> {
     return this.internal.recordFailure(id, body);
+  }
+
+  /** V15 tool `find_client_cases` (declared before `clients` so the path is not shadowed). */
+  @Get('clients/cases')
+  findClientCases(
+    @Query({ schema: ClientCasesQuerySchema }) query: ClientCasesQuery,
+  ): Promise<ClientCase[]> {
+    return this.internal.findClientCases(query);
   }
 
   @Get('clients')

@@ -1,7 +1,7 @@
 'use client';
 
-import type { CaseStage, CaseStatus } from '@demo/shared';
-import { Check, Hourglass, Loader2, Minus, X } from 'lucide-react';
+import type { CaseStage, CaseStatus, HandoverReason } from '@demo/shared';
+import { Check, Hourglass, Loader2, Minus, UserRound, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PIPELINE, pipelineStates, type PillState } from '@/lib/stage';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const PILL_STYLES: Record<PillState, string> = {
   waiting: 'border-amber-400 bg-amber-100 text-amber-900 animate-pulse',
   failed: 'border-red-300 bg-red-50 text-red-700',
   skipped: 'border-dashed border-slate-200 bg-transparent text-slate-300',
+  you: 'border-orange-400 bg-orange-100 text-orange-900',
 };
 
 function PillIcon({ state, className }: { state: PillState; className?: string }) {
@@ -27,6 +28,8 @@ function PillIcon({ state, className }: { state: PillState; className?: string }
       return <X className={className} />;
     case 'skipped':
       return <Minus className={className} />;
+    case 'you':
+      return <UserRound className={className} />;
     default:
       return <span className={cn('rounded-full bg-current opacity-40', className)} />;
   }
@@ -110,18 +113,23 @@ export function StageLabel({
   stage,
   currentTool,
   revision,
+  handoverReason = null,
 }: {
   stage: CaseStage;
   currentTool: string | null;
   revision: number;
+  /** V15: why the broker must handle it. */
+  handoverReason?: HandoverReason | null;
 }) {
   const t = useTranslations('stage');
+  const tReason = useTranslations('handoverReason');
   return (
     <span className="flex flex-col">
       <span
         className={cn(
           'text-xs font-medium',
           stage === 'awaiting_approval' && 'text-amber-700',
+          stage === 'needs_broker' && 'text-orange-700',
           stage === 'failed' && 'text-red-700',
           stage === 'done' && 'text-emerald-700',
           ['triage', 'coverage', 'drafting', 'execute'].includes(stage) && 'text-blue-700',
@@ -132,6 +140,9 @@ export function StageLabel({
       </span>
       {currentTool && (
         <span className="truncate font-mono text-[11px] text-muted-foreground">{currentTool}</span>
+      )}
+      {stage === 'needs_broker' && handoverReason && (
+        <span className="text-[11px] text-orange-800">{tReason(handoverReason)}</span>
       )}
     </span>
   );

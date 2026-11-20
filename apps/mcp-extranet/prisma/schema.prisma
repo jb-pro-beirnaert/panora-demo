@@ -26,21 +26,25 @@ model Insurer {
 }
 
 model Policy {
-  number           String       @id
-  insurerId        String
-  insurer          Insurer      @relation(fields: [insurerId], references: [id], onDelete: Cascade)
-  holderName       String
+  number                  String       @id
+  insurerId               String
+  insurer                 Insurer      @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  holderName              String
   /// Lower-case, accent-free holder name, for `search_policy`.
-  holderNameSearch String
-  holderSiren      String
-  brokerCode       String
-  product          String
-  status           PolicyStatus
-  startDate        DateTime     @db.Date
-  endDate          DateTime?    @db.Date
-  endReason        String?
-  coverages        Coverage[]
-  claims           Claim[]
+  holderNameSearch        String
+  holderSiren             String
+  brokerCode              String
+  product                 String
+  status                  PolicyStatus
+  startDate               DateTime     @db.Date
+  endDate                 DateTime?    @db.Date
+  endReason               String?
+  /// V15: next renewal date; a cancellation by the client takes effect on a renewal.
+  renewalDate             DateTime     @db.Date
+  /// V15: when the client's cancellation was recorded (the policy stays active until endDate).
+  cancellationRequestedAt DateTime?    @db.Date
+  coverages               Coverage[]
+  claims                  Claim[]
 
   @@index([holderNameSearch])
   @@index([brokerCode])

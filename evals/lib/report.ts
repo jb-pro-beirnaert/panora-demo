@@ -8,6 +8,8 @@ const STRICT = new Set([
   'coverage/verdict',
   'drafting/action_type',
   'drafting/amounts',
+  'workflow/outcome',
+  'workflow/effective_date',
 ]);
 
 /** Adds the workflow score: 1 when every applicable strict check passes. */

@@ -24,11 +24,11 @@ import { caseGroup, type CaseGroup } from '@/lib/stage';
 import { useStored } from '@/lib/use-stored';
 import { cn } from '@/lib/utils';
 
-type Tab = 'all' | 'inProgress' | 'toApprove' | 'done' | 'failed';
+type Tab = 'all' | 'inProgress' | 'toApprove' | 'needsBroker' | 'done';
 type View = 'table' | 'board';
 
-const TABS: Tab[] = ['all', 'inProgress', 'toApprove', 'done', 'failed'];
-const BOARD: CaseGroup[] = ['queued', 'agents', 'toApprove', 'done', 'failed'];
+const TABS: Tab[] = ['all', 'inProgress', 'toApprove', 'needsBroker', 'done'];
+const BOARD: CaseGroup[] = ['queued', 'agents', 'toApprove', 'needsBroker', 'done'];
 const VIEW_KEY = 'demo.inboxView';
 const SEEN_KEY = 'demo.seenCases';
 const HIGHLIGHT_MS = 3_000;
@@ -245,8 +245,8 @@ function CaseList() {
                     'rounded-full px-1.5 text-xs tabular-nums',
                     candidate === 'toApprove' && counts.toApprove > 0
                       ? 'bg-amber-500 text-white'
-                      : candidate === 'failed' && counts.failed > 0
-                        ? 'bg-red-500 text-white'
+                      : candidate === 'needsBroker' && counts.needsBroker > 0
+                        ? 'bg-orange-500 text-white'
                         : 'bg-muted text-muted-foreground',
                   )}
                 >
@@ -338,6 +338,7 @@ function CaseTable({ cases, seen, fresh, open }: RowProps & { cases: CaseSummary
                 <div className="flex items-center gap-2">
                   <LanguageBadge language={kase.language} />
                   <span className={cn('truncate', unread && 'font-semibold')}>{kase.subject}</span>
+                  {kase.followUps > 0 && <FollowUpBadge count={kase.followUps} />}
                 </div>
               </TableCell>
               <TableCell className="min-w-48">
@@ -347,6 +348,7 @@ function CaseTable({ cases, seen, fresh, open }: RowProps & { cases: CaseSummary
                     stage={kase.stage}
                     currentTool={kase.currentTool}
                     revision={kase.revision}
+                    handoverReason={kase.handoverReason}
                   />
                 </div>
               </TableCell>
@@ -368,8 +370,8 @@ const COLUMN_STYLES: Record<CaseGroup, string> = {
   queued: 'border-t-slate-300',
   agents: 'border-t-blue-400',
   toApprove: 'border-t-amber-400',
+  needsBroker: 'border-t-orange-500',
   done: 'border-t-emerald-400',
-  failed: 'border-t-red-400',
 };
 
 /** Read-only board: cards move from column to column as the agents work. */
@@ -418,6 +420,7 @@ function Board({ cases, seen, fresh, open }: RowProps & { cases: CaseSummary[] }
                 stage={kase.stage}
                 currentTool={kase.currentTool}
                 revision={kase.revision}
+                handoverReason={kase.handoverReason}
               />
             </button>
           ))}
@@ -429,5 +432,15 @@ function Board({ cases, seen, fresh, open }: RowProps & { cases: CaseSummary[] }
         </div>
       ))}
     </div>
+  );
+}
+
+/** V15: the case received follow-up e-mails. */
+function FollowUpBadge({ count }: { count: number }) {
+  const t = useTranslations('inbox');
+  return (
+    <span className="shrink-0 rounded-full border border-violet-300 bg-violet-50 px-1.5 text-[10px] font-medium text-violet-800">
+      {t('followUp', { count })}
+    </span>
   );
 }

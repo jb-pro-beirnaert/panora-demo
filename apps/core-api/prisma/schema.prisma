@@ -30,12 +30,20 @@ enum CaseStatus {
   claim_filed
   ready_to_send
   failed
+  needs_broker
+  handled_manually
+  cancellation_filed
+  merged
 }
 
 enum ActionType {
   request_documents
   file_claim
   notify_denial
+  cancel_policy
+  answer_question
+  send_status
+  acknowledge
 }
 
 enum ProposedActionStatus {
@@ -91,29 +99,36 @@ model Client {
  * A policy as the brokerage's own software knows it: `knownStatus` may be out of date.
  */
 model Policy {
-  number      String       @id
-  clientId    String
-  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  insurerName String
-  product     String
-  knownStatus PolicyStatus
-  renewalDate DateTime     @db.Date
+  number                    String       @id
+  clientId                  String
+  client                    Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  insurerName               String
+  product                   String
+  knownStatus               PolicyStatus
+  renewalDate               DateTime     @db.Date
+  /// V15: the cancellation recorded at the insurer takes effect on this date.
+  cancellationEffectiveDate DateTime?    @db.Date
 }
 
 model InboundEmail {
-  id          String       @id @default(uuid())
+  id               String       @id @default(uuid())
   /**
    * RFC 5322 Message-ID: the same e-mail received twice creates a single case.
    */
-  messageId   String       @unique
-  from        String
-  to          String
-  subject     String
-  body        String
-  receivedAt  DateTime
-  language    Locale
-  attachments Attachment[]
-  case        Case?
+  messageId        String       @unique
+  from             String
+  to               String
+  subject          String
+  body             String
+  receivedAt       DateTime
+  language         Locale
+  /// V15 `In-Reply-To` header.
+  inReplyTo        String?
+  attachments      Attachment[]
+  case             Case?        @relation("CaseEmail")
+  /// V15: a follow-up e-mail, attached to the case it refers to.
+  followUpOfCaseId String?
+  followUpOf       Case?        @relation("FollowUps", fields: [followUpOfCaseId], references: [id], onDelete: Cascade)
 }
 
 model Attachment {
@@ -135,52 +150,59 @@ model Attachment {
 }
 
 model Case {
-  id              String           @id @default(uuid())
+  id               String           @id @default(uuid())
   /**
    * Human-readable reference: CASE-0001.
    */
-  number          Int              @unique @default(autoincrement())
-  brokerageId     String
-  brokerage       Brokerage        @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
-  emailId         String           @unique
-  email           InboundEmail     @relation(fields: [emailId], references: [id], onDelete: Cascade)
-  clientId        String?
-  client          Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  policyNumber    String?
-  status          CaseStatus       @default(received)
-  workflowRunId   String?          @unique
+  number           Int              @unique @default(autoincrement())
+  brokerageId      String
+  brokerage        Brokerage        @relation(fields: [brokerageId], references: [id], onDelete: Cascade)
+  emailId          String           @unique
+  email            InboundEmail     @relation("CaseEmail", fields: [emailId], references: [id], onDelete: Cascade)
+  /// V15: follow-up e-mails attached to this case.
+  followUps        InboundEmail[]   @relation("FollowUps")
+  /// V15 "À traiter par vous": why the agents left the case to the broker.
+  handoverReason   String?
+  handoverParams   Json?
+  /// V15: the case this one was merged into (a follow-up without In-Reply-To).
+  mergedIntoCaseId String?
+  clientId         String?
+  client           Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  policyNumber     String?
+  status           CaseStatus       @default(received)
+  workflowRunId    String?          @unique
   /**
    * Langfuse trace id: one trace per case (initial run and every resume).
    */
-  traceId         String?
+  traceId          String?
   /**
    * Eval run options (models, architecture, context), demo mode only.
    */
-  runOptions      Json?
+  runOptions       Json?
   /**
    * V10 retention: when the workflow snapshot and the trace of this closed case were purged.
    */
-  purgedAt        DateTime?
+  purgedAt         DateTime?
   /**
    * Filled as the workflow progresses (language-neutral values).
    */
-  requestType     String?
-  verdict         String?
-  alerts          String[]
-  claimNumber     String?
-  failureReason   String?
+  requestType      String?
+  verdict          String?
+  alerts           String[]
+  claimNumber      String?
+  failureReason    String?
   /**
    * V13 live stage: the workflow step running now (`triage`, `coverage`, `drafting`, `execute`)
    * and the tool its agent called last, from the agent events.
    */
-  currentStep     String?
-  currentTool     String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  steps           AgentStep[]
-  agentEvents     AgentEvent[]
-  proposedActions ProposedAction[]
-  auditLogs       AuditLog[]
+  currentStep      String?
+  currentTool      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  steps            AgentStep[]
+  agentEvents      AgentEvent[]
+  proposedActions  ProposedAction[]
+  auditLogs        AuditLog[]
 
   @@index([status])
   @@index([createdAt])
@@ -223,28 +245,35 @@ model AgentEvent {
 }
 
 model ProposedAction {
-  id            String               @id @default(uuid())
-  caseId        String
-  case          Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  revision      Int
-  workflowRunId String
-  actionType    ActionType
-  draftSubject  String
-  draftBody     String
-  draftLanguage Locale
-  internalNote  String
-  noteLanguage  Locale
+  id                String               @id @default(uuid())
+  caseId            String
+  case              Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  revision          Int
+  workflowRunId     String
+  actionType        ActionType
+  draftSubject      String
+  draftBody         String
+  draftLanguage     Locale
+  internalNote      String
+  noteLanguage      Locale
   /**
    * Arguments of `file_claim` (null for other action types).
    */
-  claimFiling   Json?
-  status        ProposedActionStatus @default(pending)
-  decidedById   String?
-  comment       String?
-  decidedAt     DateTime?
-  createdAt     DateTime             @default(now())
+  claimFiling       Json?
+  /// V15: arguments of `request_cancellation` (null for other action types).
+  cancellation      Json?
+  /// V15: the reply as it will be sent (placeholders filled, approval comment applied).
+  finalDraftSubject String?
+  finalDraftBody    String?
+  /// V15: false for a standalone reply (follow-up status, acknowledgement): no workflow waits.
+  awaitsWorkflow    Boolean              @default(true)
+  status            ProposedActionStatus @default(pending)
+  decidedById       String?
+  comment           String?
+  decidedAt         DateTime?
+  createdAt         DateTime             @default(now())
 
-  @@unique([caseId, revision])
+  @@unique([caseId, workflowRunId, revision])
 }
 
 /**

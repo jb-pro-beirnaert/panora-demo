@@ -29,3 +29,21 @@ export const FileClaimResultSchema = z.object({
   alreadyFiled: z.boolean(),
 });
 export type FileClaimResult = z.infer<typeof FileClaimResultSchema>;
+
+/** Arguments of the MCP write tool `request_cancellation` (V15). */
+export const RequestCancellationInputSchema = z.object({
+  policyNumber: z.string().trim().min(1),
+  /** Date the cancellation takes effect: a renewal date of the policy, `YYYY-MM-DD`. */
+  effectiveDate: IsoDateSchema,
+  reason: z.literal('client_request'),
+});
+export type RequestCancellationInput = z.infer<typeof RequestCancellationInputSchema>;
+
+/** Result of `request_cancellation`. */
+export const RequestCancellationResultSchema = z.object({
+  policyNumber: z.string(),
+  effectiveDate: IsoDateSchema,
+  /** True when the same cancellation was already recorded: the call is idempotent. */
+  alreadyRequested: z.boolean(),
+});
+export type RequestCancellationResult = z.infer<typeof RequestCancellationResultSchema>;

@@ -6,6 +6,7 @@ import type {
   CaseStats,
   CaseSummary,
   DecisionRequest,
+  HandledRequest,
 } from '@demo/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
@@ -20,6 +21,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   PROCESS_EMAIL_QUEUE,
   RESUME_WORKFLOW_QUEUE,
+  type DraftReplyJob,
   type ProcessEmailJob,
   type ResumeWorkflowJob,
 } from '../queues/queue-names.js';
@@ -41,7 +43,8 @@ export class CasesService {
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
     @InjectQueue(RESUME_WORKFLOW_QUEUE) private readonly resumeQueue: Queue<ResumeWorkflowJob>,
-    @InjectQueue(PROCESS_EMAIL_QUEUE) private readonly processEmailQueue: Queue<ProcessEmailJob>,
+    @InjectQueue(PROCESS_EMAIL_QUEUE)
+    private readonly processEmailQueue: Queue<ProcessEmailJob | DraftReplyJob>,
   ) {}
 
   /** Load metrics (V9): status counts, throughput, durations, queue depths. */
@@ -160,7 +163,7 @@ export class CasesService {
     const running = (step: string | null) =>
       processing.find((group) => group.currentStep === step)?._count._all ?? 0;
     const agents = await Promise.all(
-      (['triage', 'coverage', 'drafting'] as const).map(async (agent) => {
+      (['triage', 'coverage', 'service', 'drafting'] as const).map(async (agent) => {
         const [latest, lastStart, lastStep] = await Promise.all([
           this.prisma.case.findFirst({
             where: { status: 'processing', currentStep: agent },
@@ -226,8 +229,16 @@ export class CasesService {
       total: count(groups.map((group) => group.status)),
       inProgress: count(['received', 'processing']),
       awaitingApproval: count(['awaiting_approval']),
-      closed: count(['classified', 'claim_filed', 'ready_to_send']),
+      closed: count([
+        'classified',
+        'claim_filed',
+        'ready_to_send',
+        'handled_manually',
+        'cancellation_filed',
+        'merged',
+      ]),
       failed: count(['failed']),
+      needsBroker: count(['needs_broker']),
     };
   }
 
@@ -245,25 +256,35 @@ export class CasesService {
       ...kase.proposedActions.flatMap((action) => (action.decidedById ? [action.decidedById] : [])),
     ];
     const brokers = await this.prisma.broker.findMany({ where: { id: { in: brokerIds } } });
+    const merged = kase.mergedIntoCaseId
+      ? await this.prisma.case.findUnique({ where: { id: kase.mergedIntoCaseId } })
+      : null;
     return toCaseDetail(kase, {
       knownPolicyStatus: policy?.knownStatus ?? null,
       brokerNames: new Map(brokers.map((broker) => [broker.id, broker.name])),
+      mergedInto: merged ? { id: merged.id, reference: caseReference(merged.number) } : null,
     });
   }
 
   /**
-   * The broker approves or rejects the pending proposal. The workflow is resumed by the
-   * `resume-workflow` worker; a rejection comment goes back to `draftingAgent`.
+   * The broker approves or rejects a pending proposal (the one given by `actionId`, else the most
+   * recent). When a workflow waits for it, the `resume-workflow` worker resumes it; a rejection
+   * comment goes back to `draftingAgent`. V15: a standalone reply (follow-up status,
+   * acknowledgement) is just made ready to send, or re-drafted after a rejection.
    */
   async decide(caseId: string, request: DecisionRequest): Promise<void> {
     const broker = await this.currentBroker();
     const kase = await this.prisma.case.findUnique({
       where: { id: caseId },
-      include: { proposedActions: { where: { status: 'pending' }, orderBy: { revision: 'desc' } } },
+      include: {
+        proposedActions: { where: { status: 'pending' }, orderBy: { createdAt: 'desc' } },
+      },
     });
     if (!kase) throw new NotFoundException(`No case ${caseId}.`);
-    const action = kase.proposedActions[0];
-    if (kase.status !== 'awaiting_approval' || !action) {
+    const action = request.actionId
+      ? kase.proposedActions.find((candidate) => candidate.id === request.actionId)
+      : kase.proposedActions[0];
+    if (!action || (action.awaitsWorkflow && kase.status !== 'awaiting_approval')) {
       throw new ConflictException('This case has no proposal awaiting a decision.');
     }
 
@@ -276,13 +297,19 @@ export class CasesService {
           decidedById: broker.id,
           comment: request.comment ?? null,
           decidedAt: new Date(),
+          // A standalone reply is sent as approved.
+          ...(!action.awaitsWorkflow && request.approved
+            ? { finalDraftSubject: action.draftSubject, finalDraftBody: action.draftBody }
+            : {}),
         },
       });
       if (updated.count === 0) return false;
-      await tx.case.update({
-        where: { id: caseId },
-        data: { status: 'processing', currentStep: null, currentTool: null },
-      });
+      if (action.awaitsWorkflow) {
+        await tx.case.update({
+          where: { id: caseId },
+          data: { status: 'processing', currentStep: null, currentTool: null },
+        });
+      }
       await this.audit.record(
         {
           caseId,
@@ -297,10 +324,44 @@ export class CasesService {
         },
         tx,
       );
+      if (!action.awaitsWorkflow && request.approved) {
+        await this.audit.record(
+          {
+            caseId,
+            actor: 'system',
+            actorId: 'system',
+            action: 'reply_ready',
+            params: { actionType: action.actionType },
+          },
+          tx,
+        );
+      }
       return true;
     });
     if (!decided) throw new ConflictException('This proposal was already decided.');
 
+    if (!action.awaitsWorkflow) {
+      if (!request.approved) {
+        // Re-drafted by the `draft-reply` workflow with the broker's comment.
+        const email = await this.replyTarget(kase.id, kase.emailId, action.actionType);
+        await this.processEmailQueue.add(
+          'draft-reply',
+          {
+            caseId,
+            kind: action.actionType === 'send_status' ? 'send_status' : 'acknowledge',
+            emailId: email,
+            previous: {
+              subject: action.draftSubject,
+              body: action.draftBody,
+              comment: request.comment ?? null,
+            },
+          },
+          { jobId: `reply-${action.id}` },
+        );
+      }
+      this.realtime.publish('case.updated', caseId, { reply: true }, kase.brokerageId);
+      return;
+    }
     await this.resumeQueue.add(
       'resume-workflow',
       {
@@ -312,9 +373,95 @@ export class CasesService {
           ...(request.comment ? { comment: request.comment } : {}),
         },
       },
-      { jobId: `${caseId}-r${action.revision}` },
+      { jobId: `${caseId}-${action.id}` },
     );
     this.realtime.publish('case.updated', caseId, { status: 'processing' }, kase.brokerageId);
+  }
+
+  /** The e-mail a standalone reply answers: the latest follow-up, else the case's e-mail. */
+  private async replyTarget(caseId: string, emailId: string, actionType: string): Promise<string> {
+    if (actionType !== 'send_status') return emailId;
+    const latest = await this.prisma.inboundEmail.findFirst({
+      where: { followUpOfCaseId: caseId },
+      orderBy: { receivedAt: 'desc' },
+    });
+    return latest?.id ?? emailId;
+  }
+
+  /**
+   * V15 "Marquer comme traité": the broker handled the case outside the demo (a certificate, a
+   * quote, a case the agents could not finish). Pending replies are left as they are.
+   */
+  async markHandled(caseId: string, request: HandledRequest): Promise<void> {
+    const broker = await this.currentBroker();
+    const kase = await this.prisma.case.findUnique({ where: { id: caseId } });
+    if (!kase) throw new NotFoundException(`No case ${caseId}.`);
+    if (!['needs_broker', 'failed'].includes(kase.status)) {
+      throw new ConflictException('Only a case left to the broker can be marked as handled.');
+    }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.case.update({ where: { id: caseId }, data: { status: 'handled_manually' } });
+      await this.audit.record(
+        {
+          caseId,
+          actor: 'broker',
+          actorId: broker.id,
+          action: 'case_handled_manually',
+          params: request.comment ? { comment: request.comment } : {},
+        },
+        tx,
+      );
+    });
+    this.realtime.publish('case.closed', caseId, { outcome: 'handled_manually' }, kase.brokerageId);
+  }
+
+  /**
+   * V15: documents arrived in a follow-up — the case is analysed again from the start with every
+   * attachment (a new workflow run). A proposal still pending on the old run is withdrawn.
+   */
+  async reanalyze(caseId: string): Promise<void> {
+    const broker = await this.currentBroker();
+    const kase = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      include: { _count: { select: { followUps: true } } },
+    });
+    if (!kase) throw new NotFoundException(`No case ${caseId}.`);
+    if (kase._count.followUps === 0 || ['received', 'processing'].includes(kase.status)) {
+      throw new ConflictException(
+        'Only a case with a follow-up, not running, can be analysed again.',
+      );
+    }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.proposedAction.updateMany({
+        where: { caseId, status: 'pending', awaitsWorkflow: true },
+        data: {
+          status: 'rejected',
+          comment: 'superseded by a new analysis',
+          decidedAt: new Date(),
+        },
+      });
+      await tx.case.update({
+        where: { id: caseId },
+        data: {
+          status: 'received',
+          workflowRunId: null,
+          failureReason: null,
+          handoverReason: null,
+          currentStep: null,
+          currentTool: null,
+        },
+      });
+      await this.audit.record(
+        { caseId, actor: 'broker', actorId: broker.id, action: 'analysis_restarted', params: {} },
+        tx,
+      );
+    });
+    await this.processEmailQueue.add(
+      'process-email',
+      { caseId },
+      { jobId: `${kase.emailId}-reanalyze-${Date.now()}` },
+    );
+    this.realtime.publish('case.updated', caseId, { status: 'received' }, kase.brokerageId);
   }
 
   /** The file of an attachment (V14), served inline so the UI can open the PDF. */
@@ -323,7 +470,11 @@ export class CasesService {
     attachmentId: string,
   ): Promise<{ fileName: string; type: string; content: Uint8Array }> {
     const attachment = await this.prisma.attachment.findFirst({
-      where: { id: attachmentId, email: { case: { id: caseId } } },
+      where: {
+        id: attachmentId,
+        // The case's e-mail, or one of its follow-ups (V15).
+        OR: [{ email: { case: { id: caseId } } }, { email: { followUpOfCaseId: caseId } }],
+      },
       select: { fileName: true, type: true, content: true },
     });
     if (!attachment || attachment.content.length === 0) {

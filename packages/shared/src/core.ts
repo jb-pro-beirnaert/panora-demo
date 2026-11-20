@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { AlertTypeSchema, LocaleSchema, PolicyStatusSchema, VerdictSchema } from './domain.js';
+import {
+  ActionTypeSchema,
+  AlertTypeSchema,
+  HandoverReasonSchema,
+  LocaleSchema,
+  PolicyStatusSchema,
+  VerdictSchema,
+} from './domain.js';
 import { ProposedActionSchema } from './drafting.js';
 import { ProcessEmailResultSchema, RunOptionsSchema } from './process-email.js';
 import { RawEmailInputSchema } from './inbound-email.js';
@@ -75,6 +82,14 @@ export const CaseStatusSchema = z.enum([
   'ready_to_send',
   /** The workflow failed. */
   'failed',
+  /** V15: the agents could not handle the request; the broker must ("À traiter par vous"). */
+  'needs_broker',
+  /** V15: the broker handled it outside the demo and closed the case. */
+  'handled_manually',
+  /** V15: approved cancellation recorded at the insurer. */
+  'cancellation_filed',
+  /** V15: a follow-up e-mail, attached to the case it refers to. */
+  'merged',
 ]);
 export type CaseStatus = z.infer<typeof CaseStatusSchema>;
 
@@ -82,9 +97,12 @@ export const CLOSED_CASE_STATUSES: readonly CaseStatus[] = [
   'classified',
   'claim_filed',
   'ready_to_send',
+  'handled_manually',
+  'cancellation_filed',
+  'merged',
 ];
 
-export const AgentNameSchema = z.enum(['system', 'triage', 'coverage', 'drafting']);
+export const AgentNameSchema = z.enum(['system', 'triage', 'coverage', 'service', 'drafting']);
 export type AgentName = z.infer<typeof AgentNameSchema>;
 
 /**
@@ -102,6 +120,15 @@ export const StepTypeSchema = z.enum([
   'drafting.proposed',
   'execute.claim_filed',
   'execute.ready_to_send',
+  // V15
+  'triage.follow_up_matched',
+  'triage.follow_up_unmatched',
+  'service.policy_checked',
+  'service.analysis',
+  'handover',
+  'drafting.polished',
+  'execute.cancellation_filed',
+  'follow_up.received',
 ]);
 export type StepType = z.infer<typeof StepTypeSchema>;
 
@@ -145,8 +172,14 @@ export const ProposedActionCallbackSchema = z.object({
   draftLanguage: LocaleSchema,
   /** Language of `internalNote` (`Brokerage.locale`). */
   noteLanguage: LocaleSchema,
-  verdict: VerdictSchema,
+  /** Claims only; null for the other requests (V15). */
+  verdict: VerdictSchema.nullable(),
   alerts: z.array(AlertTypeSchema),
+  /**
+   * True when a suspended workflow waits for the decision (it is resumed with it). False for a
+   * standalone reply (follow-up status, acknowledgement): approving it only makes it ready to send.
+   */
+  awaitsWorkflow: z.boolean().default(true),
 });
 export type ProposedActionCallback = z.infer<typeof ProposedActionCallbackSchema>;
 
@@ -156,6 +189,32 @@ export const ExecutedActionCallbackSchema = z.object({
   result: ProcessEmailResultSchema,
 });
 export type ExecutedActionCallback = z.infer<typeof ExecutedActionCallbackSchema>;
+
+/** `GET /internal/clients/cases?email=` (tool `find_client_cases`, V15): the client's recent cases. */
+export const ClientCasesQuerySchema = z.object({
+  email: z.email(),
+  /** Leave this case out (the one being processed). */
+  excludeCaseId: z.string().optional(),
+});
+export type ClientCasesQuery = z.infer<typeof ClientCasesQuerySchema>;
+
+export const ClientCaseSchema = z.object({
+  caseId: z.string(),
+  reference: z.string(),
+  receivedAt: z.string(),
+  subject: z.string(),
+  requestType: z.string().nullable(),
+  status: z.string(),
+  policyNumber: z.string().nullable(),
+  /** Claim facts from the triage, when the case is a claim. */
+  incidentDate: z.string().nullable(),
+  nature: z.string().nullable(),
+  amount: z.number().nullable(),
+  claimNumber: z.string().nullable(),
+  /** The last proposal (type and status), if any. */
+  lastAction: z.object({ actionType: z.string(), status: z.string() }).nullable(),
+});
+export type ClientCase = z.infer<typeof ClientCaseSchema>;
 
 /** `POST /internal/cases/:id/failed` (Mastra → Core). */
 export const WorkflowFailedCallbackSchema = z.object({
@@ -193,7 +252,15 @@ export type ClientLookupResult = z.infer<typeof ClientLookupResultSchema>;
 export const DecisionRequestSchema = z.object({
   approved: z.boolean(),
   comment: z.string().trim().min(1).max(2_000).optional(),
+  /** V15: which pending proposal (a case can have a follow-up reply pending too). */
+  actionId: z.string().optional(),
 });
+
+/** `POST /cases/:id/handled` (UI → Core, V15): "Marquer comme traité". */
+export const HandledRequestSchema = z.object({
+  comment: z.string().trim().min(1).max(2_000).optional(),
+});
+export type HandledRequest = z.infer<typeof HandledRequestSchema>;
 export type DecisionRequest = z.infer<typeof DecisionRequestSchema>;
 
 /** Body of `POST /emails`: the e-mail with its files, plus run options for evals (demo mode only). */
@@ -234,6 +301,14 @@ export const AuditActionSchema = z.enum([
   'workflow_retried',
   /** V10 retention: the workflow snapshot and the trace of a closed case were deleted. */
   'data_purged',
+  // V15
+  'handed_over',
+  'case_handled_manually',
+  'cancellation_filed',
+  'follow_up_received',
+  'follow_up_merged',
+  'reply_ready',
+  'analysis_restarted',
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 
@@ -284,7 +359,7 @@ export const CaseMetricsSchema = z.object({
 export type CaseMetrics = z.infer<typeof CaseMetricsSchema>;
 
 /** Workflow steps announced by a `step_started` agent event (V13). */
-export const WorkStepSchema = z.enum(['triage', 'coverage', 'drafting', 'execute']);
+export const WorkStepSchema = z.enum(['triage', 'coverage', 'service', 'drafting', 'execute']);
 export type WorkStep = z.infer<typeof WorkStepSchema>;
 
 /**
@@ -300,6 +375,8 @@ export const CaseStageSchema = z.enum([
   'execute',
   'done',
   'failed',
+  /** V15: "À traiter par vous". */
+  'needs_broker',
 ]);
 export type CaseStage = z.infer<typeof CaseStageSchema>;
 
@@ -310,7 +387,7 @@ export const AgentsActivitySchema = z.object({
   executing: z.number().int(),
   agents: z.array(
     z.object({
-      agent: z.enum(['triage', 'coverage', 'drafting']),
+      agent: z.enum(['triage', 'coverage', 'service', 'drafting']),
       running: z.number().int(),
       /** Model of the agent's latest step (`provider/model`). */
       model: z.string().nullable(),
@@ -330,6 +407,8 @@ export const CaseStatsSchema = z.object({
   awaitingApproval: z.number().int(),
   closed: z.number().int(),
   failed: z.number().int(),
+  /** V15: "À traiter par vous". */
+  needsBroker: z.number().int(),
 });
 export type CaseStats = z.infer<typeof CaseStatsSchema>;
 
@@ -386,6 +465,10 @@ export const CaseSummarySchema = z.object({
   stage: CaseStageSchema,
   currentTool: z.string().nullable(),
   revision: z.number().int(),
+  /** V15: why the broker must handle it, follow-ups received, a reply waiting for approval. */
+  handoverReason: HandoverReasonSchema.nullable(),
+  followUps: z.number().int(),
+  pendingProposals: z.number().int(),
 });
 export type CaseSummary = z.infer<typeof CaseSummarySchema>;
 
@@ -407,13 +490,19 @@ export type AgentStepView = z.infer<typeof AgentStepViewSchema>;
 export const ProposedActionViewSchema = z.object({
   id: z.string(),
   revision: z.number().int(),
-  actionType: z.enum(['request_documents', 'file_claim', 'notify_denial']),
+  actionType: ActionTypeSchema,
   draftSubject: z.string(),
   draftBody: z.string(),
   draftLanguage: LocaleSchema,
   internalNote: z.string(),
   noteLanguage: LocaleSchema,
   claimFiling: z.record(z.string(), z.unknown()).nullable(),
+  cancellation: z.record(z.string(), z.unknown()).nullable(),
+  /** V15: the reply as it will be sent, after execution (placeholders filled, comment applied). */
+  finalDraftSubject: z.string().nullable(),
+  finalDraftBody: z.string().nullable(),
+  /** V15: false for a standalone reply (follow-up status, acknowledgement). */
+  awaitsWorkflow: z.boolean(),
   status: z.enum(['pending', 'approved', 'rejected']),
   decidedBy: z.object({ id: z.string(), name: z.string() }).nullable(),
   comment: z.string().nullable(),
@@ -435,6 +524,29 @@ export const AuditLogViewSchema = z.object({
 });
 export type AuditLogView = z.infer<typeof AuditLogViewSchema>;
 
+export const AttachmentViewSchema = z.object({
+  id: z.string(),
+  fileName: z.string(),
+  type: z.string(),
+  extractedText: z.string(),
+  /** V14: size of the file, pages of a PDF, and whether its text could be extracted. */
+  sizeBytes: z.number().int(),
+  pageCount: z.number().int().nullable(),
+  extractionStatus: z.enum(['ok', 'failed', 'not_applicable']),
+});
+export type AttachmentView = z.infer<typeof AttachmentViewSchema>;
+
+export const EmailViewSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  subject: z.string(),
+  body: z.string(),
+  receivedAt: z.string(),
+  language: LocaleSchema,
+  attachments: z.array(AttachmentViewSchema),
+});
+export type EmailView = z.infer<typeof EmailViewSchema>;
+
 export const CaseDetailSchema = CaseSummarySchema.extend({
   brokerage: z.object({
     id: z.string(),
@@ -451,26 +563,13 @@ export const CaseDetailSchema = CaseSummarySchema.extend({
   workflowRunId: z.string().nullable(),
   /** Langfuse trace of the case (one trace per case: initial run and resumes). */
   traceId: z.string().nullable(),
-  email: z.object({
-    from: z.string(),
-    to: z.string(),
-    subject: z.string(),
-    body: z.string(),
-    receivedAt: z.string(),
-    language: LocaleSchema,
-    attachments: z.array(
-      z.object({
-        id: z.string(),
-        fileName: z.string(),
-        type: z.string(),
-        extractedText: z.string(),
-        /** V14: size of the file, pages of a PDF, and whether its text could be extracted. */
-        sizeBytes: z.number().int(),
-        pageCount: z.number().int().nullable(),
-        extractionStatus: z.enum(['ok', 'failed', 'not_applicable']),
-      }),
-    ),
-  }),
+  email: EmailViewSchema,
+  /** V15: follow-up e-mails attached to the case, oldest first. */
+  followUps: z.array(EmailViewSchema.extend({ id: z.string() })),
+  /** V15: why the agents left the case to the broker. */
+  handover: z.object({ reason: HandoverReasonSchema, params: StepParamsSchema }).nullable(),
+  /** V15: the case this one was merged into (a follow-up without In-Reply-To). */
+  mergedInto: z.object({ id: z.string(), reference: z.string() }).nullable(),
   steps: z.array(AgentStepViewSchema),
   agentEvents: z.array(AgentEventViewSchema),
   proposedActions: z.array(ProposedActionViewSchema),

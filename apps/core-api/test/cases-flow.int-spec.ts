@@ -298,7 +298,10 @@ describe('case lifecycle (Postgres + Redis)', () => {
       .send({ approved: false, comment: 'Ajoute le numéro de contrat.' })
       .expect(202);
     await http.post(`/cases/${caseId}/decision`).send({ approved: true }).expect(409);
-    const job = await app.get<Queue>(getQueueToken(RESUME_WORKFLOW_QUEUE)).getJob(`${caseId}-r1`);
+    const rejected = (await detail(caseId)).proposedActions[0]!;
+    const job = await app
+      .get<Queue>(getQueueToken(RESUME_WORKFLOW_QUEUE))
+      .getJob(`${caseId}-${rejected.id}`);
     expect(job?.data).toEqual({
       caseId,
       workflowRunId: 'run-1',
@@ -468,6 +471,160 @@ describe('case lifecycle (Postgres + Redis)', () => {
       messageId: '<bad-options@x>',
       runOptions: { models: { triage: 'no' } },
     } as never).expect(400);
+  });
+
+  // --- V15: requests, replies, "À traiter par vous", follow-ups ---
+
+  /** A new case from a copy of a generated e-mail. */
+  const newCase = async (messageId: string): Promise<string> => {
+    const response = await receive({ ...terminatedText, messageId }).expect(202);
+    return response.body.caseId as string;
+  };
+  const replyJobs = async () =>
+    (await app.get<Queue>(getQueueToken(PROCESS_EMAIL_QUEUE)).getJobs(['waiting', 'delayed']))
+      .filter((job) => job.name === 'draft-reply')
+      .map((job) => job.data as { caseId: string; kind: string });
+
+  it('V15: a follow-up with In-Reply-To joins its case and queues a status reply', async () => {
+    const response = await receive({
+      ...terminatedText,
+      messageId: '<follow-up-1@client>',
+      subject: 'Re: Dégât des eaux dans le fournil',
+      inReplyTo: terminated.messageId,
+      attachments: [],
+    }).expect(202);
+    expect(response.body).toMatchObject({ caseId, created: false });
+    const view = await detail(caseId);
+    expect(view.followUps.map((email) => email.subject)).toEqual([
+      'Re: Dégât des eaux dans le fournil',
+    ]);
+    expect(view.followUps).toHaveLength(1);
+    expect(view.auditLogs.at(-1)?.action).toBe('follow_up_received');
+    expect(await replyJobs()).toContainEqual(
+      expect.objectContaining({ caseId, kind: 'send_status' }),
+    );
+    // The same follow-up received twice stays a single e-mail.
+    await receive({
+      ...terminatedText,
+      messageId: '<follow-up-1@client>',
+      inReplyTo: terminated.messageId,
+      attachments: [],
+    }).expect(202);
+    expect((await detail(caseId)).followUps).toHaveLength(1);
+  });
+
+  it('V15: a standalone reply waits for no workflow and is ready once approved', async () => {
+    const before = await detail(caseId);
+    await http
+      .post(`/internal/cases/${caseId}/proposed-action`)
+      .set(service)
+      .send({
+        ...proposal(1, 'send_status'),
+        workflowRunId: 'reply-run-1',
+        verdict: null,
+        alerts: [],
+        awaitsWorkflow: false,
+      })
+      .expect(200);
+    const pending = await detail(caseId);
+    expect(pending.status).toBe(before.status);
+    expect(pending).toMatchObject({ stage: 'awaiting_approval', pendingProposals: 1 });
+    const reply = pending.proposedActions.find((action) => !action.awaitsWorkflow)!;
+    await http
+      .post(`/cases/${caseId}/decision`)
+      .send({ approved: true, actionId: reply.id })
+      .expect(202);
+    const decided = await detail(caseId);
+    expect(decided.status).toBe(before.status);
+    expect(decided.proposedActions.find((action) => action.id === reply.id)).toMatchObject({
+      status: 'approved',
+      finalDraftBody: reply.draftBody,
+    });
+    expect(decided.auditLogs.at(-1)?.action).toBe('reply_ready');
+  });
+
+  it('V15: a hand-over leaves the case to the broker until marked as handled', async () => {
+    const id = await newCase('<v15-handover@client>');
+    await http
+      .post(`/internal/cases/${id}/executed-action`)
+      .set(service)
+      .send({ workflowRunId: 'run-h', result: { outcome: 'handover', reason: 'quote_request' } })
+      .expect(200);
+    const view = await detail(id);
+    expect(view).toMatchObject({
+      status: 'needs_broker',
+      stage: 'needs_broker',
+      handover: { reason: 'quote_request' },
+    });
+    const stats = (await http.get('/cases/stats').expect(200)).body as { needsBroker: number };
+    expect(stats.needsBroker).toBeGreaterThan(0);
+    await http.post(`/cases/${id}/handled`).send({ comment: 'Devis envoyé.' }).expect(202);
+    const handled = await detail(id);
+    expect(handled.status).toBe('handled_manually');
+    expect(handled.auditLogs.at(-1)).toMatchObject({
+      action: 'case_handled_manually',
+      params: { comment: 'Devis envoyé.' },
+    });
+    await http.post(`/cases/${id}/handled`).send({}).expect(409);
+  });
+
+  it("V15: an approved cancellation is recorded on the brokerage's policy", async () => {
+    const id = await newCase('<v15-cancel@client>');
+    const policyNumber = world.brokeragePolicies[0]!.number;
+    const cancel = {
+      ...proposal(1, 'cancel_policy'),
+      workflowRunId: 'run-c',
+      verdict: null,
+      alerts: [],
+    };
+    cancel.action = {
+      ...cancel.action,
+      cancellation: { policyNumber, effectiveDate: '2027-06-30', reason: 'client_request' },
+    } as typeof cancel.action;
+    await http.post(`/internal/cases/${id}/proposed-action`).set(service).send(cancel).expect(200);
+    await http
+      .post(`/internal/cases/${id}/executed-action`)
+      .set(service)
+      .send({
+        workflowRunId: 'run-c',
+        result: {
+          outcome: 'cancellation_filed',
+          effectiveDate: '2027-06-30',
+          action: cancel.action,
+          approvedBy: delormeBroker.id,
+          finalDraft: { subject: 'Résiliation', body: 'Effet le 30/06/2027.' },
+        },
+      })
+      .expect(200);
+    const view = await detail(id);
+    expect(view.status).toBe('cancellation_filed');
+    expect(view.proposedActions[0]).toMatchObject({ finalDraftBody: 'Effet le 30/06/2027.' });
+    const policy = await app
+      .get(PrismaService)
+      .policy.findUniqueOrThrow({ where: { number: policyNumber } });
+    expect(policy.cancellationEffectiveDate?.toISOString().slice(0, 10)).toBe('2027-06-30');
+  });
+
+  it("V15: find_client_cases lists the sender's cases; a merged follow-up joins its case", async () => {
+    const found = await http
+      .get('/internal/clients/cases')
+      .query({ email: terminatedText.from })
+      .set(service)
+      .expect(200);
+    expect((found.body as { caseId: string }[]).map((kase) => kase.caseId)).toContain(caseId);
+
+    const id = await newCase('<v15-merge@client>');
+    await http
+      .post(`/internal/cases/${id}/executed-action`)
+      .set(service)
+      .send({ workflowRunId: 'run-m', result: { outcome: 'merged', targetCaseId: caseId } })
+      .expect(200);
+    const merged = await detail(id);
+    expect(merged).toMatchObject({ status: 'merged', mergedInto: { id: caseId } });
+    expect((await detail(caseId)).followUps).toHaveLength(2);
+    expect(await replyJobs()).toContainEqual(
+      expect.objectContaining({ caseId, kind: 'send_status' }),
+    );
   });
 
   it('ignores callbacks for a case that no longer exists', async () => {

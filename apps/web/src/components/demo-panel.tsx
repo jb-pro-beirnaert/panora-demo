@@ -92,6 +92,7 @@ export function DemoPanel() {
   const counters: [string, number | undefined][] = [
     ['inProgress', stats?.inProgress],
     ['awaitingApproval', stats?.awaitingApproval],
+    ['needsBroker', stats?.needsBroker],
     ['closed', stats?.closed],
     ['failed', stats?.failed],
   ];
@@ -228,9 +229,7 @@ function ScriptList({ items, next }: { items: ScriptItem[]; next: number | null 
           ) : (
             <span className="size-3 rounded-full border border-current opacity-40" />
           )}
-          <span className="truncate">
-            {t(`scenario.${item.scenario === 'non_claim' ? item.requestType : item.scenario}`)}
-          </span>
+          <span className="truncate">{t(`scenario.${item.scenario}`)}</span>
           <span className="rounded border px-1 text-[10px] uppercase">{item.language}</span>
         </li>
       ))}

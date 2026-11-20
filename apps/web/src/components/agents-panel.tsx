@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 const AGENT_COLORS = {
   triage: 'text-violet-700 bg-violet-50 border-violet-200',
   coverage: 'text-blue-700 bg-blue-50 border-blue-200',
+  service: 'text-indigo-700 bg-indigo-50 border-indigo-200',
   drafting: 'text-teal-700 bg-teal-50 border-teal-200',
 } as const;
 
@@ -52,7 +53,7 @@ export function AgentsPanel() {
   useRealtime(scheduleLoad);
 
   return (
-    <section className="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,14rem)]">
+    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,14rem)]">
       {(activity?.agents ?? []).map((agent) => {
         const busy = agent.running > 0;
         return (

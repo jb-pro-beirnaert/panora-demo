@@ -1,5 +1,7 @@
 import {
+  ClientCaseSchema,
   ClientLookupResultSchema,
+  type ClientCase,
   type AgentEventCallback,
   type AgentStepCallback,
   type ClientLookupResult,
@@ -74,6 +76,21 @@ export const core = {
   },
   async failed(caseId: string | null | undefined, payload: WorkflowFailedCallback): Promise<void> {
     if (caseId) await post(casePath(caseId, 'failed'), payload);
+  },
+
+  /** `find_client_cases` (V15): the brokerage's recent cases for a sender, newest first. */
+  async findClientCases(email: string, excludeCaseId?: string): Promise<ClientCase[]> {
+    const url = new URL('/internal/clients/cases', env.CORE_API_URL);
+    url.searchParams.set('email', email);
+    if (excludeCaseId) url.searchParams.set('excludeCaseId', excludeCaseId);
+    const response = await fetch(url, {
+      headers: headers(),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      throw new Error(`Core case lookup failed (${response.status}): ${await response.text()}`);
+    }
+    return ClientCaseSchema.array().parse(await response.json());
   },
 
   /** `find_client`: null when the sender is not a client of the brokerage. */

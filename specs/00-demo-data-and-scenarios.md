@@ -60,7 +60,24 @@ Chaque e-mail du flux est tiré dans ce catalogue. Le générateur fixe à l'ava
 | 13 | Langues croisées | e-mail en anglais, clauses en français (ou l'inverse) | selon le cas | brouillon dans la langue de l'e-mail, citations dans leur langue | V4 |
 | 14 | Cabinet francophone, client anglophone | `Brokerage.locale = fr`, e-mail en anglais | selon le cas | brouillon en anglais, note interne en français | V4 |
 
-**V15** ajoute les pièces partielles, la résiliation traitée (recevable, déjà résiliée, hors préavis), la question sur une garantie, l'attestation, le devis « à traiter par vous », les e-mails sans rapport (spam, newsletter, facture fournisseur), les relances et les doublons envoyés pendant la démo. Leur résultat attendu est dans `v15-requests-and-replies.md` §9 ; ce catalogue sera complété en V15.
+Depuis **V15**, le scénario 8 est remplacé par les lignes ci-dessous : chaque e-mail aboutit à une action proposée, à « À traiter par vous » ou à un classement.
+
+| # | Scénario (`scenario`) | Ce qui le provoque dans les données | Analyse attendue | Issue attendue | Depuis |
+| --- | --- | --- | --- | --- | --- |
+| 15 | Pièces partielles (`partial_documents`) | facture ou devis seul, sans constat ni rapport | `uncertain` + `missing_document` | `request_documents` (seulement les pièces manquantes) | V15 |
+| 16 | Résiliation (`cancellation`) | contrat actif, échéance à plus de deux mois | date d'effet = prochaine échéance | `cancel_policy` → `request_cancellation` après validation | V15 |
+| 17 | Résiliation hors préavis (`cancellation_late_notice`) | échéance à moins de deux mois (clause 12.3) | `notice_period_not_met`, échéance suivante | `cancel_policy` | V15 |
+| 18 | Contrat déjà résilié (`cancellation_already_terminated`) | contrat résilié chez l'assureur | `already_terminated` | `send_status` | V15 |
+| 19 | Résiliation déjà demandée (`cancellation_already_requested`) | résiliation programmée chez l'assureur | `cancellation_already_requested` | `send_status` | V15 |
+| 20 | Question sur une garantie (`coverage_question`) | « notre contrat couvre-t-il… ? » | réponse citée (plafond, franchise, exclusions) | `answer_question` | V15 |
+| 21 | Attestation (`certificate_request`) | demande d'attestation | — | À traiter par vous + `acknowledge` | V15 |
+| 22 | Devis (`quote_request`) | demande de devis | — | À traiter par vous + `acknowledge` | V15 |
+| 23 | Spam, newsletter, facture fournisseur | e-mail sans rapport avec un client | — | classé, sans réponse | V15 |
+| 24 | Relance avec `In-Reply-To` (`follow_up`) | réponse à un e-mail d'un dossier, avec des pièces | — | rattachée au dossier, `send_status`, « Relancer l'analyse » | V15 (script) |
+| 25 | Relance sans en-tête (`follow_up_no_header`) | « où en est mon dossier ? » | dossier retrouvé par `find_client_cases` | rattachée (dossier `merged`), `send_status` | V15 (script) |
+| 26 | Sinistre renvoyé (`resent_claim`) | le même sinistre renvoyé, pas encore déclaré | `uncertain` + `duplicate_claim` (via `find_client_cases`) | `request_documents` | V15 (script) |
+
+Les relances et le sinistre renvoyé dépendent d'un e-mail précédent : ils n'existent que dans le script de démo, pas dans le tirage des evals.
 
 Depuis V14, la démo envoie un **script fini** (un e-mail par cas, voir `v14-scripted-demo.md` §1) ; le tirage pondéré ci-dessous ne sert plus qu'aux evals et au test de charge.
 

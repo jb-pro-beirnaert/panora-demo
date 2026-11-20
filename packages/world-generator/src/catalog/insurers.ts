@@ -52,7 +52,12 @@ export const GENERAL_CLAUSES = {
   supportingDocuments: '3.2',
   termination: '12.1',
   suspension: '12.2',
+  /** V15: cancellation by the insured (notice period). */
+  clientCancellation: '12.3',
 } as const;
+
+/** V15: months of notice before the renewal date for a cancellation by the insured. */
+export const CANCELLATION_NOTICE_MONTHS = 2;
 
 export function clauseRef(insurer: InsurerDefinition, clauseNumber: string): string {
   return `CG-${insurer.code}-${clauseNumber}`;
@@ -101,6 +106,11 @@ function generalClauses(insurer: InsurerDefinition): ExtranetClause[] {
       GENERAL_CLAUSES.suspension,
       'Suspension pour non-paiement de la prime',
       "À défaut de paiement d'une prime dans les dix jours de son échéance, la garantie est suspendue trente jours après la mise en demeure de l'assuré. Aucun sinistre survenu pendant la suspension n'est garanti.",
+    ),
+    general(
+      GENERAL_CLAUSES.clientCancellation,
+      "Résiliation à l'initiative de l'assuré",
+      "L'assuré peut résilier le contrat à chaque échéance principale, par lettre ou tout autre support durable adressé à l'assureur ou à son courtier, moyennant un préavis de deux mois. Une demande reçue moins de deux mois avant l'échéance prend effet à l'échéance suivante. Le contrat et ses garanties restent en vigueur jusqu'à la date d'effet de la résiliation.",
     ),
   ];
 }

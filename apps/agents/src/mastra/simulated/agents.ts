@@ -1,6 +1,10 @@
 import {
   detectLanguage,
   missingDocuments,
+  type ActionType,
+  type RequestSubtype,
+  type RequestType,
+  type ServiceAnalysis,
   type CoverageVerdict,
   type Draft,
   type DocumentType,
@@ -59,6 +63,33 @@ function amountIn(text: string): number | null {
   return units ? Number(units) : null;
 }
 
+/** Request type and subtype from keywords (V15 request types). */
+function simulatedRequest(head: string): [RequestType, RequestSubtype | null] {
+  if (/newsletter|désabonner|unsubscribe/i.test(head)) return ['unrelated', 'newsletter'];
+  if (/google|seo|audit gratuit|free audit/i.test(head)) return ['unrelated', 'spam'];
+  if (/service comptabilit|fournitures de bureau|entretien des locaux/i.test(head)) {
+    return ['unrelated', 'supplier_invoice'];
+  }
+  const subject = head.split('\n')[0] ?? '';
+  const resent = /renvoie mon e-mail|sending my e-mail again/i.test(head);
+  if (
+    !resent &&
+    (/^re\s*:/i.test(subject) ||
+      /suite à mon e-mail|further to my|où en est|where does/i.test(head))
+  ) {
+    return ['follow_up', null];
+  }
+  if (/résili|cancel/i.test(head)) return ['cancellation', null];
+  if (/attestation|certificate/i.test(head)) return ['information', 'certificate'];
+  if (/couvre-t-il|question sur nos garanties|does our policy cover|about our cover/i.test(head)) {
+    return ['information', 'coverage_question'];
+  }
+  if (/demande de devis|devis pour|quote request|send us a quote/i.test(head)) {
+    return ['quote_request', null];
+  }
+  return ['claim', null];
+}
+
 export async function simulateTriage(
   email: InboundEmailInput,
   receivedDate: string,
@@ -69,11 +100,7 @@ export async function simulateTriage(
     '\n',
   );
   const head = `${email.subject}\n${email.body}`;
-  const requestType = /résili|cancel/i.test(head)
-    ? 'cancellation'
-    : /devis|quote/i.test(head) && !/sinistre|claim|dégât|damage/i.test(head)
-      ? 'quote_request'
-      : 'claim';
+  const [requestType, subtype] = simulatedRequest(head);
   const nature = PERIL_WORDS.find(([, pattern]) => pattern.test(head))?.[0] ?? null;
   const documentsPresent = email.attachments.map((attachment) => ({
     type: documentType(attachment.fileName),
@@ -83,6 +110,8 @@ export async function simulateTriage(
   incident.setUTCDate(incident.getUTCDate() - 1);
   return {
     requestType,
+    subtype,
+    caseReference: /CASE-\d{4}/.exec(head)?.[0] ?? null,
     emailLanguage: detectLanguage(head),
     holderName: field(null),
     policyNumber: field(/\b[CF]-\d{5}\b/.exec(text)?.[0] ?? null),
@@ -178,31 +207,100 @@ export async function simulateCoverage(
   };
 }
 
+/** The claim action a verdict calls for. */
+export function claimActionOf(verdict: CoverageVerdict): ActionType {
+  return verdict.verdict === 'covered'
+    ? 'file_claim'
+    : verdict.verdict === 'not_covered'
+      ? 'notify_denial'
+      : 'request_documents';
+}
+
 export async function simulateDraft(
-  verdict: CoverageVerdict,
+  actionType: ActionType,
   emailLanguage: 'fr' | 'en',
   noteLanguage: 'fr' | 'en',
   latencyMs: number,
 ): Promise<Draft> {
   await sleep(latencyMs);
-  const actionType =
-    verdict.verdict === 'covered'
-      ? 'file_claim'
-      : verdict.verdict === 'not_covered'
-        ? 'notify_denial'
-        : 'request_documents';
   const english = emailLanguage === 'en';
+  const placeholder =
+    actionType === 'file_claim'
+      ? ' {{claimNumber}}'
+      : actionType === 'cancel_policy'
+        ? ' {{effectiveDate}}'
+        : '';
   return {
     actionType,
     clientEmailDraft: {
       subject: english ? 'Your claim' : 'Votre sinistre',
       body: english
-        ? `Hello,\n\nWe have reviewed your claim (${actionType}).\n\nThe claims team`
-        : `Bonjour,\n\nNous avons étudié votre déclaration (${actionType}).\n\nLe service sinistres`,
+        ? `Hello,\n\nWe have reviewed your request (${actionType}${placeholder}).\n\nThe claims team`
+        : `Bonjour,\n\nNous avons étudié votre demande (${actionType}${placeholder}).\n\nLe service sinistres`,
     },
     internalNote:
       noteLanguage === 'en'
         ? `Simulated proposal: ${actionType}.`
         : `Proposition simulée : ${actionType}.`,
+  };
+}
+
+/**
+ * Stand-in for `policyServiceAgent`: reads the policy through the real MCP tools and applies the
+ * cancellation rules (notice of two months before the renewal date).
+ */
+export async function simulateService(
+  claim: TriagedEmail,
+  latencyMs: number,
+): Promise<ServiceAnalysis> {
+  await sleep(latencyMs);
+  const number = claim.triage.policyNumber.value;
+  const base: ServiceAnalysis = {
+    outcome: 'handover',
+    handoverReason: 'policy_not_found',
+    policyNumber: number,
+    policyStatus: null,
+    renewalDate: null,
+    effectiveDate: null,
+    alerts: [],
+    answer: null,
+    citations: [],
+    summary: 'Simulated analysis.',
+  };
+  if (!number) return base;
+  const tools = await extranetTools('read', claim.brokerage.brokerCode);
+  const policy = toolJson(await tools.get_policy?.execute?.({ number }, {})) as {
+    status?: string;
+    endDate?: string | null;
+    endReason?: string | null;
+    renewalDate?: string;
+  } | null;
+  if (!policy?.status || !policy.renewalDate) return base;
+  const status = policy.status as ServiceAnalysis['policyStatus'];
+  const common = {
+    ...base,
+    outcome: 'proposal' as const,
+    handoverReason: null,
+    policyStatus: status,
+    renewalDate: policy.renewalDate,
+  };
+  if (claim.triage.requestType === 'information') {
+    return { ...common, answer: 'Simulated answer about the cover.' };
+  }
+  if (status === 'terminated') return { ...common, alerts: ['already_terminated'] };
+  if (policy.endReason === 'client_request' && policy.endDate) {
+    return { ...common, effectiveDate: policy.endDate, alerts: ['cancellation_already_requested'] };
+  }
+  const notice = new Date(`${claim.receivedDate}T00:00:00Z`);
+  notice.setUTCMonth(notice.getUTCMonth() + 2);
+  if (notice.toISOString().slice(0, 10) <= policy.renewalDate) {
+    return { ...common, effectiveDate: policy.renewalDate };
+  }
+  const next = new Date(`${policy.renewalDate}T00:00:00Z`);
+  next.setUTCFullYear(next.getUTCFullYear() + 1);
+  return {
+    ...common,
+    effectiveDate: next.toISOString().slice(0, 10),
+    alerts: ['notice_period_not_met'],
   };
 }

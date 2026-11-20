@@ -9,6 +9,19 @@ export interface ProcessEmailJob {
   caseId: string;
 }
 
+/**
+ * V15, job `draft-reply` of the process-email queue: a standalone reply (case status after a
+ * follow-up, acknowledgement), drafted by the Mastra workflow `draft-reply`.
+ */
+export interface DraftReplyJob {
+  caseId: string;
+  kind: 'send_status' | 'acknowledge';
+  /** The e-mail the reply answers. */
+  emailId: string;
+  /** The rejected reply and the broker's comment, for a re-draft. */
+  previous?: { subject: string; body: string; comment: string | null };
+}
+
 export interface ResumeWorkflowJob {
   caseId: string;
   workflowRunId: string;

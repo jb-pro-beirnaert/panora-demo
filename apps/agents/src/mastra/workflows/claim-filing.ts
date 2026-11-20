@@ -58,5 +58,6 @@ export function toProposedAction(
     ...draft,
     revision: rounds.length + 1,
     claimFiling: draft.actionType === 'file_claim' ? filing : null,
+    cancellation: null,
   };
 }

@@ -1,5 +1,6 @@
 import {
   DecisionRequestSchema,
+  HandledRequestSchema,
   type AgentsActivity,
   type BrokerView,
   type CaseDetail,
@@ -7,6 +8,7 @@ import {
   type CaseStats,
   type CaseSummary,
   type DecisionRequest,
+  type HandledRequest,
 } from '@demo/shared';
 import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
@@ -67,6 +69,25 @@ export class CasesController {
     @Body({ schema: DecisionRequestSchema }) request: DecisionRequest,
   ): Promise<{ status: 'accepted' }> {
     await this.cases.decide(id, request);
+    return { status: 'accepted' };
+  }
+
+  /** V15 "Marquer comme traité": the broker handled the case outside the demo. */
+  @Post('cases/:id/handled')
+  @HttpCode(202)
+  async handled(
+    @Param('id') id: string,
+    @Body({ schema: HandledRequestSchema }) request: HandledRequest,
+  ): Promise<{ status: 'accepted' }> {
+    await this.cases.markHandled(id, request);
+    return { status: 'accepted' };
+  }
+
+  /** V15: analyse the case again with the documents received in a follow-up. */
+  @Post('cases/:id/reanalyze')
+  @HttpCode(202)
+  async reanalyze(@Param('id') id: string): Promise<{ status: 'accepted' }> {
+    await this.cases.reanalyze(id);
     return { status: 'accepted' };
   }
 

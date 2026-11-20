@@ -4,7 +4,7 @@ import type { CaseStage, CaseStatus } from '@demo/shared';
 export const PIPELINE = ['triage', 'coverage', 'drafting', 'approval', 'execute'] as const;
 export type PipelineStep = (typeof PIPELINE)[number];
 
-export type PillState = 'pending' | 'running' | 'done' | 'waiting' | 'failed' | 'skipped';
+export type PillState = 'pending' | 'running' | 'done' | 'waiting' | 'failed' | 'skipped' | 'you';
 
 /** Index of the step a stage is at (the steps before it are done). */
 const POSITION: Partial<Record<CaseStage, number>> = {
@@ -25,10 +25,19 @@ export function pipelineStates(kase: {
     PillState
   >;
   if (kase.stage === 'done') {
-    // Not a claim: classified after triage, the rest of the pipeline does not apply.
-    const classified = kase.status === 'classified';
+    // Classified (unrelated) or merged into another case after triage: the rest does not apply.
+    const triageOnly = kase.status === 'classified' || kase.status === 'merged';
     for (const step of PIPELINE)
-      states[step] = classified && step !== 'triage' ? 'skipped' : 'done';
+      states[step] = triageOnly && step !== 'triage' ? 'skipped' : 'done';
+    return states;
+  }
+  if (kase.stage === 'needs_broker') {
+    // V15 "À traiter par vous": the agents stopped; the broker takes over.
+    states.triage = 'done';
+    states.coverage = 'done';
+    states.drafting = 'done';
+    states.approval = 'you';
+    states.execute = 'skipped';
     return states;
   }
   if (kase.stage === 'failed') {
@@ -45,8 +54,9 @@ export function pipelineStates(kase: {
 }
 
 /** Inbox tabs and board columns. */
-export type CaseGroup = 'queued' | 'agents' | 'toApprove' | 'done' | 'failed';
+export type CaseGroup = 'queued' | 'agents' | 'toApprove' | 'needsBroker' | 'done';
 
+/** V15: a failed case is left to the broker too ("À traiter par vous"). */
 export function caseGroup(stage: CaseStage): CaseGroup {
   switch (stage) {
     case 'queued':
@@ -56,7 +66,8 @@ export function caseGroup(stage: CaseStage): CaseGroup {
     case 'done':
       return 'done';
     case 'failed':
-      return 'failed';
+    case 'needs_broker':
+      return 'needsBroker';
     default:
       return 'agents';
   }

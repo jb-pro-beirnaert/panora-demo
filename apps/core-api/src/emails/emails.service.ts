@@ -13,7 +13,11 @@ import { caseReference } from '../cases/case-views.js';
 import { ENV, type Env } from '../env.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { PROCESS_EMAIL_QUEUE, type ProcessEmailJob } from '../queues/queue-names.js';
+import {
+  PROCESS_EMAIL_QUEUE,
+  type DraftReplyJob,
+  type ProcessEmailJob,
+} from '../queues/queue-names.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 
 @Injectable()
@@ -23,7 +27,8 @@ export class EmailsService {
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
     @Inject(ENV) private readonly env: Env,
-    @InjectQueue(PROCESS_EMAIL_QUEUE) private readonly processEmailQueue: Queue<ProcessEmailJob>,
+    @InjectQueue(PROCESS_EMAIL_QUEUE)
+    private readonly processEmailQueue: Queue<ProcessEmailJob | DraftReplyJob>,
   ) {}
 
   /**
@@ -56,6 +61,12 @@ export class EmailsService {
       })),
     );
 
+    // V15: an answer to an e-mail of a case (In-Reply-To) joins that case instead of opening one.
+    if (input.inReplyTo) {
+      const thread = await this.findByMessageId(input.inReplyTo);
+      if (thread) return this.attachFollowUp(thread, input, files, brokerage.locale);
+    }
+
     let created;
     try {
       created = await this.prisma.$transaction(async (tx) => {
@@ -68,6 +79,7 @@ export class EmailsService {
             body: input.body,
             receivedAt: new Date(input.receivedAt),
             language: detectLanguage(`${input.subject}\n${input.body}`, brokerage.locale),
+            inReplyTo: input.inReplyTo ?? null,
             attachments: {
               create: files.map(({ attachment, content, extracted }, position) => ({
                 fileName: attachment.fileName,
@@ -127,9 +139,76 @@ export class EmailsService {
   ): Promise<{ caseId: string; reference: string } | null> {
     const email = await this.prisma.inboundEmail.findUnique({
       where: { messageId },
-      include: { case: true },
+      include: { case: true, followUpOf: true },
     });
-    if (!email?.case) return null;
-    return { caseId: email.case.id, reference: caseReference(email.case.number) };
+    // V15: a follow-up e-mail belongs to the case it was attached to.
+    const kase = email?.followUpOf ?? email?.case;
+    if (!kase) return null;
+    return { caseId: kase.id, reference: caseReference(kase.number) };
+  }
+
+  /**
+   * V15: stores a follow-up e-mail on the case it answers, then asks the agents for a status reply
+   * (`draft-reply` job). The case's own workflow is not touched.
+   */
+  private async attachFollowUp(
+    thread: { caseId: string; reference: string },
+    input: Omit<ReceiveEmailRequest, 'runOptions'>,
+    files: {
+      attachment: ReceiveEmailRequest['attachments'][number];
+      content: Buffer<ArrayBuffer>;
+      extracted: Awaited<ReturnType<typeof extractAttachment>>;
+    }[],
+    locale: 'fr' | 'en',
+  ): Promise<EmailAccepted> {
+    const email = await this.prisma.$transaction(async (tx) => {
+      const stored = await tx.inboundEmail.create({
+        data: {
+          messageId: input.messageId,
+          from: input.from,
+          to: input.to,
+          subject: input.subject,
+          body: input.body,
+          receivedAt: new Date(input.receivedAt),
+          language: detectLanguage(`${input.subject}\n${input.body}`, locale),
+          inReplyTo: input.inReplyTo ?? null,
+          followUpOfCaseId: thread.caseId,
+          attachments: {
+            create: files.map(({ attachment, content, extracted }, position) => ({
+              fileName: attachment.fileName,
+              type: attachment.contentType,
+              content,
+              sizeBytes: extracted.sizeBytes,
+              pageCount: extracted.pageCount,
+              extractionStatus: extracted.extractionStatus,
+              extractedText: extracted.extractedText,
+              position,
+            })),
+          },
+        },
+      });
+      await this.audit.record(
+        {
+          caseId: thread.caseId,
+          actor: 'system',
+          actorId: 'system',
+          action: 'follow_up_received',
+          params: {
+            from: input.from,
+            subject: input.subject,
+            attachments: files.length,
+          },
+        },
+        tx,
+      );
+      return stored;
+    });
+    const job: DraftReplyJob = { caseId: thread.caseId, kind: 'send_status', emailId: email.id };
+    await this.processEmailQueue.add('draft-reply', job, { jobId: `reply-${email.id}` });
+    const kase = await this.prisma.case.findUnique({ where: { id: thread.caseId } });
+    if (kase) {
+      this.realtime.publish('case.updated', kase.id, { followUp: true }, kase.brokerageId);
+    }
+    return { ...thread, created: false };
   }
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ActionTypeSchema } from './domain.js';
-import { FileClaimInputSchema } from './extranet-tools.js';
+import { FileClaimInputSchema, RequestCancellationInputSchema } from './extranet-tools.js';
 
 /** Output of `draftingAgent`. Free text follows the language rules passed in the agent input. */
 export const DraftSchema = z.object({
@@ -24,6 +24,11 @@ export const ProposedActionSchema = DraftSchema.extend({
    * the coverage verdict (never by the LLM). Null unless `actionType` is `file_claim`.
    */
   claimFiling: FileClaimInputSchema.nullable(),
+  /**
+   * Arguments of the MCP `request_cancellation` call run after approval (V15), built by code from
+   * the service analysis. Null unless `actionType` is `cancel_policy`.
+   */
+  cancellation: RequestCancellationInputSchema.nullable().default(null),
 });
 export type ProposedAction = z.infer<typeof ProposedActionSchema>;
 

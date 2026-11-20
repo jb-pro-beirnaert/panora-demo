@@ -123,10 +123,12 @@ Postgres and Redis (empty), a self-hosted Langfuse, the five apps in watch mode,
 fictional world.
 
 Open http://localhost:3000 — no sign-in: the demo has one brokerage (Delorme Courtage) and one
-broker (Sophie Marchal), and every e-mail lands in her inbox. The demo is a fixed script of 14
-e-mails covering every case of the catalog (the terminated-policy case comes second), with real PDF
+broker (Sophie Marchal), and every e-mail lands in her inbox. The demo is a fixed script of 25
+e-mails covering every case of the catalog (claims, cancellations, questions, certificates, quotes,
+spam, follow-ups, duplicates) (the terminated-policy case comes second), with real PDF
 attachments: press **Play** (one e-mail every 20 s) or **Send 1 e-mail** in the demo panel, which
-shows "Demo · 7/14 e-mails sent". Each e-mail pops in with a toast,
+shows "Demo · 7/25 e-mails sent". Every request ends with a reply proposed to the broker, "For you
+to handle" (with the reason), or classified. Each e-mail pops in with a toast,
 its row shows a live pipeline (Triage → Coverage → Drafting → Approval → Execution) with the agent
 at work and the MCP tool it is calling, the "Live agents" panel shows what each Mastra agent is
 doing, and a list/board toggle shows cases moving between columns. Approve or reject the

@@ -63,6 +63,7 @@ export function triageReport(triage: TriageResult, timing: Timing): AgentStepCal
     stepType: 'triage.completed',
     params: {
       requestType: triage.requestType,
+      subtype: triage.subtype,
       emailLanguage: triage.emailLanguage,
       policyNumber: triage.policyNumber.value,
       nature: triage.nature.value,
@@ -84,8 +85,8 @@ export function triageReport(triage: TriageResult, timing: Timing): AgentStepCal
   };
 }
 
-export function classifiedReport(requestType: string): AgentStepCallback {
-  return { agent: 'system', stepType: 'triage.classified', params: { requestType } };
+export function classifiedReport(requestType: string, subtype: string | null): AgentStepCallback {
+  return { agent: 'system', stepType: 'triage.classified', params: { requestType, subtype } };
 }
 
 /** One report for the policy status at the insurer, one for the verdict (with clause citations). */

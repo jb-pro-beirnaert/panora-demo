@@ -4,6 +4,7 @@ import {
   LocaleSchema,
   DocumentTypeSchema,
   PerilSchema,
+  RequestSubtypeSchema,
   RequestTypeSchema,
   RequiredDocumentSchema,
 } from './domain.js';
@@ -30,6 +31,10 @@ function extracted<T extends z.ZodType>(value: T) {
 /** Output of `triageAgent`. */
 export const TriageResultSchema = z.object({
   requestType: RequestTypeSchema,
+  /** `information`: coverage_question or certificate; `unrelated`: spam, newsletter or supplier_invoice. */
+  subtype: RequestSubtypeSchema.nullable(),
+  /** A case reference cited by the sender (`CASE-0003`), for a follow-up. */
+  caseReference: z.string().nullable(),
   /** Language the e-mail is written in (its body, not the attachments). */
   emailLanguage: LocaleSchema,
   /** Company or person the e-mail is sent on behalf of (the policy holder). */

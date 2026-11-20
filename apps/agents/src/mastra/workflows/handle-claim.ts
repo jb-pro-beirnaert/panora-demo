@@ -20,10 +20,11 @@ import {
 } from '../core-callbacks/step-reports.js';
 import { env } from '../env.js';
 import { modelSpecOf } from '../models.js';
-import { simulateCoverage, simulateDraft } from '../simulated/agents.js';
+import { claimActionOf, simulateCoverage, simulateDraft } from '../simulated/agents.js';
 import { extranetTools } from '../mcp/extranet-client.js';
 import { annotateSpan, caseContext } from './context.js';
 import { actionTypeProblem, buildClaimFiling, toProposedAction } from './claim-filing.js';
+import { finalReply } from './reply.js';
 import {
   ApprovalSuspendSchema,
   ClaimLoopStateSchema,
@@ -39,7 +40,7 @@ const COVERAGE_MAX_STEPS = 16;
 const LANGUAGE_NAMES: Record<Locale, string> = { fr: 'French', en: 'English' };
 
 /** What the brokerage's own software knows about the sender, for the coverage agent. */
-function clientSection(claim: TriagedEmail): string {
+export function clientSection(claim: TriagedEmail): string {
   if (!claim.client) {
     return "Brokerage's records (find_client): the sender's address is not a known client of the brokerage.";
   }
@@ -179,7 +180,7 @@ const draft = createStep({
     let result: Draft;
     if (env.AGENTS_MODE === 'simulated') {
       result = await simulateDraft(
-        inputData.coverage,
+        claimActionOf(inputData.coverage),
         claim.triage.emailLanguage,
         claim.brokerage.locale,
         env.SIMULATED_LLM_LATENCY_MS,
@@ -243,6 +244,7 @@ const approval = createStep({
         noteLanguage: claim.brokerage.locale,
         verdict: coverage.verdict,
         alerts: coverage.alerts,
+        awaitsWorkflow: true,
       });
       return await suspend({ action });
     }
@@ -272,10 +274,24 @@ const execute = createStep({
     'Runs the approved action: file_claim through the MCP write token, otherwise ready_to_send.',
   inputSchema: ClaimLoopStateSchema,
   outputSchema: ProcessEmailResultSchema,
-  execute: async ({ inputData }): Promise<ProcessEmailResult> => {
+  execute: async ({ inputData, mastra, tracingContext }): Promise<ProcessEmailResult> => {
     const approved = inputData.rounds.at(-1);
     if (!approved?.decision.approved) throw new Error('execute reached without an approved action');
     const { action, decision } = approved;
+    const { claim } = inputData;
+    // V15: the reply as it will be sent — the approval comment applied, placeholders filled.
+    const reply = (values: Record<string, string>) =>
+      finalReply({
+        mastra,
+        caseId: claim.caseId,
+        action,
+        comment: decision.comment,
+        values,
+        requestContext: caseContext(claim.brokerage.brokerCode, claim.caseId, claim.options),
+        tracingContext,
+        emailLanguage: claim.triage.emailLanguage,
+        noteLanguage: claim.brokerage.locale,
+      });
     await reportStepStarted(inputData.claim.caseId, 'execute', { actionType: action.actionType });
 
     if (action.actionType !== 'file_claim') {
@@ -284,6 +300,7 @@ const execute = createStep({
         outcome: 'ready_to_send',
         action,
         approvedBy: decision.brokerId,
+        finalDraft: await reply({}),
       };
       await reportExecution(inputData.claim.caseId, result);
       return result;
@@ -298,6 +315,7 @@ const execute = createStep({
       claimNumber: filed.claimNumber,
       action,
       approvedBy: decision.brokerId,
+      finalDraft: await reply({ claimNumber: filed.claimNumber }),
     };
     await reportExecution(inputData.claim.caseId, result);
     return result;

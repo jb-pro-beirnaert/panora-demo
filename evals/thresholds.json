@@ -8,5 +8,7 @@
   "drafting/action_type": 0.7,
   "drafting/amounts": 0.8,
   "drafting/languages": 0.9,
-  "workflow/case_correct": 0.5
+  "workflow/case_correct": 0.5,
+  "workflow/outcome": 0.8,
+  "workflow/effective_date": 0.7
 }

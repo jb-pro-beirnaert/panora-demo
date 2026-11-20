@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import type { Observed } from '../lib/observed.js';
 import { citationRule, normalizeText, scoreCoverage } from './coverage.js';
 import { amountsIn, knownAmounts, scoreDrafting } from './drafting.js';
+import { scoreOutcome } from './outcome.js';
 import { scoreTriage } from './triage.js';
 
 const truth: ClaimGroundTruth = {
@@ -42,6 +43,8 @@ const clauses = new Map([[clause.ref, clause]]);
 
 const good: Observed = {
   status: 'awaiting_approval',
+  service: null,
+  handoverReason: null,
   triage: {
     requestType: 'claim',
     emailLanguage: 'fr',
@@ -121,9 +124,47 @@ describe('scorers', () => {
     assert.ok(knownAmounts(truth).has(1150));
   });
 
-  it('do not score coverage and drafting for an e-mail that is not a claim', () => {
-    const scores = scoreCoverage({ ...truth, scenario: 'non_claim' } as never, good, clauses);
+  it('do not score coverage for an e-mail that is not a claim', () => {
+    const scores = scoreCoverage(
+      { ...truth, scenario: 'quote_request', requestType: 'quote_request' } as never,
+      good,
+      clauses,
+    );
     assert.ok(scores.every((score) => score.value === null));
+  });
+
+  it('scores the outcome of a request (V15)', () => {
+    const request = {
+      ...truth,
+      scenario: 'cancellation_late_notice',
+      requestType: 'cancellation',
+      subtype: null,
+      expectedOutcome: 'action',
+      expectedAction: 'cancel_policy',
+      handoverReason: null,
+      effectiveDate: '2027-12-27',
+      followUpOf: null,
+    } as never;
+    const observed: Observed = {
+      ...good,
+      service: { effectiveDate: '2027-12-27', alerts: ['notice_period_not_met'] },
+    };
+    const byName = Object.fromEntries(
+      scoreOutcome(request, observed).map((score) => [score.scorer, score.value]),
+    );
+    assert.deepEqual(byName, { outcome: 1, handover_reason: null, effective_date: 1 });
+    const handedOver = scoreOutcome(
+      {
+        ...(request as object),
+        expectedOutcome: 'needs_broker',
+        handoverReason: 'quote_request',
+      } as never,
+      { ...good, status: 'needs_broker', handoverReason: 'quote_request' },
+    );
+    assert.deepEqual(
+      handedOver.map((score) => score.value),
+      [1, 1, 0],
+    );
   });
 });
 

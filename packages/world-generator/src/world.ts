@@ -263,8 +263,14 @@ class WorldBuilder {
       startDate: addDays(this.referenceDate, -int(faker, 200, 2_000)),
       endDate: input.endDate ?? null,
       endReason: input.endReason ?? null,
+      renewalDate: '',
+      cancellationRequestedAt: null,
       coverages,
     };
+    // Drawn after the start date, as before V15: the generated world does not change.
+    const renewalDate = addDays(this.referenceDate, int(faker, 10, 360));
+    // V15: the insurer and the brokerage agree on the renewal date.
+    policy.renewalDate = renewalDate;
     this.policies.push(policy);
     this.brokeragePolicies.push({
       number,
@@ -272,7 +278,7 @@ class WorldBuilder {
       insurerName: insurer.name,
       product: productLabel,
       knownStatus: input.knownStatus ?? status,
-      renewalDate: addDays(this.referenceDate, int(faker, 10, 360)),
+      renewalDate,
     });
     if (input.product.id === 'fleet') this.addVehicles(number, input.vehicles);
     return policy;
@@ -456,6 +462,14 @@ export function generateWorld(options: GenerateWorldOptions): World {
     builder.brokeragePolicies.find((known) => known.number === policy.number)!.knownStatus =
       change.knownStatus;
   });
+  // V15: a cancellation the client already asked for, scheduled at the next renewal (no random
+  // draw, so the rest of the world is unchanged).
+  const scheduled = fillerPolicies[statusChanges.length];
+  if (scheduled) {
+    scheduled.endReason = 'client_request';
+    scheduled.endDate = scheduled.renewalDate;
+    scheduled.cancellationRequestedAt = addDays(referenceDate, -12);
+  }
 
   const clientOf = (policy: ExtranetPolicy) =>
     builder.clients.find((client) => client.companyName === policy.holderName)!;

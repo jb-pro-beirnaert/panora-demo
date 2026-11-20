@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { LocaleSchema, RequestTypeSchema } from './domain.js';
+import {
+  HandoverReasonSchema,
+  IsoDateSchema,
+  LocaleSchema,
+  RequestSubtypeSchema,
+} from './domain.js';
 import { ProposedActionSchema } from './drafting.js';
 import { InboundEmailInputSchema } from './inbound-email.js';
 
@@ -50,12 +55,33 @@ export const ProcessEmailInputSchema = z.object({
 });
 export type ProcessEmailInput = z.infer<typeof ProcessEmailInputSchema>;
 
+/**
+ * V15: the reply to the client as it will be sent, after execution: placeholders filled with the
+ * insurer's answer (claim number, effective date) and the broker's approval comment applied.
+ */
+export const FinalDraftSchema = z.object({ subject: z.string(), body: z.string() });
+export type FinalDraft = z.infer<typeof FinalDraftSchema>;
+
 /** Final output of `process-email`. */
 export const ProcessEmailResultSchema = z.discriminatedUnion('outcome', [
-  /** Not a claim: classified, no coverage analysis, no draft. */
+  /** Not a client request (spam, newsletter, supplier invoice): classified, no draft (V15). */
   z.object({
     outcome: z.literal('classified'),
-    requestType: RequestTypeSchema.exclude(['claim']),
+    requestType: z.literal('unrelated'),
+    subtype: RequestSubtypeSchema.nullable(),
+  }),
+  /** The agents could not handle the request: left to the broker (V15, "À traiter par vous"). */
+  z.object({
+    outcome: z.literal('handover'),
+    reason: HandoverReasonSchema,
+  }),
+  /** Approved `cancel_policy`: the cancellation is recorded at the insurer (V15). */
+  z.object({
+    outcome: z.literal('cancellation_filed'),
+    effectiveDate: IsoDateSchema,
+    action: ProposedActionSchema,
+    approvedBy: z.string(),
+    finalDraft: FinalDraftSchema.nullable().default(null),
   }),
   /** Approved `file_claim`: the claim now exists at the insurer. */
   z.object({
@@ -63,12 +89,39 @@ export const ProcessEmailResultSchema = z.discriminatedUnion('outcome', [
     claimNumber: z.string(),
     action: ProposedActionSchema,
     approvedBy: z.string(),
+    finalDraft: FinalDraftSchema.nullable().default(null),
   }),
   /** Approved e-mail (documents request or denial): ready to be sent (sending is out of scope). */
   z.object({
     outcome: z.literal('ready_to_send'),
     action: ProposedActionSchema,
     approvedBy: z.string(),
+    finalDraft: FinalDraftSchema.nullable().default(null),
+  }),
+  /** V15: a follow-up without In-Reply-To, attached to the case it refers to. */
+  z.object({
+    outcome: z.literal('merged'),
+    targetCaseId: z.string(),
   }),
 ]);
 export type ProcessEmailResult = z.infer<typeof ProcessEmailResultSchema>;
+
+/**
+ * Input of the Mastra workflow `draft-reply` (V15), started by Core: a standalone reply that no
+ * workflow waits for — the status of a case after a follow-up, or an acknowledgement — and its
+ * re-draft after the broker rejected it with a comment.
+ */
+export const DraftReplyInputSchema = z.object({
+  caseId: z.string().min(1),
+  kind: z.enum(['send_status', 'acknowledge']),
+  /** The e-mail the reply answers (a follow-up, or the case's e-mail). */
+  email: InboundEmailInputSchema,
+  brokerage: BrokerageContextSchema,
+  /** What the brokerage knows about the case, as JSON text (status, last action, claim number…). */
+  caseContext: z.string(),
+  /** The rejected reply and the broker's comment, for a re-draft. */
+  previous: z
+    .object({ subject: z.string(), body: z.string(), comment: z.string().nullable() })
+    .optional(),
+});
+export type DraftReplyInput = z.infer<typeof DraftReplyInputSchema>;

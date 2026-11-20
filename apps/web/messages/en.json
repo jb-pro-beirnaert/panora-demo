@@ -37,7 +37,8 @@
       "inProgress": "In progress",
       "awaitingApproval": "To approve",
       "closed": "Done",
-      "failed": "Failed"
+      "failed": "Failed",
+      "needsBroker": "For you"
     },
     "counter": "{label}: <strong>{value}</strong>",
     "throughput": "{count} done / min",
@@ -46,16 +47,27 @@
       "covered": "Covered claim",
       "policy_terminated": "Terminated policy ★",
       "missing_document": "Missing document",
+      "partial_documents": "Partial documents",
       "exclusion": "Exclusion",
       "limit_exceeded": "Limit exceeded",
       "deductible": "Deductible",
-      "duplicate_claim": "Duplicate",
+      "duplicate_claim": "Duplicate at the insurer",
       "unreadable_field": "Unreadable field",
       "late_declaration": "Late declaration",
       "unknown_client": "Unknown client",
-      "cancellation": "Cancellation request",
+      "cancellation": "Cancellation",
+      "cancellation_already_terminated": "Cancelling a terminated policy",
+      "cancellation_late_notice": "Cancellation without notice",
+      "cancellation_already_requested": "Cancellation already requested",
+      "coverage_question": "Question about a cover",
+      "certificate_request": "Certificate request",
       "quote_request": "Quote request",
-      "other": "Other request"
+      "spam": "Spam",
+      "newsletter": "Newsletter",
+      "supplier_invoice": "Supplier invoice",
+      "follow_up": "Follow-up with documents",
+      "follow_up_no_header": "“Where is my claim?” follow-up",
+      "resent_claim": "Claim sent twice (duplicate)"
     }
   },
   "inbox": {
@@ -85,8 +97,8 @@
       "all": "All",
       "inProgress": "In progress",
       "toApprove": "To approve",
-      "done": "Done",
-      "failed": "Failed"
+      "needsBroker": "For you",
+      "done": "Done"
     },
     "view": {
       "table": "List",
@@ -96,9 +108,10 @@
       "queued": "Queue",
       "agents": "Agents",
       "toApprove": "To approve",
-      "done": "Done",
-      "failed": "Failed"
-    }
+      "needsBroker": "For you",
+      "done": "Done"
+    },
+    "followUp": "{count, plural, one {follow-up} other {# follow-ups}}"
   },
   "case": {
     "back": "Back to the inbox",
@@ -147,7 +160,31 @@
     "openFile": "Open",
     "pages": "{count, plural, one {# page} other {# pages}}",
     "extractedText": "Extracted text sent to the agents",
-    "extractionFailed": "unreadable"
+    "extractionFailed": "unreadable",
+    "mergedInto": "This follow-up was attached to case <link>{reference}</link>.",
+    "handover": {
+      "title": "For you to handle",
+      "markHandled": "Mark as handled",
+      "commentPlaceholder": "What you did (optional)",
+      "hint": {
+        "certificate_request": "No tool lets the agents issue a certificate: issue it from the insurer’s extranet, then send it to the client.",
+        "quote_request": "Pricing is not left to the agents: prepare the quote with the insurer.",
+        "policy_not_found": "The policy cited exists neither at the brokerage nor at the insurer: check the number with the client.",
+        "policy_of_other_client": "The policy cited does not belong to the sender: check their identity before doing anything.",
+        "question_not_answerable": "No clause answers the question: reply to the client after checking with the insurer.",
+        "follow_up_unmatched": "The agents could not find the case this follow-up refers to: find it and reply to the client.",
+        "unclassified": "The agents could not classify this request: read the e-mail and handle it.",
+        "workflow_failed": "Automatic processing failed: relaunch it or handle the request yourself."
+      }
+    },
+    "followUps": {
+      "title": "{count, plural, one {Follow-up received} other {# follow-ups received}}",
+      "newDocuments": "The follow-up brings new documents: analyse the case again to take them into account.",
+      "reanalyze": "Analyse again"
+    },
+    "standaloneReply": "Reply to the client",
+    "cancellationFiling": "Cancellation to record: policy {policyNumber}, effective {date}",
+    "finalDraft": "Final reply, ready to send"
   },
   "status": {
     "received": "Received",
@@ -156,7 +193,11 @@
     "classified": "Classified",
     "claim_filed": "Claim filed",
     "ready_to_send": "Ready to send",
-    "failed": "Failed"
+    "failed": "Failed",
+    "needs_broker": "For you to handle",
+    "handled_manually": "Handled by the broker",
+    "cancellation_filed": "Cancellation recorded",
+    "merged": "Attached to a case"
   },
   "verdict": {
     "covered": "Covered",
@@ -170,18 +211,27 @@
     "late_declaration": "Late declaration",
     "missing_document": "Missing document",
     "duplicate_claim": "Duplicate claim",
-    "unknown_client": "Unknown client"
+    "unknown_client": "Unknown client",
+    "already_terminated": "Policy already terminated",
+    "cancellation_already_requested": "Cancellation already requested",
+    "notice_period_not_met": "Notice period not met"
   },
   "actionType": {
     "request_documents": "Request documents",
     "file_claim": "File the claim",
-    "notify_denial": "Notify the denial"
+    "notify_denial": "Notify the denial",
+    "cancel_policy": "Cancel the policy",
+    "answer_question": "Answer the question",
+    "send_status": "Give the case status",
+    "acknowledge": "Acknowledgement"
   },
   "requestType": {
     "claim": "Claim",
-    "quote_request": "Quote request",
     "cancellation": "Cancellation",
-    "other": "Other"
+    "information": "Information request",
+    "quote_request": "Quote request",
+    "follow_up": "Follow-up",
+    "unrelated": "Unrelated"
   },
   "proposalStatus": {
     "pending": "Pending",
@@ -205,7 +255,8 @@
     "triage": "Triage agent",
     "coverage": "Coverage agent",
     "drafting": "Drafting agent",
-    "workflow": "Workflow"
+    "workflow": "Workflow",
+    "service": "Policy agent"
   },
   "actor": {
     "system": "System",
@@ -220,18 +271,31 @@
       "client_found": "Sender identified: {companyName} ({policyCount} policies)",
       "client_not_found": "Sender {email} is not a known client",
       "completed": "E-mail analysed: {requestType}, {nature}, amount {amount}, incident on {incidentDate}",
-      "classified": "Not a claim: classified as {requestType}"
+      "classified": "Unrelated: classified ({subtype})",
+      "completedRequest": "E-mail analysed: {requestType}",
+      "follow_up_matched": "Follow-up attached to case {reference}",
+      "follow_up_unmatched": "Follow-up: no matching case among {cases} recent cases"
     },
     "coverage": {
       "policy_checked": "Policy {policyNumber} checked at the insurer: {status}",
       "verdict": "Verdict: {verdict} ({coverage}), alerts: {alerts}"
     },
     "drafting": {
-      "proposed": "Proposal {revision}: {actionType}"
+      "proposed": "Proposal {revision}: {actionType}",
+      "polished": "Reply polished with the comment: “{comment}”"
     },
     "execute": {
       "claim_filed": "Claim {claimNumber} filed at the insurer",
-      "ready_to_send": "E-mail ready to send ({actionType})"
+      "ready_to_send": "E-mail ready to send ({actionType})",
+      "cancellation_filed": "Cancellation of policy {policyNumber} recorded at the insurer, effective {effectiveDate}"
+    },
+    "service": {
+      "policy_checked": "Policy {policyNumber} checked at the insurer: {status}, renewal on {renewalDate}",
+      "analysis": "Analysis: policy {policyNumber}, effective date {effectiveDate}, alerts: {alerts}"
+    },
+    "handover": "Left to the broker: {reason}",
+    "follow_up": {
+      "received": "Follow-up received"
     }
   },
   "audit": {
@@ -248,7 +312,14 @@
     "workflow_failed": "Processing failed",
     "workflow_restarted": "Processing restarted after an interruption (attempt {attempt})",
     "workflow_retried": "Case relaunched by the broker",
-    "data_purged": "Workflow snapshot and trace deleted (retention: {retentionDays} days)"
+    "data_purged": "Workflow snapshot and trace deleted (retention: {retentionDays} days)",
+    "handed_over": "Left to the broker: {reason}",
+    "case_handled_manually": "Marked as handled by the broker",
+    "cancellation_filed": "Cancellation recorded at the insurer (effective {effectiveDate})",
+    "follow_up_received": "Follow-up received",
+    "follow_up_merged": "Follow-up attached to case {into}",
+    "reply_ready": "Reply ready to send ({actionType})",
+    "analysis_restarted": "New analysis requested by the broker"
   },
   "common": {
     "none": "none",
@@ -263,13 +334,16 @@
       "read_clause": "{agent} reads clause {ref}",
       "get_claim_history": "{agent} checks the claim history of policy {policyNumber}",
       "find_client": "{agent} looks up the sender {email} in the brokerage's records",
-      "other": "{agent} calls {tool}"
+      "other": "{agent} calls {tool}",
+      "find_client_cases": "{agent} checks the brokerage's recent cases of {email}"
     },
     "step_started": {
       "triage": "{agent} starts (model {model})",
       "coverage": "{agent} starts (model {model})",
       "drafting": "{agent} drafts proposal {revision} (model {model})",
-      "execute": "Running the approved action: {actionType}"
+      "execute": "Running the approved action: {actionType}",
+      "service": "{agent} starts (model {model})",
+      "polish": "{agent} applies the broker's comment (model {model})"
     }
   },
   "evals": {
@@ -305,7 +379,7 @@
   },
   "pipeline": {
     "triage": "Triage",
-    "coverage": "Coverage",
+    "coverage": "Analysis",
     "drafting": "Drafting",
     "approval": "Approval",
     "execute": "Execution",
@@ -315,7 +389,8 @@
       "done": "done",
       "waiting": "waiting for the broker",
       "failed": "failed",
-      "skipped": "not applicable"
+      "skipped": "not applicable",
+      "you": "for you to handle"
     }
   },
   "stage": {
@@ -327,7 +402,8 @@
     "execute": "Filing at the insurer",
     "done": "Done",
     "failed": "Failed",
-    "revision": "proposal {revision}"
+    "revision": "proposal {revision}",
+    "needs_broker": "For you to handle"
   },
   "agents": {
     "running": "{count} running",
@@ -342,5 +418,22 @@
   "notify": {
     "newEmail": "New e-mail from {from}",
     "close": "Close"
+  },
+  "requestSubtype": {
+    "coverage_question": "question about a cover",
+    "certificate": "certificate",
+    "spam": "spam",
+    "newsletter": "newsletter",
+    "supplier_invoice": "supplier invoice"
+  },
+  "handoverReason": {
+    "certificate_request": "Certificate request",
+    "quote_request": "Quote request",
+    "policy_not_found": "Policy not found",
+    "policy_of_other_client": "Another client's policy",
+    "question_not_answerable": "No answer in the policy",
+    "follow_up_unmatched": "Follow-up without a known case",
+    "unclassified": "Unclassified request",
+    "workflow_failed": "Processing failed"
   }
 }

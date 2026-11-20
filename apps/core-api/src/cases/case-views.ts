@@ -17,7 +17,14 @@ export const caseSummaryInclude = {
   brokerage: true,
   client: true,
   email: true,
-  _count: { select: { proposedActions: true } },
+  _count: {
+    select: {
+      proposedActions: true,
+      followUps: true,
+    },
+  },
+  // V15: replies waiting for the broker (a follow-up reply can wait on a closed case).
+  proposedActions: { where: { status: 'pending' }, select: { id: true } },
 } satisfies Prisma.CaseInclude;
 
 export const caseDetailInclude = {
@@ -26,9 +33,13 @@ export const caseDetailInclude = {
   email: { include: { attachments: { orderBy: { position: 'asc' }, omit: { content: true } } } },
   steps: { orderBy: { createdAt: 'asc' } },
   agentEvents: { orderBy: { createdAt: 'asc' } },
-  proposedActions: { orderBy: { revision: 'asc' } },
+  proposedActions: { orderBy: { createdAt: 'asc' } },
   auditLogs: { orderBy: { createdAt: 'asc' } },
-  _count: { select: { proposedActions: true } },
+  followUps: {
+    orderBy: { receivedAt: 'asc' },
+    include: { attachments: { orderBy: { position: 'asc' }, omit: { content: true } } },
+  },
+  _count: { select: { proposedActions: true, followUps: true } },
 } satisfies Prisma.CaseInclude;
 
 type CaseWithSummary = Prisma.CaseGetPayload<{ include: typeof caseSummaryInclude }>;
@@ -36,22 +47,55 @@ type CaseWithDetail = Prisma.CaseGetPayload<{ include: typeof caseDetailInclude 
 
 const WORK_STEPS = new Set<string>(['triage', 'coverage', 'drafting', 'execute']);
 
-/** V13 live stage, from the status and the step announced by the last `step_started` event. */
-export function caseStage(kase: { status: string; currentStep: string | null }): CaseStage {
+/**
+ * V13 live stage, from the status and the step announced by the last `step_started` event. V15:
+ * the policy service agent shows as the analysis step; a reply waiting for the broker (follow-up,
+ * acknowledgement) puts the case back in "to approve"; "À traiter par vous" is its own stage.
+ */
+export function caseStage(kase: {
+  status: string;
+  currentStep: string | null;
+  pendingProposals?: number;
+}): CaseStage {
+  if (kase.status === 'processing') {
+    const step = kase.currentStep === 'service' ? 'coverage' : kase.currentStep;
+    return step && WORK_STEPS.has(step) ? (step as CaseStage) : 'queued';
+  }
+  if (kase.status === 'received') return 'queued';
+  // The broker must handle it: the acknowledgement proposed with it does not change that.
+  if (kase.status === 'needs_broker') return 'needs_broker';
+  if ((kase.pendingProposals ?? 0) > 0 || kase.status === 'awaiting_approval') {
+    return 'awaiting_approval';
+  }
   switch (kase.status) {
-    case 'received':
-      return 'queued';
-    case 'processing':
-      return kase.currentStep && WORK_STEPS.has(kase.currentStep)
-        ? (kase.currentStep as CaseStage)
-        : 'queued';
-    case 'awaiting_approval':
-      return 'awaiting_approval';
     case 'failed':
       return 'failed';
+    case 'needs_broker':
+      return 'needs_broker';
     default:
       return 'done';
   }
+}
+
+/** Fills the summary of a follow-up e-mail or the case's e-mail (V14 attachments). */
+function toEmailView(email: CaseWithDetail['email']): CaseDetail['email'] {
+  return {
+    from: email.from,
+    to: email.to,
+    subject: email.subject,
+    body: email.body,
+    receivedAt: email.receivedAt.toISOString(),
+    language: email.language,
+    attachments: email.attachments.map((attachment) => ({
+      id: attachment.id,
+      fileName: attachment.fileName,
+      type: attachment.type,
+      extractedText: attachment.extractedText,
+      sizeBytes: attachment.sizeBytes,
+      pageCount: attachment.pageCount,
+      extractionStatus: attachment.extractionStatus as 'ok' | 'failed' | 'not_applicable',
+    })),
+  };
 }
 
 export function toCaseSummary(kase: CaseWithSummary): CaseSummary {
@@ -69,9 +113,12 @@ export function toCaseSummary(kase: CaseWithSummary): CaseSummary {
     alerts: kase.alerts as CaseSummary['alerts'],
     receivedAt: kase.email.receivedAt.toISOString(),
     updatedAt: kase.updatedAt.toISOString(),
-    stage: caseStage(kase),
+    stage: caseStage({ ...kase, pendingProposals: kase.proposedActions.length }),
     currentTool: kase.status === 'processing' ? kase.currentTool : null,
     revision: kase._count.proposedActions,
+    handoverReason: (kase.handoverReason as CaseSummary['handoverReason']) ?? null,
+    followUps: kase._count.followUps,
+    pendingProposals: kase.proposedActions.length,
   };
 }
 
@@ -80,6 +127,7 @@ export function toCaseDetail(
   extra: {
     knownPolicyStatus: CaseDetail['knownPolicyStatus'];
     brokerNames: Map<string, string>;
+    mergedInto: CaseDetail['mergedInto'];
   },
 ): CaseDetail {
   const steps: AgentStepView[] = kase.steps.map((step) => ({
@@ -112,6 +160,10 @@ export function toCaseDetail(
     internalNote: action.internalNote,
     noteLanguage: action.noteLanguage,
     claimFiling: (action.claimFiling as ProposedActionView['claimFiling']) ?? null,
+    cancellation: (action.cancellation as ProposedActionView['cancellation']) ?? null,
+    finalDraftSubject: action.finalDraftSubject,
+    finalDraftBody: action.finalDraftBody,
+    awaitsWorkflow: action.awaitsWorkflow,
     status: action.status,
     decidedBy: action.decidedById
       ? {
@@ -133,8 +185,20 @@ export function toCaseDetail(
     source: log.source,
     createdAt: log.createdAt.toISOString(),
   }));
+  const pending = kase.proposedActions.filter((action) => action.status === 'pending');
   return {
-    ...toCaseSummary(kase),
+    ...toCaseSummary({ ...kase, proposedActions: pending.map(({ id }) => ({ id })) }),
+    followUps: kase.followUps.map((email) => ({
+      id: email.id,
+      ...toEmailView(email as CaseWithDetail['email']),
+    })),
+    handover: kase.handoverReason
+      ? {
+          reason: kase.handoverReason as NonNullable<CaseDetail['handover']>['reason'],
+          params: (kase.handoverParams as NonNullable<CaseDetail['handover']>['params']) ?? {},
+        }
+      : null,
+    mergedInto: extra.mergedInto,
     brokerage: {
       id: kase.brokerage.id,
       name: kase.brokerage.name,
@@ -148,23 +212,7 @@ export function toCaseDetail(
     failureReason: kase.failureReason,
     workflowRunId: kase.workflowRunId,
     traceId: kase.traceId,
-    email: {
-      from: kase.email.from,
-      to: kase.email.to,
-      subject: kase.email.subject,
-      body: kase.email.body,
-      receivedAt: kase.email.receivedAt.toISOString(),
-      language: kase.email.language,
-      attachments: kase.email.attachments.map((attachment) => ({
-        id: attachment.id,
-        fileName: attachment.fileName,
-        type: attachment.type,
-        extractedText: attachment.extractedText,
-        sizeBytes: attachment.sizeBytes,
-        pageCount: attachment.pageCount,
-        extractionStatus: attachment.extractionStatus as 'ok' | 'failed' | 'not_applicable',
-      })),
-    },
+    email: toEmailView(kase.email),
     steps,
     agentEvents,
     proposedActions,

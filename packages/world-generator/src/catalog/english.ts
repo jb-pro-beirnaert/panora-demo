@@ -138,6 +138,10 @@ export function generalClausesEn(declarationDelayDays: number): Record<string, [
       'Suspension for non-payment of the premium',
       'If a premium is not paid within ten days of its due date, cover is suspended thirty days after the insured has been given formal notice. No claim occurring during the suspension is covered.',
     ],
+    '12.3': [
+      'Cancellation by the insured',
+      'The insured may cancel the policy at each renewal date, by letter or any other durable medium sent to the insurer or to their broker, with two months’ notice. A request received less than two months before the renewal date takes effect at the following renewal date. The policy and its cover remain in force until the cancellation takes effect.',
+    ],
   };
 }
 

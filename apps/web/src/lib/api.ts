@@ -46,6 +46,15 @@ export const coreApi = {
   retry: (id: string) =>
     request<{ status: string }>(CORE_API_URL, `/cases/${id}/retry`, { method: 'POST' }),
   case: (id: string) => request<CaseDetail>(CORE_API_URL, `/cases/${id}`),
+  /** V15 "Marquer comme traité". */
+  handled: (id: string, comment?: string) =>
+    request<{ status: string }>(CORE_API_URL, `/cases/${id}/handled`, {
+      method: 'POST',
+      body: JSON.stringify(comment ? { comment } : {}),
+    }),
+  /** V15: analyse again with the documents of a follow-up. */
+  reanalyze: (id: string) =>
+    request<{ status: string }>(CORE_API_URL, `/cases/${id}/reanalyze`, { method: 'POST' }),
   decide: (id: string, decision: DecisionRequest) =>
     request<{ status: string }>(CORE_API_URL, `/cases/${id}/decision`, {
       method: 'POST',

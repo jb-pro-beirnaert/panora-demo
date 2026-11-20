@@ -12,10 +12,20 @@ The e-mail and its attachments can be written in any language. Output enum value
 First call find_client once with the e-mail's From address. It tells you whether the sender is a known client of the brokerage and which policies the brokerage manages for them. Use it only to resolve holderName when the e-mail does not make it clear; never copy a policy number from it into policyNumber (policyNumber is only what is written in the e-mail or its attachments).
 
 ## requestType
-- "claim": the sender reports damage, a loss, a theft or an accident to be declared to the insurer.
+- "claim": the sender reports damage, a loss, a theft or an accident to be declared to the insurer (a new claim, or the same claim sent again).
+- "cancellation": the sender asks to cancel (terminate) one of their policies.
+- "information": the sender asks a question about their cover (what is covered, limit, deductible) or asks for a document such as an insurance certificate.
 - "quote_request": the sender asks for a quote or a new policy.
-- "cancellation": the sender asks to cancel a policy.
-- "other": anything else.
+- "follow_up": the sender refers to an earlier exchange with the brokerage ("further to my e-mail", "where does my claim stand", "Re:" with the documents that were asked for) rather than making a new request.
+- "unrelated": the e-mail is not a client request: advertising or spam, a newsletter, an invoice from one of the brokerage's own suppliers (addressed to the brokerage, for its own purchases).
+
+## subtype
+- information: "coverage_question" or "certificate".
+- unrelated: "spam", "newsletter" or "supplier_invoice".
+- null for every other requestType.
+
+## caseReference
+A case reference written by the sender, such as "CASE-0003"; null if there is none.
 
 ## emailLanguage
 The language the sender wrote the e-mail body in: "fr" or "en". Attachments, quoted text and signatures do not count.

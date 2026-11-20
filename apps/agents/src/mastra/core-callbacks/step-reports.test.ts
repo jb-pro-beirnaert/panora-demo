@@ -11,6 +11,8 @@ const field = <T>(value: T | null, document = 'email_body', page: number | null 
 
 const triage: TriageResult = {
   requestType: 'claim',
+  subtype: null,
+  caseReference: null,
   emailLanguage: 'fr',
   holderName: field('Boulangerie Martin SARL'),
   policyNumber: field<string>(null),
@@ -77,17 +79,26 @@ describe('coverageReports', () => {
 
 describe('executeReport', () => {
   it('maps each outcome to its timeline step', () => {
-    assert.equal(executeReport({ outcome: 'classified', requestType: 'other' }), null);
+    assert.equal(
+      executeReport({ outcome: 'classified', requestType: 'unrelated', subtype: 'spam' }),
+      null,
+    );
     const action = {
       actionType: 'file_claim' as const,
       clientEmailDraft: { subject: 's', body: 'b' },
       internalNote: 'n',
       revision: 1,
       claimFiling: null,
+      cancellation: null,
     };
     assert.equal(
-      executeReport({ outcome: 'claim_filed', claimNumber: 'S-1', action, approvedBy: 'b' })
-        ?.stepType,
+      executeReport({
+        outcome: 'claim_filed',
+        claimNumber: 'S-1',
+        action,
+        approvedBy: 'b',
+        finalDraft: null,
+      })?.stepType,
       'execute.claim_filed',
     );
   });

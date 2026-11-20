@@ -5,6 +5,7 @@ import {
   ProcessEmailInputSchema,
   ProcessEmailResultSchema,
   TriageResultSchema,
+  type HandoverReason,
   type InboundEmailInput,
   type ProcessEmailInput,
   type ProcessEmailResult,
@@ -22,7 +23,8 @@ import { CLIENT_LOOKUP_KEY } from '../mcp/extranet-client.js';
 import { lookupClient } from '../tools/find-client.js';
 import { annotateSpan, caseContext } from './context.js';
 import { handleClaimWorkflow } from './handle-claim.js';
-import { PreparedEmailSchema, TriagedEmailSchema } from './schemas.js';
+import { handOver, handleServiceWorkflow } from './handle-service.js';
+import { PreparedEmailSchema, TriagedEmailSchema, type TriagedEmail } from './schemas.js';
 
 /** find_client + the structured answer. */
 const TRIAGE_MAX_STEPS = 4;
@@ -181,14 +183,81 @@ const triage = createStep({
 const classify = createStep({
   id: 'classify',
   description:
-    'Not a claim: records the request type and ends the workflow (no coverage analysis).',
+    'Not a client request (spam, newsletter, supplier invoice): recorded and closed, no reply.',
   inputSchema: TriagedEmailSchema,
   outputSchema: ProcessEmailResultSchema,
   execute: async ({ inputData }): Promise<ProcessEmailResult> => {
-    const { requestType } = inputData.triage;
-    if (requestType === 'claim') throw new Error('classify only handles non-claim e-mails');
-    await core.step(inputData.caseId, classifiedReport(requestType));
-    return { outcome: 'classified', requestType };
+    const { requestType, subtype } = inputData.triage;
+    if (requestType !== 'unrelated') throw new Error('classify only handles unrelated e-mails');
+    await core.step(inputData.caseId, classifiedReport(requestType, subtype));
+    return { outcome: 'classified', requestType, subtype };
+  },
+});
+
+/** Requests the agents cannot handle at all: a quote, a certificate (V15). */
+function directHandoverReason(triaged: TriagedEmail): HandoverReason | null {
+  if (triaged.triage.requestType === 'quote_request') return 'quote_request';
+  if (triaged.triage.requestType === 'information' && triaged.triage.subtype === 'certificate') {
+    return 'certificate_request';
+  }
+  return null;
+}
+
+const handover = createStep({
+  id: 'handover',
+  description:
+    'A quote or a certificate: the agents propose an acknowledgement and the broker takes over.',
+  inputSchema: TriagedEmailSchema,
+  outputSchema: ProcessEmailResultSchema,
+  execute: async ({ inputData, mastra, tracingContext, runId }): Promise<ProcessEmailResult> => {
+    const reason = directHandoverReason(inputData) ?? 'unclassified';
+    await handOver({ request: inputData, reason, mastra, tracingContext, runId });
+    return { outcome: 'handover', reason };
+  },
+});
+
+/**
+ * A follow-up without In-Reply-To (V15): the case it refers to is looked up among the sender's
+ * recent cases (a cited reference first, else the newest open one). Found: the e-mail is attached
+ * to it. Not found: the broker must handle it.
+ */
+const matchFollowUp = createStep({
+  id: 'match-follow-up',
+  description: "Finds the case a follow-up refers to among the sender's recent cases.",
+  inputSchema: TriagedEmailSchema,
+  outputSchema: ProcessEmailResultSchema,
+  execute: async ({ inputData, mastra, tracingContext, runId }): Promise<ProcessEmailResult> => {
+    const cases = inputData.caseId
+      ? await core.findClientCases(inputData.email.from, inputData.caseId)
+      : [];
+    const reference = inputData.triage.caseReference;
+    const candidates = cases.filter((kase) => kase.status !== 'merged');
+    const match =
+      (reference && candidates.find((kase) => kase.reference === reference)) ||
+      candidates.find((kase) => kase.requestType !== 'unrelated');
+    if (match) {
+      await core.step(inputData.caseId, {
+        agent: 'triage',
+        stepType: 'triage.follow_up_matched',
+        params: { reference: match.reference },
+        sources: [{ kind: 'core', ref: 'find_client_cases' }],
+      });
+      return { outcome: 'merged', targetCaseId: match.caseId };
+    }
+    await core.step(inputData.caseId, {
+      agent: 'triage',
+      stepType: 'triage.follow_up_unmatched',
+      params: { cases: cases.length },
+      sources: [{ kind: 'core', ref: 'find_client_cases' }],
+    });
+    await handOver({
+      request: inputData,
+      reason: 'follow_up_unmatched',
+      mastra,
+      tracingContext,
+      runId,
+    });
+    return { outcome: 'handover', reason: 'follow_up_unmatched' };
   },
 });
 
@@ -197,11 +266,19 @@ const collectResult = createStep({
   description: 'Returns the result of the branch that ran.',
   inputSchema: z.object({
     classify: ProcessEmailResultSchema.optional(),
+    handover: ProcessEmailResultSchema.optional(),
+    'match-follow-up': ProcessEmailResultSchema.optional(),
     'handle-claim': ProcessEmailResultSchema.optional(),
+    'handle-service': ProcessEmailResultSchema.optional(),
   }),
   outputSchema: ProcessEmailResultSchema,
   execute: async ({ inputData }) => {
-    const result = inputData.classify ?? inputData['handle-claim'];
+    const result =
+      inputData.classify ??
+      inputData.handover ??
+      inputData['match-follow-up'] ??
+      inputData['handle-claim'] ??
+      inputData['handle-service'];
     if (!result) throw new Error('no branch produced a result');
     return result;
   },
@@ -212,8 +289,9 @@ function caseIdOf(getInitData: () => unknown): string | undefined {
 }
 
 /**
- * prepare → triage → not a claim: classify (end) | claim: handle-claim (coverage analysis,
- * draft/approval loop with human approval, execute). The final result and failures are reported
+ * prepare → triage → claim: handle-claim (coverage analysis, draft/approval loop with human
+ * approval, execute) | cancellation or question: handle-service | follow-up: attached to its case
+ * | quote or certificate: handed over to the broker | unrelated: classified (V15). The final result and failures are reported
  * to Core from the workflow's lifecycle callbacks.
  */
 export const processEmailWorkflow = createWorkflow({
@@ -246,8 +324,17 @@ export const processEmailWorkflow = createWorkflow({
   .then(prepare)
   .then(triage)
   .branch([
-    [async ({ inputData }) => inputData.triage.requestType !== 'claim', classify],
     [async ({ inputData }) => inputData.triage.requestType === 'claim', handleClaimWorkflow],
+    [async ({ inputData }) => inputData.triage.requestType === 'unrelated', classify],
+    [async ({ inputData }) => inputData.triage.requestType === 'follow_up', matchFollowUp],
+    [async ({ inputData }) => directHandoverReason(inputData) !== null, handover],
+    [
+      async ({ inputData }) =>
+        inputData.triage.requestType === 'cancellation' ||
+        (inputData.triage.requestType === 'information' &&
+          inputData.triage.subtype !== 'certificate'),
+      handleServiceWorkflow,
+    ],
   ])
   .then(collectResult)
   .commit();

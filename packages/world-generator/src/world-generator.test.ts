@@ -71,11 +71,31 @@ describe('generateEmails', () => {
       const brokerage = world.brokerages.find((b) => b.brokerCode === groundTruth.brokerCode);
       assert.equal(email.to, brokerage?.inboxEmail);
 
-      if (groundTruth.scenario === 'non_claim') {
-        assert.notEqual(groundTruth.requestType, 'claim');
-        assert.equal(email.attachments.length, 0);
-        assert.equal(groundTruth.policyNumber !== null, groundTruth.requestType === 'cancellation');
-        if (groundTruth.policyNumber) assert.ok(email.body.includes(groundTruth.policyNumber));
+      if (groundTruth.requestType !== 'claim') {
+        // V15 requests: the policy they are about is written in the e-mail.
+        if (groundTruth.policyNumber) {
+          assert.ok(email.body.includes(groundTruth.policyNumber));
+          assert.ok(world.policies.some((p) => p.number === groundTruth.policyNumber));
+        }
+        assert.equal(
+          groundTruth.expectedAction === null,
+          groundTruth.expectedOutcome === 'classified',
+        );
+        assert.equal(
+          groundTruth.handoverReason !== null,
+          groundTruth.expectedOutcome === 'needs_broker',
+        );
+        if (groundTruth.requestType === 'cancellation') {
+          const policy = world.policies.find((p) => p.number === groundTruth.policyNumber)!;
+          if (groundTruth.scenario === 'cancellation_already_terminated') {
+            assert.equal(policy.status, 'terminated');
+          } else if (groundTruth.scenario === 'cancellation_already_requested') {
+            assert.equal(policy.endReason, 'client_request');
+            assert.equal(groundTruth.effectiveDate, policy.endDate);
+          } else {
+            assert.ok(groundTruth.effectiveDate! >= policy.renewalDate);
+          }
+        }
         continue;
       }
 
@@ -118,6 +138,10 @@ describe('generateEmails', () => {
           break;
         case 'unreadable_field':
           assert.ok(groundTruth.amount === null || !groundTruth.incidentDateReadable);
+          break;
+        case 'partial_documents':
+          assert.equal(email.attachments.length, 1);
+          assert.ok(groundTruth.documentsMissing.length > 0);
           break;
         default:
           assert.equal(policy.status, 'active');
@@ -186,7 +210,7 @@ describe('multilingual world (V4)', () => {
       const policy = multi.policies.find((candidate) => candidate.number === policyNumber);
       return multi.insurers.find((insurer) => insurer.id === policy?.insurerId)?.locale;
     };
-    const claims = multiEmails.filter((email) => email.groundTruth.scenario !== 'non_claim');
+    const claims = multiEmails.filter((email) => email.groundTruth.requestType === 'claim');
     assert.ok(
       claims.some(
         (e) =>
@@ -204,7 +228,7 @@ describe('multilingual world (V4)', () => {
   });
 });
 
-test('the demo script covers every scenario once, in order, reproducibly (V14)', () => {
+test('the demo script covers every scenario once, in order, reproducibly (V14, V15)', () => {
   const world = generateWorld({ seed: 42, locales: ['fr', 'en'], mix: { en: 0.25 } });
   const script = generateDemoScript(world, 42);
   assert.equal(script.length, DEMO_SCRIPT.length);
@@ -217,10 +241,17 @@ test('the demo script covers every scenario once, in order, reproducibly (V14)',
     DEMO_SCRIPT.map((entry) => entry.language),
   );
   assert.equal(script[1]!.groundTruth.policyNumber, SHOWCASE.terminatedPolicy);
-  const kinds = script.flatMap(({ groundTruth }) =>
-    groundTruth.scenario === 'non_claim' ? [groundTruth.requestType] : [],
-  );
-  assert.deepEqual(kinds, ['cancellation', 'quote_request']);
   assert.equal(new Set(script.map(({ email }) => email.messageId)).size, script.length);
+  // Follow-ups and the resent claim refer to the right e-mails.
+  const byScenario = (scenario: string) =>
+    script.find(({ groundTruth }) => groundTruth.scenario === scenario)!;
+  assert.equal(byScenario('follow_up').email.inReplyTo, script[2]!.email.messageId);
+  assert.equal(byScenario('follow_up_no_header').email.inReplyTo, undefined);
+  assert.equal(byScenario('follow_up_no_header').email.from, script[0]!.email.from);
+  assert.equal(byScenario('resent_claim').email.from, script[6]!.email.from);
+  for (const { email, groundTruth } of script) {
+    InboundEmailInputSchema.parse(email);
+    GroundTruthSchema.parse(groundTruth);
+  }
   assert.deepEqual(generateDemoScript(world, 42), script);
 });

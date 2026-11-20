@@ -2,7 +2,7 @@
 
 import type { AgentEventView, AgentStepView, CaseDetail, ProposedActionView } from '@demo/shared';
 import { useFormatter, useTranslations } from 'next-intl';
-import { Bot, Cpu, ExternalLink, FileText, Loader2 } from 'lucide-react';
+import { Bot, Cpu, ExternalLink, FileText, Loader2, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertBadges, LanguageBadge, StatusBadge, VerdictBadge } from '@/components/case-badges';
 import { PipelineStepper } from '@/components/pipeline';
@@ -93,6 +93,19 @@ export function CaseView({ caseId }: { caseId: string }) {
         </div>
       )}
       {kase.status === 'failed' && <FailedBanner kase={kase} onRetried={load} />}
+      {kase.status === 'needs_broker' && <HandoverBanner kase={kase} onHandled={load} />}
+      {kase.mergedInto && (
+        <div className="rounded-lg border border-violet-300 bg-violet-50 p-3 text-sm text-violet-900">
+          {t.rich('case.mergedInto', {
+            reference: kase.mergedInto.reference,
+            link: (chunks) => (
+              <Link href={`/cases/${kase.mergedInto!.id}`} className="font-medium underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </div>
+      )}
       {kase.claimNumber && (
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900">
           {t('case.claimFiled', { claimNumber: kase.claimNumber })}
@@ -101,6 +114,7 @@ export function CaseView({ caseId }: { caseId: string }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <EmailCard kase={kase} />
+          {kase.followUps.length > 0 && <FollowUpsCard kase={kase} onRestarted={load} />}
           <TimelineCard kase={kase} />
         </div>
         <div className="space-y-4">
@@ -110,6 +124,108 @@ export function CaseView({ caseId }: { caseId: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * V15 "À traiter par vous": why the agents stopped, what they found, and a button to close the case
+ * once the broker has handled it.
+ */
+function HandoverBanner({ kase, onHandled }: { kase: CaseDetail; onHandled: () => void }) {
+  const t = useTranslations();
+  const [comment, setComment] = useState('');
+  const [sending, setSending] = useState(false);
+  const reason = kase.handover?.reason ?? kase.handoverReason;
+  return (
+    <div className="space-y-2 rounded-lg border border-orange-300 bg-orange-50 p-3 text-sm text-orange-950">
+      <div className="flex flex-wrap items-center gap-2">
+        <UserRound className="size-4" />
+        <span className="font-semibold">{t('case.handover.title')}</span>
+        {reason && <span>— {t(`handoverReason.${reason}`)}</span>}
+      </div>
+      <p>{reason ? t(`case.handover.hint.${reason}`) : t('case.handover.hint.unclassified')}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          className="h-8 min-w-60 flex-1 rounded-lg border border-orange-200 bg-background px-2"
+          placeholder={t('case.handover.commentPlaceholder')}
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
+        />
+        <Button
+          size="sm"
+          disabled={sending}
+          onClick={async () => {
+            setSending(true);
+            try {
+              await coreApi.handled(kase.id, comment.trim() || undefined);
+              onHandled();
+            } finally {
+              setSending(false);
+            }
+          }}
+        >
+          {t('case.handover.markHandled')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** V15: follow-up e-mails attached to the case, and a new analysis when they bring documents. */
+function FollowUpsCard({ kase, onRestarted }: { kase: CaseDetail; onRestarted: () => void }) {
+  const t = useTranslations('case');
+  const format = useFormatter();
+  const [sending, setSending] = useState(false);
+  const withDocuments = kase.followUps.some((email) => email.attachments.length > 0);
+  const running = kase.status === 'received' || kase.status === 'processing';
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('followUps.title', { count: kase.followUps.length })}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {kase.followUps.map((email) => (
+          <div key={email.id} className="space-y-2 rounded-lg border border-violet-200 p-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span>{email.from}</span>
+              <span>
+                {format.dateTime(new Date(email.receivedAt), {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </span>
+              <LanguageBadge language={email.language} />
+            </div>
+            <div className="font-medium">{email.subject}</div>
+            <p className="whitespace-pre-wrap">{email.body}</p>
+            {email.attachments.map((attachment) => (
+              <AttachmentRow key={attachment.id} caseId={kase.id} attachment={attachment} />
+            ))}
+          </div>
+        ))}
+        {withDocuments && !running && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-violet-50 p-2 text-violet-900">
+            <span className="mr-auto">{t('followUps.newDocuments')}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={sending}
+              onClick={async () => {
+                setSending(true);
+                try {
+                  await coreApi.reanalyze(kase.id);
+                  onRestarted();
+                } finally {
+                  setSending(false);
+                }
+              }}
+            >
+              {t('followUps.reanalyze')}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -378,7 +494,11 @@ function ProposalCard({ kase, onDecided }: { kase: CaseDetail; onDecided: () => 
             key={action.id}
             kase={kase}
             action={action}
-            canDecide={kase.status === 'awaiting_approval' && action.status === 'pending'}
+            // V15: a standalone reply (follow-up status, acknowledgement) waits for no workflow.
+            canDecide={
+              action.status === 'pending' &&
+              (!action.awaitsWorkflow || kase.status === 'awaiting_approval')
+            }
             onDecided={onDecided}
           />
         ))}
@@ -411,6 +531,7 @@ function Proposal({
     try {
       await coreApi.decide(kase.id, {
         approved,
+        actionId: action.id,
         ...(comment.trim() ? { comment: comment.trim() } : {}),
       });
       setComment('');
@@ -423,6 +544,10 @@ function Proposal({
   };
 
   const filing = action.claimFiling as { amount?: number; date?: string } | null;
+  const cancellation = action.cancellation as {
+    policyNumber?: string;
+    effectiveDate?: string;
+  } | null;
   return (
     <div
       className={cn(
@@ -431,7 +556,11 @@ function Proposal({
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">{t('case.revision', { revision: action.revision })}</span>
+        <span className="font-medium">
+          {action.awaitsWorkflow
+            ? t('case.revision', { revision: action.revision })
+            : t('case.standaloneReply')}
+        </span>
         <Badge>{t(`actionType.${action.actionType}`)}</Badge>
         <Badge variant="outline">{t(`proposalStatus.${action.status}`)}</Badge>
       </div>
@@ -440,6 +569,14 @@ function Proposal({
           {t('case.claimFiling', {
             amount: formatters.money(filing.amount),
             date: formatters.date(filing.date),
+          })}
+        </p>
+      )}
+      {cancellation?.policyNumber && cancellation.effectiveDate && (
+        <p className="text-sm">
+          {t('case.cancellationFiling', {
+            policyNumber: cancellation.policyNumber,
+            date: formatters.date(cancellation.effectiveDate),
           })}
         </p>
       )}
@@ -452,6 +589,17 @@ function Proposal({
           <p className="mt-1 whitespace-pre-wrap">{action.draftBody}</p>
         </div>
       </div>
+      {action.finalDraftBody && action.finalDraftBody !== action.draftBody && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-sm font-medium text-emerald-800">
+            {t('case.finalDraft')} <LanguageBadge language={action.draftLanguage} />
+          </div>
+          <div className="rounded border border-emerald-200 bg-emerald-50 p-2 text-sm">
+            <div className="font-medium">{action.finalDraftSubject}</div>
+            <p className="mt-1 whitespace-pre-wrap">{action.finalDraftBody}</p>
+          </div>
+        </div>
+      )}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-sm font-medium">
           {t('case.internalNote')} <LanguageBadge language={action.noteLanguage} />
@@ -529,11 +677,6 @@ function AuditCard({ kase }: { kase: CaseDetail }) {
               </span>
               <span>
                 {renderAudit(log, t as Translate, formatters)}
-                {log.params.auto === true && (
-                  <Badge variant="outline" className="ml-1" title={t('case.autoHint')}>
-                    {t('case.auto')}
-                  </Badge>
-                )}
                 {log.source && (
                   <span className="ml-1 font-mono text-xs text-muted-foreground">
                     [{log.source}]
@@ -568,7 +711,8 @@ function CaseStepper({ kase }: { kase: CaseDetail }) {
     );
     return (which === 'first' ? events[0] : events.at(-1))?.createdAt;
   };
-  const proposals = kase.proposedActions;
+  // The workflow's own proposals (V15: a standalone reply comes later and has its own timing).
+  const proposals = kase.proposedActions.filter((action) => action.awaitsWorkflow);
   const lastProposal = proposals.at(-1);
   const closed = kase.stage === 'done';
   const durations: Partial<Record<PipelineStep, string>> = {
@@ -576,7 +720,7 @@ function CaseStepper({ kase }: { kase: CaseDetail }) {
       started('triage'),
       started('coverage') ?? (closed ? kase.updatedAt : undefined),
     ),
-    coverage: duration(started('coverage'), started('drafting')),
+    coverage: duration(started('coverage') ?? started('service'), started('drafting')),
     drafting: duration(
       started('drafting'),
       kase.stage === 'drafting' ? undefined : lastProposal?.createdAt,

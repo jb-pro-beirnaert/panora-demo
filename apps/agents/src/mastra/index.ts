@@ -3,6 +3,7 @@ import { registerApiRoute } from '@mastra/core/server';
 import { PostgresStore } from '@mastra/pg';
 import { coverageAgent } from './agents/coverage.js';
 import { draftingAgent } from './agents/drafting.js';
+import { policyServiceAgent } from './agents/policy-service.js';
 import { singleAgent } from './agents/single.js';
 import { triageAgent } from './agents/triage.js';
 import { env } from './env.js';
@@ -10,11 +11,12 @@ import { buildObservability } from './observability.js';
 import { resilienceStats } from './resilience.js';
 import { purge, PurgeRequestSchema, workflowsStore } from './retention.js';
 import { requireServiceToken } from './security.js';
+import { draftReplyWorkflow } from './workflows/draft-reply.js';
 import { processEmailWorkflow } from './workflows/process-email.js';
 
 export const mastra = new Mastra({
-  agents: { triageAgent, coverageAgent, draftingAgent, singleAgent },
-  workflows: { processEmailWorkflow },
+  agents: { triageAgent, coverageAgent, policyServiceAgent, draftingAgent, singleAgent },
+  workflows: { processEmailWorkflow, draftReplyWorkflow },
   // Workflow snapshots and runs live in the `agents` database (tables created on first use): a run
   // suspended on `approval` survives a restart of the Mastra server.
   observability: buildObservability(),

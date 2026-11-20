@@ -31,7 +31,7 @@ export function amountsIn(text: string): number[] {
 export function knownAmounts(truth: GroundTruth): Set<number> {
   const known = new Set<number>();
   if ('amount' in truth && truth.amount !== null) known.add(Math.round(truth.amount));
-  if (truth.scenario !== 'non_claim' && truth.scenario !== 'unknown_client') {
+  if (truth.requestType === 'claim' && truth.scenario !== 'unknown_client') {
     known.add(truth.limit);
     known.add(truth.deductible);
     if (truth.amount !== null) {
@@ -45,10 +45,40 @@ export function knownAmounts(truth: GroundTruth): Set<number> {
 
 /** actionType, amounts copied without error, languages of the draft and of the note. */
 export function scoreDrafting(truth: GroundTruth, observed: Observed): EvalScore[] {
-  if (truth.scenario === 'non_claim') {
-    return ['action_type', 'amounts', 'languages'].map((name) => score(name, null));
-  }
   const proposal = observed.proposal;
+  if (truth.requestType !== 'claim') {
+    // V15: unrelated e-mails get no reply; every other request gets one, in the right language.
+    if (truth.expectedAction === null) {
+      return [
+        score('action_type', proposal ? 0 : 1, proposal ? 'unexpected reply' : 'ok'),
+        score('amounts', null),
+        score('languages', null),
+      ];
+    }
+    if (!proposal) {
+      return [
+        score('action_type', 0, 'no proposal'),
+        score('amounts', null),
+        score('languages', 0, 'no proposal'),
+      ];
+    }
+    const draftLanguage = detectLanguage(`${proposal.draftSubject}\n${proposal.draftBody}`);
+    const noteLanguage = detectLanguage(proposal.internalNote);
+    return [
+      score(
+        'action_type',
+        proposal.actionType === truth.expectedAction ? 1 : 0,
+        `expected ${truth.expectedAction}, got ${proposal.actionType}`,
+      ),
+      score('amounts', null),
+      score(
+        'languages',
+        (draftLanguage === truth.expectedDraftLanguage ? 0.5 : 0) +
+          (noteLanguage === truth.expectedNoteLanguage ? 0.5 : 0),
+        `draft ${draftLanguage}/${truth.expectedDraftLanguage}, note ${noteLanguage}/${truth.expectedNoteLanguage}`,
+      ),
+    ];
+  }
   if (!proposal) {
     return [
       score('action_type', 0, 'no proposal'),

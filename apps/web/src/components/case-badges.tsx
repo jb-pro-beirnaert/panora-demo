@@ -13,6 +13,10 @@ const STATUS_STYLES: Record<CaseStatus, string> = {
   claim_filed: 'bg-emerald-100 text-emerald-800',
   ready_to_send: 'bg-emerald-100 text-emerald-800',
   failed: 'bg-red-100 text-red-800',
+  needs_broker: 'bg-orange-100 text-orange-900',
+  handled_manually: 'bg-slate-100 text-slate-700',
+  cancellation_filed: 'bg-emerald-100 text-emerald-800',
+  merged: 'bg-violet-100 text-violet-800',
 };
 
 const VERDICT_STYLES: Record<Verdict, string> = {

@@ -1,9 +1,11 @@
-import type { ApprovalDecision, ProcessEmailInput } from '@demo/shared';
+import type { ApprovalDecision, DraftReplyInput, ProcessEmailInput } from '@demo/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { ENV, type Env } from '../env.js';
 
-/** Id of the workflow in the Mastra registry. */
+/** Ids of the workflows in the Mastra registry. */
 export const PROCESS_EMAIL_WORKFLOW = 'processEmailWorkflow';
+/** V15: standalone replies (case status after a follow-up, acknowledgement). */
+export const DRAFT_REPLY_WORKFLOW = 'draftReplyWorkflow';
 
 const TIMEOUT_MS = 10_000;
 
@@ -69,8 +71,8 @@ export class MastraClient {
   }
 
   /** Creates a run (so its id can be stored before any step runs). */
-  async createRun(): Promise<string> {
-    const result = (await this.post(`/api/workflows/${PROCESS_EMAIL_WORKFLOW}/create-run`, {})) as {
+  async createRun(workflow = PROCESS_EMAIL_WORKFLOW): Promise<string> {
+    const result = (await this.post(`/api/workflows/${workflow}/create-run`, {})) as {
       runId?: string;
     };
     if (!result.runId) throw new Error('Mastra create-run returned no runId');
@@ -83,6 +85,16 @@ export class MastraClient {
       `/api/workflows/${PROCESS_EMAIL_WORKFLOW}/start?runId=${encodeURIComponent(runId)}`,
       { inputData: input, tracingOptions: tracing },
     );
+  }
+
+  /** V15: starts a `draft-reply` run (created and started at once; nothing waits for it). */
+  async startDraftReply(input: DraftReplyInput, tracing: CaseTracing): Promise<string> {
+    const runId = await this.createRun(DRAFT_REPLY_WORKFLOW);
+    await this.post(
+      `/api/workflows/${DRAFT_REPLY_WORKFLOW}/start?runId=${encodeURIComponent(runId)}`,
+      { inputData: input, tracingOptions: tracing },
+    );
+    return runId;
   }
 
   /**

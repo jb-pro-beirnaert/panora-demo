@@ -146,3 +146,83 @@ describe('MCP isolation between brokerages', () => {
     await assert.rejects(client(forged), /401|Unauthorized/i);
   });
 });
+
+describe('request_cancellation (V15)', () => {
+  const free = world.policies.find(
+    (p) => p.brokerCode === 'DLM-075' && p.status === 'active' && p.endReason === null,
+  )!;
+  const terminated = world.policies.find(
+    (p) => p.brokerCode === 'DLM-075' && p.status === 'terminated',
+  )!;
+  const structured = (result: unknown) =>
+    (result as { structuredContent?: Record<string, unknown> }).structuredContent;
+
+  it('is a write tool: a read token neither sees nor calls it', async () => {
+    const mcp = await client(issueMcpToken({ scope: 'read', brokerCode: 'DLM-075' }, SECRET));
+    const tools = await mcp.listTools();
+    assert.ok(!tools.tools.some((tool) => tool.name === 'request_cancellation'));
+    await assert.rejects(
+      mcp.callTool({
+        name: 'request_cancellation',
+        arguments: {
+          policyNumber: free.number,
+          effectiveDate: free.renewalDate,
+          reason: 'client_request',
+        },
+      }),
+      /write token|403/i,
+    );
+    await mcp.close();
+  });
+
+  it('records a cancellation at a renewal date, idempotently; get_policy shows it', async () => {
+    const mcp = await client(issueMcpToken({ scope: 'write', brokerCode: 'DLM-075' }, SECRET));
+    const args = {
+      policyNumber: free.number,
+      effectiveDate: free.renewalDate,
+      reason: 'client_request',
+    };
+    const first = await mcp.callTool({ name: 'request_cancellation', arguments: args });
+    assert.deepEqual(structured(first), {
+      policyNumber: free.number,
+      effectiveDate: free.renewalDate,
+      alreadyRequested: false,
+    });
+    const again = await mcp.callTool({ name: 'request_cancellation', arguments: args });
+    assert.equal(structured(again)?.alreadyRequested, true);
+    const policy = await mcp.callTool({ name: 'get_policy', arguments: { number: free.number } });
+    assert.match(text(policy), /client_request/);
+    assert.match(text(policy), new RegExp(free.renewalDate));
+    await mcp.close();
+  });
+
+  it('refuses a date that is not a renewal date, and a terminated policy', async () => {
+    const mcp = await client(issueMcpToken({ scope: 'write', brokerCode: 'DLM-075' }, SECRET));
+    const other = world.policies.find(
+      (p) =>
+        p.brokerCode === 'DLM-075' &&
+        p.status === 'active' &&
+        p.endReason === null &&
+        p.number !== free.number,
+    )!;
+    const wrongDate = await mcp.callTool({
+      name: 'request_cancellation',
+      arguments: {
+        policyNumber: other.number,
+        effectiveDate: '2027-02-28',
+        reason: 'client_request',
+      },
+    });
+    assert.match(text(wrongDate), /not a renewal date|refuses/);
+    const ended = await mcp.callTool({
+      name: 'request_cancellation',
+      arguments: {
+        policyNumber: terminated.number,
+        effectiveDate: terminated.renewalDate,
+        reason: 'client_request',
+      },
+    });
+    assert.match(text(ended), /already terminated/);
+    await mcp.close();
+  });
+});
